@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.security import require_api_key
 from api.schemas import (
     CollectionRequest,
     CollectionResponse,
@@ -19,6 +18,7 @@ from api.schemas import (
     EvidenceResponse,
     EvidenceVerifyResponse,
 )
+from api.security import require_api_key
 from db.repository import EvidenceRepository
 
 router = APIRouter(prefix="/api/v1/evidence", tags=["evidence"])

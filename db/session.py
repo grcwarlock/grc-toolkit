@@ -15,7 +15,7 @@ import os
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from sqlalchemy import Engine, create_engine, event, text
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from db.models import Base

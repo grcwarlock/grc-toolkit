@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.security import require_api_key
 from api.schemas import (
     AssessmentResultResponse,
     AssessmentRunResponse,
     AssessmentTrendResponse,
     AssessmentTriggerRequest,
 )
+from api.security import require_api_key
 from db.repository import AssessmentRepository
 
 router = APIRouter(prefix="/api/v1/assessments", tags=["assessments"])

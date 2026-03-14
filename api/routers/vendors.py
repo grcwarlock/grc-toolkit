@@ -13,12 +13,12 @@ from api.schemas import (
     VendorUpdate,
 )
 from api.security import (
-    require_api_key,
-    validate_enum,
     VALID_CRITICALITIES,
     VALID_DATA_CLASSIFICATIONS,
     VALID_VENDOR_CATEGORIES,
     VENDOR_UPDATABLE_FIELDS,
+    require_api_key,
+    validate_enum,
 )
 from db.repository import VendorRepository
 

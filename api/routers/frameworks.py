@@ -7,14 +7,13 @@ from pathlib import Path
 import yaml
 from fastapi import APIRouter, Depends, HTTPException
 
-from api.security import require_api_key
-
 from api.schemas import (
     CrosswalkRequest,
     CrosswalkResponse,
     FrameworkDetailResponse,
     FrameworkResponse,
 )
+from api.security import require_api_key
 
 router = APIRouter(prefix="/api/v1/frameworks", tags=["frameworks"])
 

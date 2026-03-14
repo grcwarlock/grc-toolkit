@@ -7,7 +7,6 @@ audit logging, and input sanitization.
 
 from __future__ import annotations
 
-import hashlib
 import hmac
 import logging
 import os
@@ -17,7 +16,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from datetime import UTC, datetime
 
-from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi import HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response

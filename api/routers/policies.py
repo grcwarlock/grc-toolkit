@@ -10,16 +10,16 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
-
 from api.deps import get_db
-from api.security import require_api_key, validate_enum, VALID_PROVIDERS
 from api.schemas import (
     PolicyEvalRequest,
     PolicyEvalResponse,
     PolicyViolationResponse,
 )
+from api.security import VALID_PROVIDERS, require_api_key, validate_enum
 from db.repository import PolicyViolationRepository
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/policies", tags=["policies"])
 

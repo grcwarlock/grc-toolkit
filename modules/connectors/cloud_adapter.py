@@ -10,7 +10,6 @@ import logging
 from modules.collectors import get_collector
 from modules.connectors.base import (
     BaseConnector,
-    ConnectorConfig,
     ConnectorResult,
     IngestEvent,
     IngestStatus,

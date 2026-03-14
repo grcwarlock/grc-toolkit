@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 
-from api.security import require_api_key
-
 from api.schemas import (
     PortfolioRequest,
     PortfolioResponse,
@@ -14,6 +12,7 @@ from api.schemas import (
     TreatmentComparisonRequest,
     TreatmentComparisonResponse,
 )
+from api.security import require_api_key
 from modules.risk_engine import EXAMPLE_SCENARIOS, RiskEngine, ThreatScenario
 
 router = APIRouter(prefix="/api/v1/risk", tags=["risk"])
