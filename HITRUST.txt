@@ -1,7 +1,0 @@
-HireRight does not create, receive, maintain, or transmit PHI in the course of background screening services. Our data handling involves PII, employment history, criminal records, and education verification. HITRUST CSF is specifically designed around organizations operating within HIPAA-regulated data flows, which puts this outside our applicable scope.
-
-We hold ISO 27001 certification and SOC 2 Type II attestation, both of which provide substantial overlap with HITRUST CSF control domains. HITRUST itself incorporates ISO 27001 controls directly into its framework.
-
-Recommended response to Tufts: acknowledge the request, clarify that our services fall outside HITRUST's intended scope given the absence of PHI, and offer our ISO 27001 and SOC 2 Type II reports as equivalent assurance. If they push back, we can provide a control domain crosswalk mapping our existing certifications to HITRUST CSF categories.
-
-Pursuing a HITRUST validated or certified assessment is not recommended. The cost ($150K-$400K+), timeline (6-12 months), and scope are disproportionate to the risk profile of this vendor relationship.

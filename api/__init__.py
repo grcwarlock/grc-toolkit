@@ -1,1 +1,0 @@
-"""GRC Toolkit REST API."""
