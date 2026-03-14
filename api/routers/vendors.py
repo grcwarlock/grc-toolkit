@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from api.deps import get_db
 from api.schemas import (
     VendorCreate,
-    VendorUpdate,
-    VendorResponse,
     VendorDashboardResponse,
+    VendorResponse,
+    VendorUpdate,
 )
 from db.repository import VendorRepository
 

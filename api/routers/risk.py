@@ -5,14 +5,14 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 
 from api.schemas import (
-    ThreatScenarioRequest,
-    SimulationResponse,
     PortfolioRequest,
     PortfolioResponse,
+    SimulationResponse,
+    ThreatScenarioRequest,
     TreatmentComparisonRequest,
     TreatmentComparisonResponse,
 )
-from modules.risk_engine import RiskEngine, ThreatScenario, EXAMPLE_SCENARIOS
+from modules.risk_engine import EXAMPLE_SCENARIOS, RiskEngine, ThreatScenario
 
 router = APIRouter(prefix="/api/v1/risk", tags=["risk"])
 

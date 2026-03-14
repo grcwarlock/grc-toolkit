@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from api.schemas import (
-    AssessmentTriggerRequest,
-    AssessmentRunResponse,
     AssessmentResultResponse,
+    AssessmentRunResponse,
     AssessmentTrendResponse,
+    AssessmentTriggerRequest,
 )
 from db.repository import AssessmentRepository
 

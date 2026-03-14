@@ -9,19 +9,19 @@ Usage:
     python scripts/run_risk_analysis.py --compare-treatments
 """
 
-import sys
 import json
 import logging
+import sys
 from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from modules.risk_engine import RiskEngine, EXAMPLE_SCENARIOS
+from modules.risk_engine import EXAMPLE_SCENARIOS, RiskEngine
 
 console = Console()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

@@ -1,13 +1,13 @@
 """Tests for the normalized evidence model and crosswalk engine."""
 
 import json
-import pytest
+
 from modules.models import (
-    NormalizedEvidence,
     AssessmentResult,
-    ResourceNormalizer,
-    FrameworkCrosswalk,
     ComplianceStatus,
+    FrameworkCrosswalk,
+    NormalizedEvidence,
+    ResourceNormalizer,
     Severity,
 )
 

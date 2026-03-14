@@ -8,13 +8,13 @@ risk analysis, framework management, vendor risk, and policy evaluation.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.routers import assessments, evidence, frameworks, policies, risk, vendors
 from db.session import init_db
-from api.routers import evidence, assessments, risk, frameworks, vendors, policies
 
 
 @asynccontextmanager
@@ -52,5 +52,5 @@ async def health():
     return {
         "status": "healthy",
         "version": "0.2.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

@@ -4,19 +4,17 @@ Pydantic v2 request/response models for the GRC Toolkit API.
 
 from __future__ import annotations
 
-from datetime import datetime, date
-from typing import Optional
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
-
 
 # ── Evidence ──────────────────────────────────────────────────────────
 
 class CollectionRequest(BaseModel):
     framework: str = Field("nist_800_53", description="Framework identifier")
-    control_family: Optional[str] = Field(None, description="Filter to a single control family")
+    control_family: str | None = Field(None, description="Filter to a single control family")
     providers: list[str] = Field(["aws"], description="Cloud providers to collect from")
-    regions: Optional[list[str]] = Field(None, description="Override provider regions")
+    regions: list[str] | None = Field(None, description="Override provider regions")
 
 
 class CollectionResponse(BaseModel):
@@ -59,22 +57,22 @@ class EvidenceVerifyResponse(BaseModel):
 
 class AssessmentTriggerRequest(BaseModel):
     framework: str = Field("nist_800_53")
-    evidence_run_id: Optional[str] = Field(None, description="Use evidence from a specific run")
-    providers: Optional[list[str]] = Field(None)
+    evidence_run_id: str | None = Field(None, description="Use evidence from a specific run")
+    providers: list[str] | None = Field(None)
 
 
 class AssessmentRunResponse(BaseModel):
     id: str
     framework: str
     started_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     status: str
     total_checks: int = 0
     passed: int = 0
     failed: int = 0
     errors: int = 0
-    pass_rate: Optional[float] = None
-    summary: Optional[dict] = None
+    pass_rate: float | None = None
+    summary: dict | None = None
 
 
 class AssessmentResultResponse(BaseModel):
@@ -87,7 +85,7 @@ class AssessmentResultResponse(BaseModel):
     provider: str
     region: str
     findings: list[str]
-    remediation: Optional[str] = None
+    remediation: str | None = None
     assessed_at: datetime
 
 
@@ -124,7 +122,7 @@ class SimulationResponse(BaseModel):
 class PortfolioRequest(BaseModel):
     scenarios: list[ThreatScenarioRequest]
     iterations: int = Field(10_000, ge=100, le=100_000)
-    seed: Optional[int] = None
+    seed: int | None = None
 
 
 class PortfolioResponse(BaseModel):
@@ -161,7 +159,7 @@ class FrameworkResponse(BaseModel):
 
 
 class FrameworkDetailResponse(FrameworkResponse):
-    description: Optional[str] = None
+    description: str | None = None
     control_families: dict = {}
 
 
@@ -189,21 +187,21 @@ class VendorCreate(BaseModel):
     certifications: list[str] = []
     sla_uptime_target: float = 99.9
     assessment_frequency_days: int = 365
-    primary_contact: Optional[str] = None
-    notes: Optional[str] = None
+    primary_contact: str | None = None
+    notes: str | None = None
 
 
 class VendorUpdate(BaseModel):
-    name: Optional[str] = None
-    category: Optional[str] = None
-    criticality: Optional[str] = None
-    data_classification: Optional[str] = None
-    contract_end: Optional[date] = None
-    certifications: Optional[list[str]] = None
-    risk_score: Optional[float] = None
-    risk_level: Optional[str] = None
-    last_assessment_date: Optional[date] = None
-    notes: Optional[str] = None
+    name: str | None = None
+    category: str | None = None
+    criticality: str | None = None
+    data_classification: str | None = None
+    contract_end: date | None = None
+    certifications: list[str] | None = None
+    risk_score: float | None = None
+    risk_level: str | None = None
+    last_assessment_date: date | None = None
+    notes: str | None = None
 
 
 class VendorResponse(BaseModel):
@@ -214,10 +212,10 @@ class VendorResponse(BaseModel):
     data_classification: str
     contract_start: date
     contract_end: date
-    last_assessment_date: Optional[date] = None
+    last_assessment_date: date | None = None
     certifications: list[str] = []
-    risk_score: Optional[float] = None
-    risk_level: Optional[str] = None
+    risk_score: float | None = None
+    risk_level: str | None = None
     is_active: bool = True
 
 

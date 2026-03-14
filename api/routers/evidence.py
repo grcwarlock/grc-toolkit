@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -12,8 +12,8 @@ from api.deps import get_db
 from api.schemas import (
     CollectionRequest,
     CollectionResponse,
-    EvidenceResponse,
     EvidenceListResponse,
+    EvidenceResponse,
     EvidenceVerifyResponse,
 )
 from db.repository import EvidenceRepository
@@ -33,7 +33,7 @@ async def trigger_collection(request: CollectionRequest, db: Session = Depends(g
         run_id=run_id,
         status="pending",
         artifacts_collected=0,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
     )
 
 

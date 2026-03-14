@@ -8,9 +8,8 @@ Usage:
     python scripts/run_assessment.py --run-id 20250301_143022 --output reports/
 """
 
-import sys
-import json
 import logging
+import sys
 from pathlib import Path
 
 import click
@@ -20,8 +19,8 @@ from rich.table import Table
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from modules.evidence_collector import EvidenceStore, load_framework_checks
 from modules.control_assessor import ControlAssessor
+from modules.evidence_collector import EvidenceStore, load_framework_checks
 from modules.report_generator import ReportGenerator
 
 console = Console()
@@ -97,7 +96,7 @@ def main(evidence_dir: str, run_id: str, output: str, framework: str, config: st
 
     # Summary
     summary = assessor.summarize(results)
-    console.print(f"\n[bold]Assessment Summary[/bold]")
+    console.print("\n[bold]Assessment Summary[/bold]")
     console.print(f"  Total Checks:  {summary['total_checks']}")
     console.print(f"  [green]Passed:      {summary['passed']}[/green]")
     console.print(f"  [red]Failed:      {summary['failed']}[/red]")
@@ -129,7 +128,7 @@ def main(evidence_dir: str, run_id: str, output: str, framework: str, config: st
         f"{output}/assessment_{run_id}.json",
     )
 
-    console.print(f"\n[bold green]Reports generated:[/bold green]")
+    console.print("\n[bold green]Reports generated:[/bold green]")
     console.print(f"  POA&M:             {poam_path}")
     console.print(f"  Executive Summary: {exec_path}")
     console.print(f"  JSON Export:       {json_path}")

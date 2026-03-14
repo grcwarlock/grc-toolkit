@@ -8,15 +8,15 @@ Usage:
     python scripts/run_collection.py --framework nist-800-53  # all families
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
 import click
 import yaml
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

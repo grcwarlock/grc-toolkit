@@ -1,9 +1,9 @@
 """Tests for the Monte Carlo risk engine."""
 
-import pytest
 import numpy as np
+import pytest
 
-from modules.risk_engine import RiskEngine, ThreatScenario, EXAMPLE_SCENARIOS
+from modules.risk_engine import EXAMPLE_SCENARIOS, RiskEngine, ThreatScenario
 
 
 @pytest.fixture
@@ -45,7 +45,6 @@ class TestRiskEngine:
     def test_mean_in_reasonable_range(self, engine, sample_scenario):
         """Mean ALE should be roughly frequency_mode * impact_mode."""
         result = engine.simulate_scenario(sample_scenario)
-        expected_rough = 3.0 * 50_000  # 150,000
         # Allow wide tolerance since Monte Carlo has variance
         assert 50_000 < result.mean_ale < 500_000
 

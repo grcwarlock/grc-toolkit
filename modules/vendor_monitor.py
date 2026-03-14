@@ -9,12 +9,9 @@ SLA metrics, and flagging vendors that need attention.
 
 import json
 import logging
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Optional
-
-import requests
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +38,7 @@ class Vendor:
     sla_resolution_time_hours: int = 24
 
     # Security posture
-    security_rating: Optional[float] = None
+    security_rating: float | None = None
     security_rating_source: str = ""
     certifications: list[str] = field(default_factory=list)
     last_incident_date: str = ""
@@ -95,7 +92,7 @@ class VendorRiskEngine:
     }
 
     def score_vendor(self, vendor: Vendor,
-                     sla_metrics: Optional[dict] = None) -> VendorRiskScore:
+                     sla_metrics: dict | None = None) -> VendorRiskScore:
         """Calculate a composite risk score for a single vendor."""
         factors = []
 
@@ -149,11 +146,11 @@ class VendorRiskEngine:
 
         try:
             last = datetime.fromisoformat(vendor.last_assessment_date)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             # Handle naive datetime by assuming UTC
             if last.tzinfo is None:
-                last = last.replace(tzinfo=timezone.utc)
+                last = last.replace(tzinfo=UTC)
 
             days_since = (now - last).days
             overdue_days = days_since - vendor.assessment_frequency_days
@@ -192,7 +189,7 @@ class VendorRiskEngine:
         return score
 
     def _sla_compliance_score(self, vendor: Vendor,
-                              metrics: Optional[dict] = None) -> float:
+                              metrics: dict | None = None) -> float:
         """Score based on actual SLA performance vs targets."""
         if not metrics:
             return 50.0  # No data = assume moderate risk
@@ -249,12 +246,12 @@ class VendorInventory:
         self.vendors[vendor.vendor_id] = vendor
         self.save()
 
-    def get_vendor(self, vendor_id: str) -> Optional[Vendor]:
+    def get_vendor(self, vendor_id: str) -> Vendor | None:
         return self.vendors.get(vendor_id)
 
     def vendors_needing_assessment(self) -> list[Vendor]:
         """Find vendors whose risk assessments are overdue or approaching due date."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         needs_assessment = []
 
         for vendor in self.vendors.values():
@@ -265,7 +262,7 @@ class VendorInventory:
             try:
                 last = datetime.fromisoformat(vendor.last_assessment_date)
                 if last.tzinfo is None:
-                    last = last.replace(tzinfo=timezone.utc)
+                    last = last.replace(tzinfo=UTC)
 
                 due_date = last + timedelta(days=vendor.assessment_frequency_days)
 
@@ -280,7 +277,7 @@ class VendorInventory:
 
     def expiring_contracts(self, days_ahead: int = 90) -> list[Vendor]:
         """Find vendors with contracts expiring within the specified window."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now + timedelta(days=days_ahead)
         expiring = []
 
@@ -288,7 +285,7 @@ class VendorInventory:
             try:
                 end = datetime.fromisoformat(vendor.contract_end)
                 if end.tzinfo is None:
-                    end = end.replace(tzinfo=timezone.utc)
+                    end = end.replace(tzinfo=UTC)
                 if now <= end <= cutoff:
                     expiring.append(vendor)
             except (ValueError, TypeError):

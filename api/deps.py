@@ -5,7 +5,7 @@ Dependency injection for FastAPI routes.
 from __future__ import annotations
 
 import os
-from typing import Generator
+from collections.abc import Generator
 
 import yaml
 from sqlalchemy.orm import Session

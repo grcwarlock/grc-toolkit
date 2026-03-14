@@ -8,13 +8,12 @@ with both raw API data and provider-agnostic normalized_data.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 
 import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError
 
-from modules.models import NormalizedEvidence, ResourceNormalizer
 from modules.collectors.base import create_evidence, safe_collect
+from modules.models import NormalizedEvidence, ResourceNormalizer
 
 logger = logging.getLogger(__name__)
 

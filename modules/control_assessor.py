@@ -8,11 +8,11 @@ control check. Think of this as the "brain" that decides whether
 your environment actually meets the control requirement.
 """
 
-import json
 import logging
-from datetime import datetime, timezone
-from dataclasses import dataclass, field, asdict
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class AssessmentResult:
 
     def __post_init__(self):
         if not self.assessed_at:
-            self.assessed_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.assessed_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def to_dict(self) -> dict:
         return asdict(self)

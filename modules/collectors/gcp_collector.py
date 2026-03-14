@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import logging
 
-from modules.models import NormalizedEvidence, ResourceNormalizer
 from modules.collectors.base import create_evidence, safe_collect
+from modules.models import NormalizedEvidence, ResourceNormalizer
 
 logger = logging.getLogger(__name__)
 
 try:
     from google.cloud import compute_v1
-    from google.cloud import asset_v1
     HAS_GCP = True
 except ImportError:
     HAS_GCP = False

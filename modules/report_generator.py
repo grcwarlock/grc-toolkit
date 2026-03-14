@@ -9,9 +9,8 @@ manually update a 300-page SSP ever again.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from jinja2 import Template
 from tabulate import tabulate
@@ -172,7 +171,7 @@ class ReportGenerator:
         content = template.render(
             organization=self.organization,
             system_name=self.system_name,
-            generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
             assessment_id=kwargs.get("assessment_id", "N/A"),
             summary=summary,
             findings=findings,
@@ -210,7 +209,7 @@ class ReportGenerator:
         content = template.render(
             organization=self.organization,
             framework=kwargs.get("framework", "NIST SP 800-53"),
-            generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
             summary=assessment_summary,
             top_findings=top_findings,
             trend=kwargs.get("trend", None),
@@ -252,7 +251,7 @@ class ReportGenerator:
             "metadata": {
                 "organization": self.organization,
                 "system": self.system_name,
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "version": "1.0",
             },
             "summary": summary,

@@ -9,10 +9,8 @@ informed decisions about risk treatment.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
-from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +116,7 @@ class RiskEngine:
     instead of single values.
     """
 
-    def __init__(self, iterations: int = 10_000, seed: Optional[int] = None):
+    def __init__(self, iterations: int = 10_000, seed: int | None = None):
         self.iterations = iterations
         self.rng = np.random.default_rng(seed)
 

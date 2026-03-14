@@ -8,12 +8,20 @@ across SQLite (dev) and PostgreSQL (production).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, date
-from typing import Optional
+from datetime import date, datetime
 
 from sqlalchemy import (
-    String, Text, Float, Integer, Boolean, DateTime, Date, JSON,
-    ForeignKey, Index, func,
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -37,7 +45,7 @@ class EvidenceRecord(Base):
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     normalized_data: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="collected")
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     sha256_hash: Mapped[str] = mapped_column(String(64), default="")
     metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     run_id: Mapped[str] = mapped_column(
@@ -70,10 +78,10 @@ class AssessmentResultRecord(Base):
     findings: Mapped[list] = mapped_column(JSON, default=list)
     evidence_ids: Mapped[list] = mapped_column(JSON, default=list)
     evidence_summary: Mapped[str] = mapped_column(Text, default="")
-    remediation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    remediation: Mapped[str | None] = mapped_column(Text, nullable=True)
     assessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     assessor: Mapped[str] = mapped_column(String(20), default="python")
-    policy_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    policy_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -91,7 +99,7 @@ class AssessmentRun(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     framework: Mapped[str] = mapped_column(String(50))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String(20), default="running")
@@ -99,8 +107,8 @@ class AssessmentRun(Base):
     passed: Mapped[int] = mapped_column(Integer, default=0)
     failed: Mapped[int] = mapped_column(Integer, default=0)
     errors: Mapped[int] = mapped_column(Integer, default=0)
-    pass_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    summary: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    pass_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    summary: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     triggered_by: Mapped[str] = mapped_column(String(20), default="manual")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -118,10 +126,10 @@ class FrameworkDefinition(Base):
     name: Mapped[str] = mapped_column(String(50), unique=True)
     display_name: Mapped[str] = mapped_column(String(100))
     version: Mapped[str] = mapped_column(String(20))
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     control_count: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    inherits_from: Mapped[Optional[str]] = mapped_column(
+    inherits_from: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("frameworks.id"), nullable=True
     )
     definition: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -143,14 +151,14 @@ class VendorRecord(Base):
     data_classification: Mapped[str] = mapped_column(String(20))
     contract_start: Mapped[date] = mapped_column(Date)
     contract_end: Mapped[date] = mapped_column(Date)
-    last_assessment_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    last_assessment_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     assessment_frequency_days: Mapped[int] = mapped_column(Integer, default=365)
-    security_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    security_rating: Mapped[float | None] = mapped_column(Float, nullable=True)
     certifications: Mapped[list] = mapped_column(JSON, default=list)
-    risk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    risk_level: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    primary_contact: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    risk_level: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    primary_contact: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -173,7 +181,7 @@ class PolicyViolation(Base):
     violation_detail: Mapped[str] = mapped_column(Text)
     severity: Mapped[str] = mapped_column(String(10))
     detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+    resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String(20), default="open")

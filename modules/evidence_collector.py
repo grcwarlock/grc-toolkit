@@ -9,13 +9,13 @@ and stores them for downstream control assessment.
 
 import json
 import logging
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from typing import Any
 
-import yaml
 import boto3
+import yaml
 from botocore.exceptions import ClientError, NoCredentialsError
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class AWSCollector:
     def _collect_single(self, service: str, method: str, control_id: str,
                         check_id: str, region: str) -> EvidenceArtifact:
         """Execute a single API call and wrap the result."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         try:
             session = self._get_session(region)
@@ -180,14 +180,14 @@ class EvidenceStore:
     def save(self, artifacts: list[EvidenceArtifact], run_id: str = "") -> Path:
         """Save a batch of artifacts from a collection run."""
         if not run_id:
-            run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            run_id = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
         run_dir = self.base_path / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
 
         manifest = {
             "run_id": run_id,
-            "collected_at": datetime.now(timezone.utc).strftime(self.timestamp_format),
+            "collected_at": datetime.now(UTC).strftime(self.timestamp_format),
             "artifact_count": len(artifacts),
             "artifacts": [],
         }

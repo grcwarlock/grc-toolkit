@@ -9,17 +9,17 @@ callers control transaction boundaries.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from db.models import (
-    EvidenceRecord,
     AssessmentResultRecord,
     AssessmentRun,
-    VendorRecord,
+    EvidenceRecord,
     PolicyViolation,
+    VendorRecord,
 )
 
 
@@ -127,7 +127,7 @@ class AssessmentRepository:
         run = AssessmentRun(
             id=str(uuid.uuid4()),
             framework=framework,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             status="running",
             triggered_by=triggered_by,
         )
@@ -148,7 +148,7 @@ class AssessmentRepository:
         run = session.get(AssessmentRun, run_id)
         if run is None:
             raise ValueError(f"Assessment run {run_id} not found")
-        run.completed_at = datetime.now(timezone.utc)
+        run.completed_at = datetime.now(UTC)
         run.status = "completed"
         run.total_checks = total_checks
         run.passed = passed
@@ -193,7 +193,7 @@ class AssessmentRepository:
             evidence_ids=evidence_ids,
             evidence_summary=evidence_summary,
             remediation=remediation,
-            assessed_at=assessed_at or datetime.now(timezone.utc),
+            assessed_at=assessed_at or datetime.now(UTC),
             assessor=assessor,
             policy_id=policy_id,
         )
@@ -291,7 +291,7 @@ class VendorRepository:
 
     @staticmethod
     def get_vendors_needing_assessment(session: Session) -> list[VendorRecord]:
-        now = datetime.now(timezone.utc).date()
+        now = datetime.now(UTC).date()
         cutoff = now - timedelta(days=30)
         stmt = (
             select(VendorRecord)
@@ -334,6 +334,6 @@ class PolicyViolationRepository:
         if violation is None:
             raise ValueError(f"Violation {violation_id} not found")
         violation.status = "resolved"
-        violation.resolved_at = datetime.now(timezone.utc)
+        violation.resolved_at = datetime.now(UTC)
         session.flush()
         return violation

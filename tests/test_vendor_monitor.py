@@ -1,7 +1,8 @@
 """Tests for vendor risk monitoring."""
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone, timedelta
 
 from modules.vendor_monitor import Vendor, VendorRiskEngine, VendorRiskScore
 
@@ -21,7 +22,7 @@ def compliant_vendor():
         data_classification="internal",
         contract_start="2024-01-01",
         contract_end="2026-12-31",
-        last_assessment_date=datetime.now(timezone.utc).isoformat(),
+        last_assessment_date=datetime.now(UTC).isoformat(),
         certifications=["SOC 2", "ISO 27001"],
         security_rating=85.0,
     )

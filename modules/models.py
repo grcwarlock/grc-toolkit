@@ -11,15 +11,14 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Protocol
-
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Protocol
 
 # ── Enums ─────────────────────────────────────────────────────────────
 
-class ComplianceStatus(str, Enum):
+class ComplianceStatus(StrEnum):
     COMPLIANT = "compliant"
     NON_COMPLIANT = "non_compliant"
     PARTIALLY_COMPLIANT = "partially_compliant"
@@ -27,7 +26,7 @@ class ComplianceStatus(str, Enum):
     NOT_APPLICABLE = "not_applicable"
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -62,7 +61,7 @@ class NormalizedEvidence:
 
     # Auto-populated
     evidence_id: str = ""
-    collected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    collected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     sha256_hash: str = ""
 
     def __post_init__(self):
@@ -111,7 +110,7 @@ class AssessmentResult:
 
     # Auto-populated
     result_id: str = ""
-    assessed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    assessed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self):
         if not self.result_id:

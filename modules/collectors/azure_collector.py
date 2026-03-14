@@ -9,16 +9,16 @@ from __future__ import annotations
 
 import logging
 
-from modules.models import NormalizedEvidence, ResourceNormalizer
 from modules.collectors.base import create_evidence, safe_collect
+from modules.models import NormalizedEvidence, ResourceNormalizer
 
 logger = logging.getLogger(__name__)
 
 try:
     from azure.identity import DefaultAzureCredential
-    from azure.mgmt.network import NetworkManagementClient
     from azure.mgmt.compute import ComputeManagementClient
     from azure.mgmt.monitor import MonitorManagementClient
+    from azure.mgmt.network import NetworkManagementClient
     HAS_AZURE = True
 except ImportError:
     HAS_AZURE = False

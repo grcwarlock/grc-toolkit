@@ -6,11 +6,10 @@ Wire these into your pipeline after the assessment step
 to get real-time alerts when controls drift out of compliance.
 """
 
-import json
-import smtplib
 import logging
-from email.mime.text import MIMEText
+import smtplib
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import requests
 

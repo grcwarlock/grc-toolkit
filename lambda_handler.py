@@ -15,12 +15,12 @@ Deploy with:
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import boto3
 
-from modules.evidence_collector import AWSCollector, EvidenceStore, load_framework_checks
 from modules.control_assessor import ControlAssessor
+from modules.evidence_collector import AWSCollector, EvidenceStore, load_framework_checks
 from modules.report_generator import ReportGenerator
 
 logger = logging.getLogger()
@@ -104,7 +104,7 @@ def handler(event, context):
 
     # Upload everything to S3
     s3 = boto3.client("s3")
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
 
     # Assessment results JSON
     s3.put_object(
@@ -114,7 +114,7 @@ def handler(event, context):
             "metadata": {
                 "run_id": run_id,
                 "framework": framework,
-                "assessed_at": datetime.now(timezone.utc).isoformat(),
+                "assessed_at": datetime.now(UTC).isoformat(),
             },
             "summary": summary,
             "results": results_dicts,
