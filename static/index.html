@@ -427,6 +427,9 @@
       <div class="nav-item" data-page="evidence" onclick="navigate('evidence')">
         <span class="nav-icon">&#128269;</span> Evidence
       </div>
+      <div class="nav-item" data-page="exports" onclick="navigate('exports')">
+        <span class="nav-icon">&#128230;</span> Exports
+      </div>
       <div class="nav-item" data-page="policies" onclick="navigate('policies')">
         <span class="nav-icon">&#128220;</span> Policies
       </div>
@@ -494,7 +497,7 @@
     function renderPage() {
       const main = document.getElementById('main-content');
       main.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
-      const pages = { dashboard: renderDashboard, frameworks: renderFrameworks, assessments: renderAssessments, risk: renderRisk, vendors: renderVendors, evidence: renderEvidence, policies: renderPolicies };
+      const pages = { dashboard: renderDashboard, frameworks: renderFrameworks, assessments: renderAssessments, risk: renderRisk, vendors: renderVendors, evidence: renderEvidence, exports: renderExports, policies: renderPolicies };
       (pages[currentPage] || renderDashboard)();
     }
 
@@ -740,7 +743,14 @@
             <h2>Assessments</h2>
             <p>Compliance assessment runs and results</p>
           </div>
-          <div style="margin-bottom:16px">
+          <div style="margin-bottom:16px;display:flex;gap:12px;align-items:center">
+            <select id="assess-framework" style="padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">
+              <option value="nist_800_53">NIST 800-53</option>
+              <option value="soc2">SOC 2</option>
+              <option value="iso_27001">ISO 27001</option>
+              <option value="cmmc_l2">CMMC L2</option>
+              <option value="hipaa">HIPAA</option>
+            </select>
             <button class="btn btn-primary" onclick="triggerAssessment()">Run Assessment</button>
           </div>
           <div class="card">
@@ -770,9 +780,10 @@
 
     async function triggerAssessment() {
       try {
+        const fw = document.getElementById('assess-framework').value;
         const result = await api('/api/v1/assessments/run', {
           method: 'POST',
-          body: JSON.stringify({ framework: 'nist_800_53' }),
+          body: JSON.stringify({ framework: fw }),
         });
         toast('Assessment triggered: ' + result.id.slice(0, 8));
         setTimeout(() => renderAssessments(), 1000);
@@ -1146,6 +1157,133 @@
         `;
       } catch(e) {
         main.innerHTML = '<div class="empty-state"><div class="icon">&#128220;</div><p>Could not load policies</p></div>';
+      }
+    }
+
+    // ── Exports ────────────────────────────────────────
+    async function renderExports() {
+      const main = document.getElementById('main-content');
+      let runs = [], mappingFrameworks = [];
+      try {
+        [runs, mappingFrameworks] = await Promise.all([
+          api('/api/v1/assessments/runs').catch(() => []),
+          api('/api/v1/export/frameworks').catch(() => ({ frameworks: [] })),
+        ]);
+        if (mappingFrameworks.frameworks) mappingFrameworks = mappingFrameworks.frameworks;
+        else mappingFrameworks = [];
+      } catch(e) {}
+
+      const completedRuns = (runs || []).filter(r => r.status === 'completed');
+
+      main.innerHTML = `
+        <div class="page-header">
+          <h2>Audit Exports</h2>
+          <p>Export audit packages, POA&amp;M documents, evidence, and executive summaries</p>
+        </div>
+
+        ${completedRuns.length === 0 ? `
+          <div class="empty-state">
+            <div class="icon">&#128230;</div>
+            <p>No completed assessment runs yet. Run an assessment first from the Assessments tab.</p>
+          </div>
+        ` : `
+          <div class="card">
+            <div class="card-title">Export Settings</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Assessment Run</label>
+                <select id="export-run">
+                  ${completedRuns.map(r => `
+                    <option value="${esc(r.id)}">${esc(r.framework)} — ${esc(new Date(r.started_at).toLocaleDateString())} (${esc((r.pass_rate * 100).toFixed(0))}% pass)</option>
+                  `).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Target Framework</label>
+                <select id="export-framework">
+                  <option value="nist_800_53">NIST 800-53</option>
+                  <option value="soc2">SOC 2</option>
+                  <option value="iso_27001">ISO 27001</option>
+                  <option value="cmmc_l2">CMMC L2</option>
+                  <option value="hipaa">HIPAA</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('audit-package')">
+              <div class="stat-label">Audit Package</div>
+              <div class="stat-value" style="font-size:20px;color:var(--accent)">&#128230; ZIP</div>
+              <div class="stat-sub">Complete package with results, evidence, POA&M, and executive summary</div>
+            </div>
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('poam', 'json')">
+              <div class="stat-label">POA&M (JSON)</div>
+              <div class="stat-value" style="font-size:20px;color:var(--orange)">&#128203; JSON</div>
+              <div class="stat-sub">Plan of Action & Milestones — machine-readable</div>
+            </div>
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('poam', 'txt')">
+              <div class="stat-label">POA&M (Text)</div>
+              <div class="stat-value" style="font-size:20px;color:var(--orange)">&#128196; TXT</div>
+              <div class="stat-sub">Plan of Action & Milestones — human-readable</div>
+            </div>
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('evidence', 'json')">
+              <div class="stat-label">Evidence (JSON)</div>
+              <div class="stat-value" style="font-size:20px;color:var(--green)">&#128269; JSON</div>
+              <div class="stat-sub">All collected evidence artifacts</div>
+            </div>
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('evidence', 'csv')">
+              <div class="stat-label">Evidence (CSV)</div>
+              <div class="stat-value" style="font-size:20px;color:var(--green)">&#128202; CSV</div>
+              <div class="stat-sub">Evidence in spreadsheet format</div>
+            </div>
+            <div class="stat-card" style="cursor:pointer" onclick="downloadExport('executive-summary')">
+              <div class="stat-label">Executive Summary</div>
+              <div class="stat-value" style="font-size:20px;color:var(--purple)">&#128220; TXT</div>
+              <div class="stat-sub">High-level compliance posture summary</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Available Framework Mappings</div>
+            <div id="mapping-info">
+              <p style="color:var(--text-muted)">Select a framework above, then click an export card to download.</p>
+            </div>
+          </div>
+        `}
+      `;
+    }
+
+    async function downloadExport(type, format) {
+      const runId = document.getElementById('export-run')?.value;
+      const targetFw = document.getElementById('export-framework')?.value;
+      if (!runId) { toast('Select an assessment run first', true); return; }
+
+      const apiKey = sessionStorage.getItem('grc_api_key');
+      const headers = {};
+      if (apiKey) headers['X-API-Key'] = apiKey;
+
+      let url = API + '/api/v1/export/' + type + '?assessment_run_id=' + encodeURIComponent(runId);
+      if (targetFw) url += '&target_framework=' + encodeURIComponent(targetFw);
+      if (format) url += '&format=' + encodeURIComponent(format);
+
+      toast('Downloading ' + type + '...');
+      try {
+        const resp = await fetch(url, { headers });
+        if (!resp.ok) throw new Error('Export failed: ' + resp.status);
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const cd = resp.headers.get('content-disposition') || '';
+        const match = cd.match(/filename="?([^"]+)"?/);
+        a.download = match ? match[1] : type + '_export.' + (format || 'zip');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+        toast('Download complete');
+      } catch(e) {
+        toast('Export failed: ' + e.message, true);
       }
     }
 

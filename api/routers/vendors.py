@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -70,10 +72,14 @@ async def vendor_dashboard(db: Session = Depends(get_db), api_key: str = Depends
 
     risk_dist = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0}
     scores = []
+    expiring_90d = 0
+    cutoff = datetime.now(UTC).date() + timedelta(days=90)
     for v in vendors:
         level = v.risk_level or "Medium"
         if level in risk_dist:
             risk_dist[level] += 1
+        if v.contract_end and v.contract_end <= cutoff:
+            expiring_90d += 1
         scores.append({
             "vendor": v.name,
             "vendor_id": v.id,
@@ -88,7 +94,7 @@ async def vendor_dashboard(db: Session = Depends(get_db), api_key: str = Depends
         total_vendors=len(vendors),
         risk_distribution=risk_dist,
         vendors_needing_assessment=len(needing),
-        expiring_contracts_90d=0,
+        expiring_contracts_90d=expiring_90d,
         vendor_scores=scores,
     )
 

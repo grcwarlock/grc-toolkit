@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from urllib.parse import quote
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -35,7 +36,6 @@ async def evaluate_policy(request: PolicyEvalRequest, api_key: str = Depends(req
     opa_url = os.environ.get("GRC_OPA_URL", "http://localhost:8181")
 
     try:
-        import httpx
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(
                 f"{opa_url}/v1/data/{quote(request.policy_package, safe='')}",
@@ -56,12 +56,12 @@ async def evaluate_policy(request: PolicyEvalRequest, api_key: str = Depends(req
                     policy_package=request.policy_package,
                 )
     except Exception as e:
-        logger.warning("OPA evaluation unavailable: %s", e)
+        logger.warning("OPA evaluation unavailable: %s — returning non-compliant", e)
 
-    # OPA unavailable — return unknown
+    # OPA unavailable — fail-closed (assume non-compliant)
     return PolicyEvalResponse(
-        compliant=True,
-        violations=[],
+        compliant=False,
+        violations=[{"message": "OPA policy engine unavailable — evaluation skipped (fail-closed)"}],
         policy_package=request.policy_package,
     )
 

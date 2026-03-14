@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.routers import assessments, evidence, frameworks, policies, risk, vendors
+from api.routers import assessments, evidence, exports, frameworks, policies, risk, vendors
 from api.security import (
     AuditLogMiddleware,
     RateLimitMiddleware,
@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
-# CORS origins: configure via GRC_CORS_ORIGINS env var (comma-separated)
-# Defaults to localhost dev origins if not set.
-_default_origins = "http://localhost:3000,http://localhost:8080"
+# CORS origins: configure via GRC_CORS_ORIGINS env var (comma-separated).
+# Use "*" for development or Replit where the origin is dynamic.
+_default_origins = "*"
 CORS_ORIGINS = [
     o.strip()
     for o in os.environ.get("GRC_CORS_ORIGINS", _default_origins).split(",")
@@ -85,12 +85,14 @@ app.include_router(risk.router)
 app.include_router(frameworks.router)
 app.include_router(vendors.router)
 app.include_router(policies.router)
+app.include_router(exports.router)
 
 
 @app.get("/health")
 async def health():
     return {
         "status": "healthy",
+        "version": app.version,
         "timestamp": datetime.now(UTC).isoformat(),
     }
 

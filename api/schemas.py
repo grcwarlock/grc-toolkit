@@ -253,3 +253,30 @@ class PolicyViolationResponse(BaseModel):
     status: str
     detected_at: datetime
     violation_detail: str
+
+
+# ── Exports ──────────────────────────────────────────────────────────
+
+class ExportMetadata(BaseModel):
+    source_framework: str
+    target_framework: str
+    mapping_applied: bool
+    generated_at: datetime
+    assessment_run_id: str
+
+
+class MappedControlResponse(BaseModel):
+    source_framework: str
+    source_control_id: str
+    target_framework: str
+    target_control_id: str
+    confidence: str
+    notes: str = ""
+    via: list[str] = []
+
+
+class FrameworkMappingResponse(BaseModel):
+    source_framework: str
+    target_framework: str
+    mappings: list[MappedControlResponse]
+    available_frameworks: list[str]
