@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRC Toolkit</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --border: #475569;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --orange: #f97316;
+      --purple: #a855f7;
+      --radius: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-logo span {
+      color: var(--accent);
+    }
+
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 32px;
+      max-width: 1200px;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Stat Grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+    }
+
+    tr:hover td { background: rgba(59, 130, 246, 0.05); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-green  { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-red    { background: rgba(239,68,68,0.15); color: var(--red); }
+    .badge-yellow { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .badge-orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+    .badge-blue   { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { background: var(--border); }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .form-group textarea { resize: vertical; min-height: 60px; }
+
+    /* Bar chart */
+    .bar-chart { display: flex; gap: 8px; align-items: flex-end; height: 120px; margin-top: 8px; }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bar {
+      width: 100%;
+      max-width: 48px;
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+      transition: height 0.3s;
+    }
+
+    .bar-label { font-size: 10px; color: var(--text-muted); }
+    .bar-value { font-size: 11px; font-weight: 600; }
+
+    /* Two col */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Status dot */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .dot-green  { background: var(--green); }
+    .dot-red    { background: var(--red); }
+    .dot-yellow { background: var(--yellow); }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      z-index: 1000;
+      transition: opacity 0.3s;
+    }
+
+    .toast.error { border-color: var(--red); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* Health indicator */
+    .health-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+      .two-col { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <h1><span>GRC</span> Toolkit</h1>
+        <p>Governance, Risk & Compliance</p>
+      </div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">&#9633;</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="frameworks" onclick="navigate('frameworks')">
+        <span class="nav-icon">&#9881;</span> Frameworks
+      </div>
+      <div class="nav-item" data-page="assessments" onclick="navigate('assessments')">
+        <span class="nav-icon">&#10003;</span> Assessments
+      </div>
+      <div class="nav-item" data-page="risk" onclick="navigate('risk')">
+        <span class="nav-icon">&#9888;</span> Risk Analysis
+      </div>
+      <div class="nav-item" data-page="vendors" onclick="navigate('vendors')">
+        <span class="nav-icon">&#9862;</span> Vendors
+      </div>
+      <div class="nav-item" data-page="evidence" onclick="navigate('evidence')">
+        <span class="nav-icon">&#128269;</span> Evidence
+      </div>
+      <div class="nav-item" data-page="policies" onclick="navigate('policies')">
+        <span class="nav-icon">&#128220;</span> Policies
+      </div>
+      <div class="health-bar" id="health-bar">
+        <span class="status-dot dot-yellow"></span>
+        Checking API...
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main" id="main-content">
+    </main>
+  </div>
+
+  <script>
+    const API = '';  // Same origin
+
+    // ── State ────────────────────────────────────────
+    let currentPage = 'dashboard';
+
+    // ── Navigation ───────────────────────────────────
+    function navigate(page) {
+      currentPage = page;
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.page === page);
+      });
+      renderPage();
+    }
+
+    function renderPage() {
+      const main = document.getElementById('main-content');
+      main.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+      const pages = { dashboard: renderDashboard, frameworks: renderFrameworks, assessments: renderAssessments, risk: renderRisk, vendors: renderVendors, evidence: renderEvidence, policies: renderPolicies };
+      (pages[currentPage] || renderDashboard)();
+    }
+
+    // ── API helpers ──────────────────────────────────
+    async function api(path, opts = {}) {
+      const resp = await fetch(API + path, {
+        headers: { 'Content-Type': 'application/json', ...opts.headers },
+        ...opts,
+      });
+      if (!resp.ok) throw new Error(`API ${resp.status}: ${resp.statusText}`);
+      return resp.json();
+    }
+
+    function toast(msg, isError = false) {
+      const el = document.createElement('div');
+      el.className = 'toast' + (isError ? ' error' : '');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+    }
+
+    function fmt$(n) {
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+      return '$' + n.toFixed(0);
+    }
+
+    function riskBadge(level) {
+      const map = { Critical: 'badge-red', High: 'badge-orange', Medium: 'badge-yellow', Low: 'badge-green' };
+      return `<span class="badge ${map[level] || 'badge-blue'}">${level}</span>`;
+    }
+
+    // ── Dashboard ────────────────────────────────────
+    async function renderDashboard() {
+      const main = document.getElementById('main-content');
+
+      let frameworks = [], vendors = [], scenarios = [], health = {};
+      try {
+        [frameworks, vendors, scenarios, health] = await Promise.all([
+          api('/api/v1/frameworks/').catch(() => []),
+          api('/api/v1/vendors/').catch(() => []),
+          api('/api/v1/risk/scenarios').catch(() => []),
+          api('/health').catch(() => ({ status: 'unknown' })),
+        ]);
+      } catch(e) {}
+
+      const totalControls = frameworks.reduce((s, f) => s + f.control_count, 0);
+
+      main.innerHTML = `
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <p>GRC Toolkit overview — ${new Date().toLocaleDateString()}</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Frameworks</div>
+            <div class="stat-value">${frameworks.length}</div>
+            <div class="stat-sub">${totalControls} total controls</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Vendors Tracked</div>
+            <div class="stat-value">${vendors.length}</div>
+            <div class="stat-sub">${vendors.filter(v => v.risk_level === 'High' || v.risk_level === 'Critical').length} high/critical risk</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Risk Scenarios</div>
+            <div class="stat-value">${scenarios.length}</div>
+            <div class="stat-sub">Monte Carlo simulation ready</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">API Status</div>
+            <div class="stat-value" style="color: ${health.status === 'healthy' ? 'var(--green)' : 'var(--yellow)'}">
+              ${health.status === 'healthy' ? '&#10003;' : '&#9888;'} ${health.status || 'unknown'}
+            </div>
+            <div class="stat-sub">v${health.version || '?'}</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Frameworks</div>
+            <table>
+              <tr><th>Framework</th><th>Version</th><th>Controls</th></tr>
+              ${frameworks.map(f => `
+                <tr>
+                  <td>${f.display_name}</td>
+                  <td><span class="badge badge-blue">${f.version}</span></td>
+                  <td>${f.control_count}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="3" style="color:var(--text-muted)">No frameworks loaded</td></tr>'}
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-title">Vendor Risk Overview</div>
+            ${vendors.length > 0 ? `
+              <table>
+                <tr><th>Vendor</th><th>Risk</th><th>Criticality</th></tr>
+                ${vendors.slice(0, 8).map(v => `
+                  <tr>
+                    <td>${v.name}</td>
+                    <td>${riskBadge(v.risk_level || 'Medium')}</td>
+                    <td>${v.criticality}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            ` : '<div class="empty-state"><div class="icon">&#9862;</div><p>No vendors yet — add one in the Vendors tab</p></div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // ── Frameworks ───────────────────────────────────
+    async function renderFrameworks() {
+      const main = document.getElementById('main-content');
+      try {
+        const frameworks = await api('/api/v1/frameworks/');
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Frameworks</h2>
+            <p>Compliance frameworks and control families</p>
+          </div>
+          <div class="card">
+            <table>
+              <tr><th>ID</th><th>Name</th><th>Version</th><th>Controls</th><th>Status</th><th></th></tr>
+              ${frameworks.map(f => `
+                <tr>
+                  <td style="font-family:monospace">${f.id}</td>
+                  <td>${f.display_name}</td>
+                  <td>${f.version}</td>
+                  <td>${f.control_count}</td>
+                  <td><span class="badge badge-green">Active</span></td>
+                  <td><button class="btn" onclick="viewControls('${f.id}')">View Controls</button></td>
+                </tr>
+              `).join('') || '<tr><td colspan="6" class="empty-state">No frameworks loaded</td></tr>'}
+            </table>
+          </div>
+          <div id="controls-detail"></div>
+
+          <div class="card" style="margin-top:24px">
+            <div class="card-title">Framework Crosswalk</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Source Framework</label>
+                <select id="cw-source">
+                  ${frameworks.map(f => `<option value="${f.id}">${f.display_name}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Control ID</label>
+                <input id="cw-control" placeholder="e.g. AC-2" />
+              </div>
+              <div class="form-group">
+                <label>Target Framework</label>
+                <select id="cw-target">
+                  <option value="soc2">SOC 2</option>
+                  <option value="iso_27001">ISO 27001</option>
+                  <option value="cmmc_l2">CMMC L2</option>
+                  <option value="hipaa">HIPAA</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="runCrosswalk()">Map Control</button>
+            <div id="crosswalk-result" style="margin-top:16px"></div>
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#9881;</div><p>Could not load frameworks</p></div>';
+      }
+    }
+
+    async function viewControls(frameworkId) {
+      const el = document.getElementById('controls-detail');
+      el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      try {
+        const controls = await api(`/api/v1/frameworks/${frameworkId}/controls`);
+        el.innerHTML = `
+          <div class="card">
+            <div class="card-title">Controls — ${frameworkId}</div>
+            <table>
+              <tr><th>Family</th><th>Control ID</th><th>Title</th><th>Checks</th></tr>
+              ${controls.map(c => `
+                <tr>
+                  <td><span class="badge badge-purple">${c.family}</span></td>
+                  <td style="font-family:monospace">${c.control_id}</td>
+                  <td>${c.title}</td>
+                  <td>${c.check_count}</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        `;
+      } catch(e) {
+        el.innerHTML = '<p style="color:var(--red)">Failed to load controls</p>';
+      }
+    }
+
+    async function runCrosswalk() {
+      const el = document.getElementById('crosswalk-result');
+      try {
+        const result = await api('/api/v1/frameworks/crosswalk', {
+          method: 'POST',
+          body: JSON.stringify({
+            source_framework: document.getElementById('cw-source').value,
+            control_id: document.getElementById('cw-control').value,
+            target_framework: document.getElementById('cw-target').value,
+          }),
+        });
+        if (result.target_controls.length === 0) {
+          el.innerHTML = '<p style="color:var(--text-muted)">No mappings found for this control.</p>';
+        } else {
+          el.innerHTML = `
+            <table>
+              <tr><th>Target Control</th><th>Title</th><th>Relationship</th></tr>
+              ${result.target_controls.map(tc => `
+                <tr>
+                  <td style="font-family:monospace">${tc.control_id || tc.id || JSON.stringify(tc)}</td>
+                  <td>${tc.title || ''}</td>
+                  <td>${tc.relationship || 'equivalent'}</td>
+                </tr>
+              `).join('')}
+            </table>
+          `;
+        }
+      } catch(e) {
+        el.innerHTML = `<p style="color:var(--red)">${e.message}</p>`;
+      }
+    }
+
+    // ── Assessments ──────────────────────────────────
+    async function renderAssessments() {
+      const main = document.getElementById('main-content');
+      try {
+        const runs = await api('/api/v1/assessments/runs');
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Assessments</h2>
+            <p>Compliance assessment runs and results</p>
+          </div>
+          <div style="margin-bottom:16px">
+            <button class="btn btn-primary" onclick="triggerAssessment()">Run Assessment</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Assessment Runs</div>
+            ${runs.length > 0 ? `
+              <table>
+                <tr><th>ID</th><th>Framework</th><th>Status</th><th>Pass Rate</th><th>Passed</th><th>Failed</th><th>Date</th></tr>
+                ${runs.map(r => `
+                  <tr>
+                    <td style="font-family:monospace;font-size:12px">${r.id.slice(0,8)}...</td>
+                    <td>${r.framework}</td>
+                    <td><span class="badge ${r.status === 'completed' ? 'badge-green' : 'badge-yellow'}">${r.status}</span></td>
+                    <td>${r.pass_rate != null ? (r.pass_rate * 100).toFixed(1) + '%' : '—'}</td>
+                    <td style="color:var(--green)">${r.passed}</td>
+                    <td style="color:var(--red)">${r.failed}</td>
+                    <td>${new Date(r.started_at).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            ` : '<div class="empty-state"><div class="icon">&#10003;</div><p>No assessment runs yet. Click "Run Assessment" to start one.</p></div>'}
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#10003;</div><p>Could not load assessments</p></div>';
+      }
+    }
+
+    async function triggerAssessment() {
+      try {
+        const result = await api('/api/v1/assessments/run', {
+          method: 'POST',
+          body: JSON.stringify({ framework: 'nist_800_53' }),
+        });
+        toast('Assessment triggered: ' + result.id.slice(0, 8));
+        setTimeout(() => renderAssessments(), 1000);
+      } catch(e) {
+        toast('Failed to trigger assessment', true);
+      }
+    }
+
+    // ── Risk Analysis ────────────────────────────────
+    async function renderRisk() {
+      const main = document.getElementById('main-content');
+      try {
+        const scenarios = await api('/api/v1/risk/scenarios');
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Risk Analysis</h2>
+            <p>Monte Carlo threat simulation (PERT distribution)</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Quick Simulation</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Scenario Name</label>
+                <input id="risk-name" value="Data Breach" />
+              </div>
+              <div class="form-group">
+                <label>Frequency (min / mode / max per year)</label>
+                <div style="display:flex;gap:8px">
+                  <input id="risk-fmin" type="number" step="0.1" value="0.5" style="width:80px" />
+                  <input id="risk-fmode" type="number" step="0.1" value="1.0" style="width:80px" />
+                  <input id="risk-fmax" type="number" step="0.1" value="3.0" style="width:80px" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Impact (min / mode / max in $)</label>
+                <div style="display:flex;gap:8px">
+                  <input id="risk-imin" type="number" value="50000" style="width:110px" />
+                  <input id="risk-imode" type="number" value="250000" style="width:110px" />
+                  <input id="risk-imax" type="number" value="2000000" style="width:110px" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Control Effectiveness (0-1)</label>
+                <input id="risk-ctrl" type="number" step="0.05" min="0" max="1" value="0.3" />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="runSimulation()">Run Simulation</button>
+            <div id="sim-result" style="margin-top:16px"></div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-title">Built-in Threat Scenarios</div>
+            ${scenarios.length > 0 ? `
+              <table>
+                <tr><th>Name</th><th>Category</th><th>Frequency Range</th><th>Impact Range</th><th></th></tr>
+                ${scenarios.map(s => `
+                  <tr>
+                    <td>${s.name}</td>
+                    <td><span class="badge badge-purple">${s.category}</span></td>
+                    <td>${s.frequency.min} — ${s.frequency.max}/yr</td>
+                    <td>${fmt$(s.impact.min)} — ${fmt$(s.impact.max)}</td>
+                    <td><button class="btn" onclick='loadScenario(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Load</button></td>
+                  </tr>
+                `).join('')}
+              </table>
+            ` : '<p style="color:var(--text-muted)">No built-in scenarios</p>'}
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><p>Could not load risk data</p></div>';
+      }
+    }
+
+    function loadScenario(s) {
+      document.getElementById('risk-name').value = s.name;
+      document.getElementById('risk-fmin').value = s.frequency.min;
+      document.getElementById('risk-fmode').value = s.frequency.mode;
+      document.getElementById('risk-fmax').value = s.frequency.max;
+      document.getElementById('risk-imin').value = s.impact.min;
+      document.getElementById('risk-imode').value = s.impact.mode;
+      document.getElementById('risk-imax').value = s.impact.max;
+      toast('Scenario loaded: ' + s.name);
+    }
+
+    async function runSimulation() {
+      const el = document.getElementById('sim-result');
+      el.innerHTML = '<div class="loading"><div class="spinner"></div>Running 10,000 iterations...</div>';
+      try {
+        const result = await api('/api/v1/risk/simulate?iterations=10000', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: document.getElementById('risk-name').value,
+            frequency_min: +document.getElementById('risk-fmin').value,
+            frequency_mode: +document.getElementById('risk-fmode').value,
+            frequency_max: +document.getElementById('risk-fmax').value,
+            impact_min: +document.getElementById('risk-imin').value,
+            impact_mode: +document.getElementById('risk-imode').value,
+            impact_max: +document.getElementById('risk-imax').value,
+            control_effectiveness: +document.getElementById('risk-ctrl').value,
+          }),
+        });
+        el.innerHTML = `
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Mean ALE</div>
+              <div class="stat-value">${fmt$(result.mean_ale)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Median ALE</div>
+              <div class="stat-value">${fmt$(result.median_ale)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">VaR 95%</div>
+              <div class="stat-value" style="color:var(--orange)">${fmt$(result.var_95)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">VaR 99%</div>
+              <div class="stat-value" style="color:var(--red)">${fmt$(result.var_99)}</div>
+            </div>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.mean_ale)}</div>
+              <div class="bar" style="height:${(result.mean_ale/result.max_observed*100)}%;background:var(--accent)"></div>
+              <div class="bar-label">Mean</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.median_ale)}</div>
+              <div class="bar" style="height:${(result.median_ale/result.max_observed*100)}%;background:var(--green)"></div>
+              <div class="bar-label">Median</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.var_90)}</div>
+              <div class="bar" style="height:${(result.var_90/result.max_observed*100)}%;background:var(--yellow)"></div>
+              <div class="bar-label">VaR 90</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.var_95)}</div>
+              <div class="bar" style="height:${(result.var_95/result.max_observed*100)}%;background:var(--orange)"></div>
+              <div class="bar-label">VaR 95</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.var_99)}</div>
+              <div class="bar" style="height:${(result.var_99/result.max_observed*100)}%;background:var(--red)"></div>
+              <div class="bar-label">VaR 99</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar-value">${fmt$(result.max_observed)}</div>
+              <div class="bar" style="height:100%;background:var(--purple)"></div>
+              <div class="bar-label">Max</div>
+            </div>
+          </div>
+        `;
+      } catch(e) {
+        el.innerHTML = `<p style="color:var(--red)">Simulation failed: ${e.message}</p>`;
+      }
+    }
+
+    // ── Vendors ──────────────────────────────────────
+    async function renderVendors() {
+      const main = document.getElementById('main-content');
+      try {
+        const vendors = await api('/api/v1/vendors/');
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Vendor Risk Management</h2>
+            <p>Track and assess third-party vendor risk</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Add Vendor</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Vendor Name</label>
+                <input id="v-name" placeholder="Acme Corp" />
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="v-category">
+                  <option>SaaS</option><option>IaaS</option><option>PaaS</option>
+                  <option>Consulting</option><option>Hardware</option><option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Criticality</label>
+                <select id="v-criticality">
+                  <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data Classification</label>
+                <select id="v-data">
+                  <option>Restricted</option><option>Confidential</option><option>Internal</option><option>Public</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Contract Start</label>
+                <input id="v-start" type="date" value="${new Date().toISOString().split('T')[0]}" />
+              </div>
+              <div class="form-group">
+                <label>Contract End</label>
+                <input id="v-end" type="date" value="${new Date(Date.now()+365*86400000).toISOString().split('T')[0]}" />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="addVendor()">Add Vendor</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Vendors (${vendors.length})</div>
+            ${vendors.length > 0 ? `
+              <table>
+                <tr><th>Name</th><th>Category</th><th>Criticality</th><th>Data Class</th><th>Risk</th><th>Contract End</th></tr>
+                ${vendors.map(v => `
+                  <tr>
+                    <td>${v.name}</td>
+                    <td>${v.category}</td>
+                    <td>${riskBadge(v.criticality)}</td>
+                    <td>${v.data_classification}</td>
+                    <td>${riskBadge(v.risk_level || 'Unscored')}</td>
+                    <td>${v.contract_end}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            ` : '<div class="empty-state"><div class="icon">&#9862;</div><p>No vendors yet</p></div>'}
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#9862;</div><p>Could not load vendors</p></div>';
+      }
+    }
+
+    async function addVendor() {
+      try {
+        await api('/api/v1/vendors/', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: document.getElementById('v-name').value,
+            category: document.getElementById('v-category').value,
+            criticality: document.getElementById('v-criticality').value,
+            data_classification: document.getElementById('v-data').value,
+            contract_start: document.getElementById('v-start').value,
+            contract_end: document.getElementById('v-end').value,
+          }),
+        });
+        toast('Vendor added');
+        renderVendors();
+      } catch(e) {
+        toast('Failed to add vendor: ' + e.message, true);
+      }
+    }
+
+    // ── Evidence ─────────────────────────────────────
+    async function renderEvidence() {
+      const main = document.getElementById('main-content');
+      try {
+        const data = await api('/api/v1/evidence/');
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Evidence Collection</h2>
+            <p>Cloud evidence with SHA-256 integrity verification</p>
+          </div>
+          <div style="margin-bottom:16px">
+            <button class="btn btn-primary" onclick="triggerCollection()">Collect Evidence</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Evidence Records (${data.total})</div>
+            ${data.items.length > 0 ? `
+              <table>
+                <tr><th>Control</th><th>Check</th><th>Provider</th><th>Service</th><th>Status</th><th>Collected</th></tr>
+                ${data.items.map(e => `
+                  <tr>
+                    <td style="font-family:monospace">${e.control_id}</td>
+                    <td>${e.check_id}</td>
+                    <td><span class="badge badge-blue">${e.provider}</span></td>
+                    <td>${e.service}</td>
+                    <td><span class="badge ${e.status === 'pass' ? 'badge-green' : 'badge-red'}">${e.status}</span></td>
+                    <td>${new Date(e.collected_at).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </table>
+            ` : '<div class="empty-state"><div class="icon">&#128269;</div><p>No evidence collected yet. Click "Collect Evidence" to start.</p></div>'}
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#128269;</div><p>Could not load evidence</p></div>';
+      }
+    }
+
+    async function triggerCollection() {
+      try {
+        const result = await api('/api/v1/evidence/collect', {
+          method: 'POST',
+          body: JSON.stringify({ framework: 'nist_800_53', providers: ['aws'] }),
+        });
+        toast('Collection started: ' + result.run_id.slice(0, 8));
+      } catch(e) {
+        toast('Collection failed: ' + e.message, true);
+      }
+    }
+
+    // ── Policies ─────────────────────────────────────
+    async function renderPolicies() {
+      const main = document.getElementById('main-content');
+      try {
+        const [bundles, violations] = await Promise.all([
+          api('/api/v1/policies/bundles').catch(() => []),
+          api('/api/v1/policies/violations').catch(() => []),
+        ]);
+
+        main.innerHTML = `
+          <div class="page-header">
+            <h2>Policy-as-Code</h2>
+            <p>OPA/Rego policy bundles and violation tracking</p>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Policy Bundles</div>
+              <div class="stat-value">${bundles.length}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Policies</div>
+              <div class="stat-value">${bundles.reduce((s, b) => s + b.policy_count, 0)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Open Violations</div>
+              <div class="stat-value" style="color:${violations.length > 0 ? 'var(--red)' : 'var(--green)'}">
+                ${violations.filter(v => v.status === 'open').length}
+              </div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">Policy Bundles</div>
+              ${bundles.length > 0 ? `
+                <table>
+                  <tr><th>Bundle</th><th>Policies</th><th>Tests</th></tr>
+                  ${bundles.map(b => `
+                    <tr>
+                      <td style="font-family:monospace">${b.name}</td>
+                      <td>${b.policy_count}</td>
+                      <td>${b.test_count}</td>
+                    </tr>
+                  `).join('')}
+                </table>
+              ` : '<p style="color:var(--text-muted)">No policy bundles found</p>'}
+            </div>
+            <div class="card">
+              <div class="card-title">Violations</div>
+              ${violations.length > 0 ? `
+                <table>
+                  <tr><th>Policy</th><th>Resource</th><th>Severity</th><th>Status</th></tr>
+                  ${violations.map(v => `
+                    <tr>
+                      <td>${v.policy_name}</td>
+                      <td style="font-family:monospace;font-size:12px">${v.resource_id}</td>
+                      <td>${riskBadge(v.severity)}</td>
+                      <td><span class="badge ${v.status === 'open' ? 'badge-red' : 'badge-green'}">${v.status}</span></td>
+                    </tr>
+                  `).join('')}
+                </table>
+              ` : '<div class="empty-state"><p>No violations recorded</p></div>'}
+            </div>
+          </div>
+        `;
+      } catch(e) {
+        main.innerHTML = '<div class="empty-state"><div class="icon">&#128220;</div><p>Could not load policies</p></div>';
+      }
+    }
+
+    // ── Health Check ─────────────────────────────────
+    async function checkHealth() {
+      const bar = document.getElementById('health-bar');
+      try {
+        const h = await api('/health');
+        bar.innerHTML = `<span class="status-dot dot-green"></span> API v${h.version} healthy`;
+      } catch {
+        bar.innerHTML = `<span class="status-dot dot-red"></span> API offline`;
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────
+    checkHealth();
+    renderPage();
+    setInterval(checkHealth, 30000);
+  </script>
+</body>
+</html>
