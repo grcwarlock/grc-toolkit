@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "assessment_run_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "framework": "cmmc_l2",
+    "generated_at": "2026-03-14T19:19:07.518043+00:00"
+  },
+  "total_findings": 5,
+  "items": [
+    {
+      "poam_id": "POAM-0001",
+      "control_id": "AC.L2-3.1.1",
+      "original_control_id": "AC-2",
+      "check_id": "iam_user_mfa",
+      "status": "Open",
+      "severity": "high",
+      "provider": "aws",
+      "region": "us-east-1",
+      "findings": [
+        "3 IAM users without MFA: svc-deploy, svc-monitoring, dev-intern",
+        "MFA adoption rate: 87% (26/30 users)"
+      ],
+      "remediation": "Enable MFA for all IAM users. Use hardware tokens for privileged accounts per AC-2(1)."
+    },
+    {
+      "poam_id": "POAM-0002",
+      "control_id": "AC.L2-3.1.1",
+      "original_control_id": "AC-2",
+      "check_id": "iam_inactive_users",
+      "status": "Open",
+      "severity": "medium",
+      "provider": "aws",
+      "region": "us-east-1",
+      "findings": [
+        "2 users inactive > 90 days: former-contractor (142d), test-user (203d)"
+      ],
+      "remediation": "Disable or remove inactive IAM users. Implement automated deprovisioning workflow."
+    },
+    {
+      "poam_id": "POAM-0003",
+      "control_id": "AC.L2-3.1.5",
+      "original_control_id": "AC-6",
+      "check_id": "iam_admin_policy",
+      "status": "Open",
+      "severity": "high",
+      "provider": "aws",
+      "region": "us-east-1",
+      "findings": [
+        "1 IAM user with AdministratorAccess: legacy-admin (direct policy attachment)",
+        "Wildcard admin policy found on user legacy-admin"
+      ],
+      "remediation": "Replace AdministratorAccess with scoped policies. Use roles with session duration limits."
+    },
+    {
+      "poam_id": "POAM-0004",
+      "control_id": "SC.L2-3.13.1",
+      "original_control_id": "SC-7",
+      "check_id": "sg_unrestricted_ssh",
+      "status": "Open",
+      "severity": "high",
+      "provider": "aws",
+      "region": "us-east-1",
+      "findings": [
+        "Security group sg-0abc123def allows SSH (port 22) from 0.0.0.0/0",
+        "Attached to 2 EC2 instances in prod VPC"
+      ],
+      "remediation": "Restrict SSH access to known bastion/VPN CIDR ranges. Use SSM Session Manager instead."
+    },
+    {
+      "poam_id": "POAM-0005",
+      "control_id": "CM.L2-3.4.2",
+      "original_control_id": "CM-6",
+      "check_id": "s3_public_access",
+      "status": "Open",
+      "severity": "high",
+      "provider": "aws",
+      "region": "us-east-1",
+      "findings": [
+        "Bucket 'marketing-assets-prod' has public access block disabled",
+        "Bucket contains 1,247 objects; review for sensitive data exposure"
+      ],
+      "remediation": "Enable S3 Block Public Access at account level. Review bucket for sensitive data."
+    }
+  ]
+}

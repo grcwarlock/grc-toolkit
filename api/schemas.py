@@ -86,6 +86,8 @@ class AssessmentResultResponse(BaseModel):
     region: str
     findings: list[str]
     remediation: str | None = None
+    remediation_steps: list[str] = []
+    console_path: str | None = None
     assessed_at: datetime
 
 

@@ -10,11 +10,53 @@ your environment actually meets the control requirement.
 
 import logging
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from modules.models import AssessmentResult
 
 logger = logging.getLogger(__name__)
+
+
+def load_remediation_from_yaml(
+    yaml_path: str = "config/frameworks.yaml",
+) -> dict[str, dict]:
+    """Load remediation guidance from framework YAML definitions.
+
+    Returns a dict keyed by check_id (assertion name) with remediation data
+    including summary, steps (per provider), and console_path (per provider).
+    """
+    try:
+        import yaml
+    except ImportError:
+        logger.warning("PyYAML not installed; remediation data unavailable")
+        return {}
+
+    path = Path(yaml_path)
+    if not path.exists():
+        logger.warning("Framework YAML not found: %s", yaml_path)
+        return {}
+
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    remediation_map: dict[str, dict] = {}
+    for _fw_key, fw_def in data.items():
+        if not isinstance(fw_def, dict):
+            continue
+        for _fam_key, family in fw_def.get("control_families", {}).items():
+            for _ctrl_key, control in family.get("controls", {}).items():
+                for check in control.get("checks", []):
+                    rem = check.get("remediation")
+                    if not rem:
+                        continue
+                    # Index by each assertion name in this check's cloud_checks
+                    for _provider, provider_checks in check.get("cloud_checks", {}).items():
+                        for cc in provider_checks:
+                            assertion = cc.get("assertion", "")
+                            if assertion and assertion not in remediation_map:
+                                remediation_map[assertion] = rem
+    return remediation_map
 
 
 class AssertionEngine:
@@ -320,8 +362,15 @@ class ControlAssessor:
     into a structured assessment report.
     """
 
-    def __init__(self):
+    def __init__(self, remediation_data: dict | None = None, load_from_yaml: bool = True):
         self.engine = AssertionEngine()
+        # remediation_data maps assertion_name -> {summary, steps, console_path}
+        if remediation_data is not None:
+            self._remediation = remediation_data
+        elif load_from_yaml:
+            self._remediation = load_remediation_from_yaml()
+        else:
+            self._remediation = {}
 
     def assess(self, artifacts: list, checks: list[dict]) -> list[AssessmentResult]:
         """
@@ -370,9 +419,34 @@ class ControlAssessor:
                     f"Source: {artifact.provider}:{artifact.service}:{artifact.method} "
                     f"in {artifact.region}, collected {artifact.collected_at}"
                 )
+                # Populate remediation from framework config on failures
+                if result.status == "fail":
+                    self._apply_remediation(result, check)
                 results.append(result)
 
         return results
+
+    def _apply_remediation(self, result: AssessmentResult, check: dict) -> None:
+        """Populate remediation fields from framework config data."""
+        assertion = check.get("assertion", "")
+        provider = result.provider
+        rem = self._remediation.get(assertion) or check.get("remediation") or {}
+        if not rem:
+            return
+        if isinstance(rem, str):
+            result.remediation = rem
+            return
+        result.remediation = rem.get("summary", result.remediation or "See framework guidance")
+        steps = rem.get("steps", {})
+        if isinstance(steps, dict):
+            result.remediation_steps = steps.get(provider, [])
+        elif isinstance(steps, list):
+            result.remediation_steps = steps
+        console = rem.get("console_path", {})
+        if isinstance(console, dict):
+            result.console_path = console.get(provider, "")
+        elif isinstance(console, str):
+            result.console_path = console
 
     def summarize(self, results: list[AssessmentResult]) -> dict[str, object]:
         """Produce a summary of assessment results by status and control family."""

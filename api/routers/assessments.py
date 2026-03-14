@@ -79,7 +79,10 @@ async def get_results(run_id: str, db: Session = Depends(get_db), api_key: str =
             id=r.id, control_id=r.control_id, check_id=r.check_id,
             assertion=r.assertion, status=r.status, severity=r.severity,
             provider=r.provider, region=r.region, findings=r.findings,
-            remediation=r.remediation, assessed_at=r.assessed_at,
+            remediation=r.remediation,
+            remediation_steps=r.remediation_steps or [],
+            console_path=r.console_path,
+            assessed_at=r.assessed_at,
         )
         for r in results
     ]

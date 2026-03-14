@@ -1,0 +1,64 @@
+
+COMPLIANCE ASSESSMENT EXECUTIVE SUMMARY
+========================================
+Organization: Acme Cloud Corp
+Framework:    nist_800_53
+Date:         2026-03-14 19:19 UTC
+
+OVERALL COMPLIANCE POSTURE
+--------------------------
+Controls Assessed:  15
+Passing:            10 (66.7%)
+Failing:            5
+Errors:             0
+Not Assessed:       0
+
+COMPLIANCE BY CONTROL FAMILY
+-----------------------------
+
+AC:  1 passed | 3 failed | 0 errors
+
+AU:  3 passed | 0 failed | 0 errors
+
+SC:  1 passed | 1 failed | 0 errors
+
+IA:  2 passed | 0 failed | 0 errors
+
+CM:  1 passed | 1 failed | 0 errors
+
+SI:  2 passed | 0 failed | 0 errors
+
+
+TOP FINDINGS REQUIRING ATTENTION
+---------------------------------
+
+1. [Critical] AC-6 - No IAM users have AdministratorAccess
+   1 IAM user with AdministratorAccess: legacy-admin (direct policy attachment)
+
+2. [Critical] SC-7 - No security groups allow unrestricted SSH
+   Security group sg-0abc123def allows SSH (port 22) from 0.0.0.0/0
+
+3. [High] AC-2 - All IAM users have MFA enabled
+   3 IAM users without MFA: svc-deploy, svc-monitoring, dev-intern
+
+4. [High] AC-2 - No IAM users inactive > 90 days
+   2 users inactive > 90 days: former-contractor (142d), test-user (203d)
+
+5. [Medium] CM-6 - S3 public access block enabled on all buckets
+   Bucket 'marketing-assets-prod' has public access block disabled
+
+
+TREND (if prior assessments available)
+------
+
+No prior assessment data available for trend comparison.
+
+
+RECOMMENDATIONS
+---------------
+
+1. Control family AC has more failures than passes. Prioritize remediation in this area.
+
+2. Multiple MFA-related findings detected. Enforce MFA across all user accounts as an immediate remediation action.
+
+3. Unrestricted network access detected. Review all security groups and NACLs, restricting ingress to known IP ranges.

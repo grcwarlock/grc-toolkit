@@ -155,6 +155,8 @@ class AssessmentResultRecord(Base):
     evidence_ids: Mapped[list] = mapped_column(JSON, default=list)
     evidence_summary: Mapped[str] = mapped_column(Text, default="")
     remediation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    remediation_steps: Mapped[list] = mapped_column(JSON, default=list)
+    console_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
     assessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     assessor: Mapped[str] = mapped_column(String(20), default="python")
     policy_id: Mapped[str | None] = mapped_column(String(100), nullable=True)

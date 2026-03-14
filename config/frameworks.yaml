@@ -17,6 +17,27 @@ nist_800_53:
             - id: "AC-2.a"
               description: "Identify and select account types"
               evidence_type: "iam_policy"
+              remediation:
+                summary: "Ensure all IAM users have MFA enabled and root access keys are removed."
+                steps:
+                  aws:
+                    - "Run: aws iam generate-credential-report && aws iam get-credential-report --output text --query Content | base64 -d to audit all users"
+                    - "For each user without MFA: aws iam create-virtual-mfa-device --virtual-mfa-device-name <user>-mfa --outfile qr.png"
+                    - "Enable MFA: aws iam enable-mfa-device --user-name <user> --serial-number <arn> --authentication-code1 <code1> --authentication-code2 <code2>"
+                    - "For privileged accounts, use hardware tokens registered via IAM console under Security Credentials"
+                    - "Add IAM policy condition aws:MultiFactorAuthPresent to enforce MFA for sensitive operations"
+                    - "Create AWS Config rule iam-user-mfa-enabled for continuous monitoring"
+                  azure:
+                    - "Navigate to Entra ID > Security > MFA > Getting started to configure MFA policies"
+                    - "Create a Conditional Access policy requiring MFA for all users"
+                    - "Use az ad user list --query '[?!strongAuthenticationDetail]' to find users without MFA"
+                  gcp:
+                    - "Enable 2-Step Verification enforcement in Google Workspace Admin > Security > 2-Step Verification"
+                    - "Use gcloud identity groups memberships list to audit group-based access"
+                console_path:
+                  aws: "IAM → Users → Select user → Security credentials → Assign MFA device"
+                  azure: "Entra ID → Security → MFA → Getting started"
+                  gcp: "Admin Console → Security → 2-Step Verification"
               cloud_checks:
                 aws:
                   - service: "iam"
@@ -37,6 +58,18 @@ nist_800_53:
             - id: "AC-2.d"
               description: "Specify authorized users and access authorizations"
               evidence_type: "iam_roles"
+              remediation:
+                summary: "Replace overly permissive IAM policies with scoped, least-privilege policies."
+                steps:
+                  aws:
+                    - "Identify attached policies: aws iam list-attached-user-policies --user-name <user>"
+                    - "Detach AdministratorAccess: aws iam detach-user-policy --user-name <user> --policy-arn arn:aws:iam::aws:policy/AdministratorAccess"
+                    - "Generate least-privilege policy via IAM Access Analyzer: aws accessanalyzer start-policy-generation"
+                    - "Create scoped policy and attach: aws iam put-user-policy or aws iam attach-user-policy"
+                    - "Migrate users to IAM roles with session duration limits: aws iam create-role --max-session-duration 3600"
+                    - "Audit activity via CloudTrail to verify correct permissions during transition"
+                console_path:
+                  aws: "IAM → Users → Permissions → Remove AdministratorAccess → Attach scoped policy"
               cloud_checks:
                 aws:
                   - service: "iam"
@@ -53,6 +86,18 @@ nist_800_53:
             - id: "AC-6.1"
               description: "Authorize access for security functions"
               evidence_type: "iam_policy"
+              remediation:
+                summary: "Remove wildcard admin policies and disable unused credentials."
+                steps:
+                  aws:
+                    - "List custom policies: aws iam list-policies --scope Local --query 'Policies[?contains(PolicyName,`Admin`) || contains(PolicyName,`FullAccess`)]'"
+                    - "Get policy document: aws iam get-policy-version --policy-arn <arn> --version-id <v> to inspect for Action:* or Resource:*"
+                    - "Replace with scoped policies using IAM Access Analyzer policy generation"
+                    - "Disable unused credentials: aws iam update-access-key --access-key-id <key> --status Inactive --user-name <user>"
+                    - "Delete unused login profiles: aws iam delete-login-profile --user-name <user>"
+                    - "Set up AWS Config rule iam-user-unused-credentials-check with maxCredentialUsageAge=90"
+                console_path:
+                  aws: "IAM → Policies → Filter by 'Customer managed' → Review policy JSON for wildcard permissions"
               cloud_checks:
                 aws:
                   - service: "iam"
@@ -72,6 +117,20 @@ nist_800_53:
             - id: "AU-2.a"
               description: "Identify event types for logging"
               evidence_type: "logging_config"
+              remediation:
+                summary: "Enable multi-region CloudTrail with log file validation and delivery to a secured S3 bucket."
+                steps:
+                  aws:
+                    - "Create multi-region trail: aws cloudtrail create-trail --name org-trail --s3-bucket-name <bucket> --is-multi-region-trail --enable-log-file-validation"
+                    - "Start logging: aws cloudtrail start-logging --name org-trail"
+                    - "Verify: aws cloudtrail get-trail-status --name org-trail (check IsLogging=true)"
+                    - "Enable data events for S3 and Lambda: aws cloudtrail put-event-selectors --trail-name org-trail --event-selectors '[{\"DataResources\":[{\"Type\":\"AWS::S3::Object\",\"Values\":[\"arn:aws:s3\"]}]}]'"
+                    - "Configure log delivery to CloudWatch: aws cloudtrail update-trail --name org-trail --cloud-watch-logs-log-group-arn <arn> --cloud-watch-logs-role-arn <role-arn>"
+                  azure:
+                    - "Enable diagnostic settings: az monitor diagnostic-settings create --name audit-logs --resource <id> --logs '[{\"category\":\"AuditEvent\",\"enabled\":true}]'"
+                console_path:
+                  aws: "CloudTrail → Trails → Create trail → Enable multi-region → Enable log file validation"
+                  azure: "Monitor → Diagnostic settings → Add diagnostic setting"
               cloud_checks:
                 aws:
                   - service: "cloudtrail"
@@ -92,6 +151,17 @@ nist_800_53:
             - id: "AU-6.a"
               description: "Review audit records for inappropriate activity"
               evidence_type: "log_review"
+              remediation:
+                summary: "Enable GuardDuty for threat detection and Security Hub for centralized findings aggregation."
+                steps:
+                  aws:
+                    - "Enable GuardDuty: aws guardduty create-detector --enable --finding-publishing-frequency FIFTEEN_MINUTES"
+                    - "Enable S3 protection: aws guardduty update-detector --detector-id <id> --data-sources S3Logs={Enable=true}"
+                    - "Enable Security Hub: aws securityhub enable-security-hub --enable-default-standards"
+                    - "Subscribe to findings via SNS: aws securityhub create-action-target --name notify --description 'Send to SNS'"
+                    - "Set up EventBridge rule for high-severity findings: aws events put-rule --name critical-findings --event-pattern '{\"source\":[\"aws.securityhub\"]}'"
+                console_path:
+                  aws: "GuardDuty → Get started → Enable GuardDuty; Security Hub → Go to Security Hub → Enable"
               cloud_checks:
                 aws:
                   - service: "guardduty"
@@ -111,6 +181,22 @@ nist_800_53:
             - id: "SC-7.a"
               description: "Monitor communications at external interfaces"
               evidence_type: "network_config"
+              remediation:
+                summary: "Restrict security group ingress to known CIDR ranges and ensure NACLs have default deny."
+                steps:
+                  aws:
+                    - "Find open rules: aws ec2 describe-security-groups --filters Name=ip-permission.cidr,Values=0.0.0.0/0 --query 'SecurityGroups[*].[GroupId,GroupName]'"
+                    - "Revoke open SSH: aws ec2 revoke-security-group-ingress --group-id <sg-id> --protocol tcp --port 22 --cidr 0.0.0.0/0"
+                    - "Revoke open RDP: aws ec2 revoke-security-group-ingress --group-id <sg-id> --protocol tcp --port 3389 --cidr 0.0.0.0/0"
+                    - "Add restricted rule: aws ec2 authorize-security-group-ingress --group-id <sg-id> --protocol tcp --port 22 --cidr <vpn-cidr>/32"
+                    - "Use SSM Session Manager instead of SSH: install SSM Agent and attach AmazonSSMManagedInstanceCore role"
+                    - "Create AWS Config rule restricted-ssh and restricted-common-ports for continuous monitoring"
+                  azure:
+                    - "List open NSG rules: az network nsg rule list --nsg-name <nsg> --query '[?sourceAddressPrefix==`*` || sourceAddressPrefix==`Internet`]'"
+                    - "Update rule: az network nsg rule update --nsg-name <nsg> --name <rule> --source-address-prefixes <cidr>"
+                console_path:
+                  aws: "VPC → Security Groups → Select group → Inbound rules → Edit → Remove 0.0.0.0/0 rules"
+                  azure: "Network Security Groups → Select NSG → Inbound security rules → Edit"
               cloud_checks:
                 aws:
                   - service: "ec2"

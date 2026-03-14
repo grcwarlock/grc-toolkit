@@ -56,6 +56,12 @@ Findings:
 {% endfor %}
 
 Remediation:    {{ finding.remediation }}
+{% if finding.remediation_steps %}
+Remediation Steps:
+{% for step in finding.remediation_steps %}  {{ loop.index }}. {{ step }}
+{% endfor %}{% endif %}
+{% if finding.console_path %}Console Path:   {{ finding.console_path }}
+{% endif %}
 Milestone Date: {{ finding.milestone_date }}
 Responsible:    {{ finding.responsible_party }}
 -------------------------------------------------------------------------------
@@ -156,6 +162,8 @@ class ReportGenerator:
                 "description": result.get("evidence_summary", ""),
                 "details": result.get("findings", []),
                 "remediation": result.get("remediation", "See framework guidance"),
+                "remediation_steps": result.get("remediation_steps", []),
+                "console_path": result.get("console_path", ""),
                 "milestone_date": kwargs.get("default_milestone", "TBD"),
                 "responsible_party": kwargs.get("default_responsible", "TBD"),
             })

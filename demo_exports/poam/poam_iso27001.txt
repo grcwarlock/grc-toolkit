@@ -1,0 +1,148 @@
+
+PLAN OF ACTION AND MILESTONES (POA&M)
+======================================
+Organization: Acme Cloud Corp
+System:       Production AWS Environment
+Generated:    2026-03-14 19:19 UTC
+Assessment:   a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+SUMMARY
+-------
+Total Findings:      6
+Critical/High:       3
+Medium:              0
+Low:                 3
+
+FINDINGS
+--------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0001
+Control:        A.5.15
+Check:          iam_user_mfa
+Severity:       Low
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+IAM credential report shows 3 users without virtual or hardware MFA device
+
+Findings:
+  - 3 IAM users without MFA: svc-deploy, svc-monitoring, dev-intern
+  - MFA adoption rate: 87% (26/30 users)
+
+
+Remediation:    Enable MFA for all IAM users. Use hardware tokens for privileged accounts per AC-2(1).
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0002
+Control:        A.5.15
+Check:          iam_inactive_users
+Severity:       Low
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+IAM credential report last-activity analysis
+
+Findings:
+  - 2 users inactive > 90 days: former-contractor (142d), test-user (203d)
+
+
+Remediation:    Disable or remove inactive IAM users. Implement automated deprovisioning workflow.
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0003
+Control:        A.8.2
+Check:          iam_admin_policy
+Severity:       Critical
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+IAM policy audit via GetAccountAuthorizationDetails
+
+Findings:
+  - 1 IAM user with AdministratorAccess: legacy-admin (direct policy attachment)
+  - Wildcard admin policy found on user legacy-admin
+
+
+Remediation:    Replace AdministratorAccess with scoped policies. Use roles with session duration limits.
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0004
+Control:        A.8.20
+Check:          sg_unrestricted_ssh
+Severity:       Critical
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+Security group ingress rule analysis via DescribeSecurityGroups
+
+Findings:
+  - Security group sg-0abc123def allows SSH (port 22) from 0.0.0.0/0
+  - Attached to 2 EC2 instances in prod VPC
+
+
+Remediation:    Restrict SSH access to known bastion/VPN CIDR ranges. Use SSM Session Manager instead.
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0005
+Control:        A.8.21
+Check:          sg_unrestricted_ssh
+Severity:       Critical
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+Security group ingress rule analysis via DescribeSecurityGroups
+
+Findings:
+  - Security group sg-0abc123def allows SSH (port 22) from 0.0.0.0/0
+  - Attached to 2 EC2 instances in prod VPC
+
+
+Remediation:    Restrict SSH access to known bastion/VPN CIDR ranges. Use SSM Session Manager instead.
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+POA&M ID:       POAM-0006
+Control:        A.8.9
+Check:          s3_public_access
+Severity:       Low
+Status:         Open
+Provider:       aws (us-east-1)
+
+Description:
+S3 GetPublicAccessBlock analysis across 18 buckets in account
+
+Findings:
+  - Bucket 'marketing-assets-prod' has public access block disabled
+  - Bucket contains 1,247 objects; review for sensitive data exposure
+
+
+Remediation:    Enable S3 Block Public Access at account level. Review bucket for sensitive data.
+Milestone Date: TBD
+Responsible:    TBD
+-------------------------------------------------------------------------------
+
+
+RISK ACCEPTANCE
+---------------
+
+No risk acceptances documented.

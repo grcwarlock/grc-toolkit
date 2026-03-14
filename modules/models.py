@@ -105,6 +105,8 @@ class AssessmentResult:
     evidence_ids: list[str] = field(default_factory=list)
     evidence_summary: str = ""
     remediation: str = ""
+    remediation_steps: list[str] = field(default_factory=list)
+    console_path: str = ""              # e.g., "IAM → Users → Security credentials"
     assessor: str = "python"            # "opa", "python", "manual"
     policy_id: str = ""                 # OPA policy ID if applicable
 

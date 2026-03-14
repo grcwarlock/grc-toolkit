@@ -1,0 +1,49 @@
+{
+  "frameworks": [
+    "cmmc_l2",
+    "hipaa",
+    "iso27001",
+    "nist_800_53",
+    "soc2"
+  ],
+  "cmmc_l2": {
+    "available_targets": [
+      "hipaa",
+      "iso27001",
+      "nist_800_53",
+      "soc2"
+    ]
+  },
+  "hipaa": {
+    "available_targets": [
+      "cmmc_l2",
+      "iso27001",
+      "nist_800_53",
+      "soc2"
+    ]
+  },
+  "iso27001": {
+    "available_targets": [
+      "cmmc_l2",
+      "hipaa",
+      "nist_800_53",
+      "soc2"
+    ]
+  },
+  "nist_800_53": {
+    "available_targets": [
+      "cmmc_l2",
+      "hipaa",
+      "iso27001",
+      "soc2"
+    ]
+  },
+  "soc2": {
+    "available_targets": [
+      "cmmc_l2",
+      "hipaa",
+      "iso27001",
+      "nist_800_53"
+    ]
+  }
+}
