@@ -247,6 +247,40 @@ class EvidenceStore:
         return runs
 
 
+def load_all_framework_data(config_dir: str = "config") -> dict:
+    """Load and merge all framework YAML files from the config directory.
+
+    Scans for frameworks.yaml plus any framework-specific files
+    (nist_800_53.yaml, iso_27001.yaml, soc2.yaml, etc.) and merges
+    them into a single dict keyed by framework identifier.
+    """
+    config_path = Path(config_dir)
+    merged: dict = {}
+
+    # Load the base frameworks.yaml first
+    base = config_path / "frameworks.yaml"
+    if base.exists():
+        with open(base) as f:
+            data = yaml.safe_load(f) or {}
+        for key, val in data.items():
+            if isinstance(val, dict) and "control_families" in val:
+                merged[key] = val
+
+    # Load individual framework files and merge/override
+    framework_files = [
+        f for f in sorted(config_path.glob("*.yaml"))
+        if f.name not in ("frameworks.yaml", "crosswalks.yaml", "settings.yaml")
+    ]
+    for fpath in framework_files:
+        with open(fpath) as f:
+            data = yaml.safe_load(f) or {}
+        for key, val in data.items():
+            if isinstance(val, dict) and "control_families" in val:
+                merged[key] = val
+
+    return merged
+
+
 def load_framework_checks(framework_path: str, framework: str = "nist_800_53",
                           control_family: str = "") -> list[dict]:
     """
@@ -255,9 +289,18 @@ def load_framework_checks(framework_path: str, framework: str = "nist_800_53",
     Optionally filters to a single control family (e.g., "AC", "AU").
     Each check in the returned list has everything needed for the
     collector to know what API call to make and where the result fits.
+
+    Supports both single-file loading (legacy) and multi-file loading.
+    If framework_path is a directory, loads all framework files from it.
     """
-    with open(framework_path) as f:
-        frameworks = yaml.safe_load(f)
+    path = Path(framework_path)
+    if path.is_dir():
+        frameworks = load_all_framework_data(framework_path)
+    elif path.exists():
+        with open(path) as f:
+            frameworks = yaml.safe_load(f) or {}
+    else:
+        frameworks = load_all_framework_data(str(path.parent))
 
     fw = frameworks.get(framework, {})
     families = fw.get("control_families", {})

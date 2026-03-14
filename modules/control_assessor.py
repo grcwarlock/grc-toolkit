@@ -25,20 +25,19 @@ def load_remediation_from_yaml(
 
     Returns a dict keyed by check_id (assertion name) with remediation data
     including summary, steps (per provider), and console_path (per provider).
+
+    Loads from all framework YAML files in the config directory.
     """
     try:
-        import yaml
+        import yaml as _yaml  # noqa: F401 — verify PyYAML is available before proceeding
     except ImportError:
         logger.warning("PyYAML not installed; remediation data unavailable")
         return {}
 
+    from modules.evidence_collector import load_all_framework_data
     path = Path(yaml_path)
-    if not path.exists():
-        logger.warning("Framework YAML not found: %s", yaml_path)
-        return {}
-
-    with open(path) as f:
-        data = yaml.safe_load(f) or {}
+    config_dir = str(path.parent) if path.suffix in (".yaml", ".yml") else yaml_path
+    data = load_all_framework_data(config_dir)
 
     remediation_map: dict[str, dict] = {}
     for _fw_key, fw_def in data.items():

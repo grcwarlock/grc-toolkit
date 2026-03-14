@@ -1,0 +1,2668 @@
+# iso_27001.yaml
+# ISO/IEC 27001:2022 Annex A Control Catalog
+# All 93 controls across 4 themes
+
+iso_27001:
+  name: "ISO/IEC 27001:2022"
+  version: "2022"
+  control_families:
+    A5:
+      name: "Organizational Controls"
+      controls:
+        A.5.1:
+          title: "Policies for information security"
+          description: "Information security policy and topic-specific policies shall be defined, approved by management, published, communicated to and acknowledged by relevant personnel and relevant interested parties, and reviewed at planned intervals or if significant changes occur."
+          checks:
+            - id: "A.5.1.a"
+              description: "Verify information security policies are defined and approved"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Create and publish an information security policy approved by management, stored in a version-controlled repository."
+                steps:
+                  aws:
+                    - "Store approved policies in S3 with versioning: aws s3api put-bucket-versioning --bucket <policy-bucket> --versioning-configuration Status=Enabled"
+                    - "Upload policy: aws s3 cp info-security-policy.pdf s3://<policy-bucket>/policies/"
+                    - "Use AWS Organizations SCPs to enforce baseline: aws organizations create-policy --name InfoSecBaseline --type SERVICE_CONTROL_POLICY --content file://scp.json"
+                  azure:
+                    - "Store policies in SharePoint or Azure Blob: az storage blob upload --container-name policies --file info-security-policy.pdf --name policies/info-security-policy.pdf"
+                console_path:
+                  aws: "S3 → policy-bucket → policies/ → Upload"
+                  azure: "Storage accounts → policies → Containers → Upload"
+              cloud_checks:
+                aws:
+                  - service: "organizations"
+                    method: "list_policies"
+                    assertion: "scp_policies_exist"
+                  - service: "s3"
+                    method: "list_objects_v2"
+                    assertion: "policy_documents_present"
+
+        A.5.2:
+          title: "Information security roles and responsibilities"
+          description: "Information security roles and responsibilities shall be defined and allocated."
+          checks:
+            - id: "A.5.2.a"
+              description: "Verify security roles are defined in IAM and org structure"
+              evidence_type: "iam_roles"
+              remediation:
+                summary: "Define dedicated security roles and assign them to appropriate personnel using IAM roles and groups."
+                steps:
+                  aws:
+                    - "Create security admin role: aws iam create-role --role-name SecurityAdmin --assume-role-policy-document file://trust-policy.json"
+                    - "Attach SecurityAudit policy: aws iam attach-role-policy --role-name SecurityAdmin --policy-arn arn:aws:iam::aws:policy/SecurityAudit"
+                    - "Create security group: aws iam create-group --group-name SecurityTeam"
+                    - "List current role assignments: aws iam list-roles --query 'Roles[?contains(RoleName,`Security`)]'"
+                  azure:
+                    - "Assign Security Admin role: az role assignment create --assignee <user-id> --role 'Security Admin' --scope /subscriptions/<sub-id>"
+                console_path:
+                  aws: "IAM → Roles → Create role → SecurityAdmin"
+                  azure: "Entra ID → Roles and administrators → Security Administrator"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_roles"
+                    assertion: "security_roles_defined"
+
+        A.5.3:
+          title: "Segregation of duties"
+          description: "Conflicting duties and conflicting areas of responsibility shall be segregated."
+          checks:
+            - id: "A.5.3.a"
+              description: "Verify segregation of duties is enforced through IAM policies"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Implement segregation of duties using separate IAM roles for development, operations, and security functions."
+                steps:
+                  aws:
+                    - "Create separate roles for dev/ops/security: aws iam create-role --role-name DevRole --assume-role-policy-document file://dev-trust.json"
+                    - "Add permission boundary: aws iam put-role-permissions-boundary --role-name DevRole --permissions-boundary arn:aws:iam::<account>:policy/DevBoundary"
+                    - "Deny self-escalation: create policy with Deny on iam:CreateRole, iam:AttachRolePolicy for dev roles"
+                    - "Use AWS Config rule iam-policy-no-statements-with-full-access to detect overly broad permissions"
+                  azure:
+                    - "Use Azure PIM for just-in-time access: az rest --method POST --uri /providers/Microsoft.Authorization/roleEligibilityScheduleRequests"
+                console_path:
+                  aws: "IAM → Roles → Create separate roles per function → Attach permission boundaries"
+                  azure: "Entra ID → Privileged Identity Management → Assignments"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_roles"
+                    assertion: "segregated_roles_exist"
+                  - service: "iam"
+                    method: "get_role"
+                    assertion: "permission_boundaries_set"
+
+        A.5.4:
+          title: "Management responsibilities"
+          description: "Management shall require all personnel to apply information security in accordance with the established information security policy and topic-specific policies of the organization."
+          checks:
+            - id: "A.5.4.a"
+              description: "Verify management enforces security policy compliance"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement automated policy compliance checks and require personnel acknowledgment."
+                steps:
+                  aws:
+                    - "Enable AWS Config conformance packs: aws configservice put-conformance-pack --conformance-pack-name OrgSecurityBaseline --template-body file://conformance-pack.yaml"
+                    - "List compliance status: aws configservice describe-compliance-by-config-rule"
+                    - "Enable Security Hub standards: aws securityhub batch-enable-standards --standards-subscription-requests StandardsArn=arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
+                  azure:
+                    - "Assign Azure Policy initiative: az policy assignment create --name SecurityBaseline --policy-set-definition <initiative-id> --scope /subscriptions/<sub-id>"
+                console_path:
+                  aws: "AWS Config → Conformance packs → Deploy pack"
+                  azure: "Policy → Assignments → Assign initiative"
+              cloud_checks:
+                aws:
+                  - service: "configservice"
+                    method: "describe_compliance_by_config_rule"
+                    assertion: "conformance_packs_compliant"
+
+        A.5.5:
+          title: "Contact with authorities"
+          description: "The organization shall establish and maintain contact with relevant authorities."
+          checks:
+            - id: "A.5.5.a"
+              description: "Verify contacts with regulatory authorities are documented and accessible"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Document authority contacts and configure automated incident notification channels."
+                steps:
+                  aws:
+                    - "Configure alternate contacts: aws account put-alternate-contact --alternate-contact-type SECURITY --name 'Security Team' --email-address security@example.com --phone-number '+1-555-0100' --title 'CISO'"
+                    - "Verify contacts: aws account get-alternate-contact --alternate-contact-type SECURITY"
+                    - "Store authority contact list in SSM Parameter Store: aws ssm put-parameter --name /security/authority-contacts --value file://contacts.json --type String"
+                  azure:
+                    - "Set security contact: az security contact create --name default --email security@example.com --phone '+1-555-0100' --alert-notifications on"
+                console_path:
+                  aws: "Account Settings → Alternate Contacts → Security"
+                  azure: "Defender for Cloud → Environment settings → Email notifications"
+              cloud_checks:
+                aws:
+                  - service: "account"
+                    method: "get_alternate_contact"
+                    assertion: "security_contact_configured"
+
+        A.5.6:
+          title: "Contact with special interest groups"
+          description: "The organization shall establish and maintain contact with special interest groups or other specialist security forums and professional associations."
+          checks:
+            - id: "A.5.6.a"
+              description: "Verify memberships in security information sharing groups"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Subscribe to threat intelligence feeds and join relevant ISACs."
+                steps:
+                  aws:
+                    - "Enable AWS Security Hub integrations: aws securityhub enable-import-findings-for-product --product-arn arn:aws:securityhub:<region>::product/aws/inspector"
+                    - "Subscribe to AWS Trusted Advisor: aws support describe-trusted-advisor-checks --language en"
+                    - "Subscribe to SNS security bulletins: aws sns subscribe --topic-arn arn:aws:sns:us-east-1:aws-security-bulletins --protocol email --notification-endpoint security@example.com"
+                  azure:
+                    - "Enable threat intelligence in Sentinel: az sentinel threat-intelligence-indicator list --workspace-name <ws>"
+                console_path:
+                  aws: "Security Hub → Integrations → Enable partner integrations"
+                  azure: "Microsoft Sentinel → Threat intelligence → Configure"
+              cloud_checks:
+                aws:
+                  - service: "securityhub"
+                    method: "list_enabled_products_for_import"
+                    assertion: "threat_intel_feeds_enabled"
+
+        A.5.7:
+          title: "Threat intelligence"
+          description: "Information relating to information security threats shall be collected and analysed to produce threat intelligence."
+          checks:
+            - id: "A.5.7.a"
+              description: "Verify threat intelligence collection and analysis is operational"
+              evidence_type: "threat_intel"
+              remediation:
+                summary: "Enable GuardDuty for threat detection and integrate third-party threat intelligence feeds."
+                steps:
+                  aws:
+                    - "Enable GuardDuty: aws guardduty create-detector --enable --finding-publishing-frequency FIFTEEN_MINUTES"
+                    - "Enable threat intel feeds: aws guardduty create-threat-intel-set --detector-id <id> --name CustomThreatIntel --format TXT --location s3://<bucket>/threat-list.txt --activate"
+                    - "Enable GuardDuty Malware Protection: aws guardduty update-member-detectors --detector-id <id> --data-sources ScanEc2InstanceWithFindings={EbsVolumes=true}"
+                    - "List findings: aws guardduty list-findings --detector-id <id> --finding-criteria '{\"Criterion\":{\"severity\":{\"Gte\":7}}}'"
+                  azure:
+                    - "Enable Microsoft Defender Threat Intelligence: az sentinel threat-intelligence-indicator list --workspace-name <ws>"
+                console_path:
+                  aws: "GuardDuty → Settings → Lists → Add threat intel set"
+                  azure: "Microsoft Sentinel → Threat intelligence"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "guardduty"
+                    method: "list_threat_intel_sets"
+                    assertion: "threat_intel_sets_active"
+
+        A.5.8:
+          title: "Information security in project management"
+          description: "Information security shall be integrated into project management."
+          checks:
+            - id: "A.5.8.a"
+              description: "Verify security gates exist in project lifecycle"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Integrate security checks into CI/CD pipelines and project workflows."
+                steps:
+                  aws:
+                    - "Add security scan stage in CodePipeline: aws codepipeline update-pipeline --pipeline file://pipeline-with-security-stage.json"
+                    - "Enable CodeBuild with security scanning: aws codebuild create-project --name security-scan --source file://source.json --environment file://env.json"
+                    - "Use Inspector for container scanning: aws inspector2 enable --resource-types ECR"
+                  azure:
+                    - "Add security scan task in Azure DevOps pipeline: az pipelines create --name security-gate --yaml-path security-pipeline.yml"
+                console_path:
+                  aws: "CodePipeline → Edit pipeline → Add security scan stage"
+                  azure: "Azure DevOps → Pipelines → Add security task"
+              cloud_checks:
+                aws:
+                  - service: "codepipeline"
+                    method: "list_pipelines"
+                    assertion: "security_stages_in_pipelines"
+
+        A.5.9:
+          title: "Inventory of information and other associated assets"
+          description: "An inventory of information and other associated assets, including owners, shall be developed and maintained."
+          checks:
+            - id: "A.5.9.a"
+              description: "Verify a complete asset inventory is maintained with ownership"
+              evidence_type: "asset_inventory"
+              remediation:
+                summary: "Use AWS Config and resource tagging to maintain a comprehensive asset inventory."
+                steps:
+                  aws:
+                    - "Enable AWS Config recording: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=<role-arn> --recording-group allSupported=true"
+                    - "Start recorder: aws configservice start-configuration-recorder --configuration-recorder-name default"
+                    - "Query resources: aws configservice select-resource-config --expression \"SELECT resourceId, resourceType, tags WHERE tags.key = 'Owner'\""
+                    - "Tag resources with owner: aws ec2 create-tags --resources <resource-id> --tags Key=Owner,Value=<team> Key=Classification,Value=<level>"
+                    - "Enable AWS Config rule required-tags: aws configservice put-config-rule --config-rule file://required-tags-rule.json"
+                  azure:
+                    - "List all resources: az resource list --query '[].{Name:name, Type:type, Tags:tags}' -o table"
+                    - "Tag resources: az tag create --resource-id <id> --tags Owner=<team> Classification=<level>"
+                console_path:
+                  aws: "AWS Config → Resources → Resource inventory"
+                  azure: "All resources → Filter by tag"
+              cloud_checks:
+                aws:
+                  - service: "configservice"
+                    method: "describe_configuration_recorders"
+                    assertion: "config_recorder_enabled"
+                  - service: "configservice"
+                    method: "select_resource_config"
+                    assertion: "all_resources_tagged_with_owner"
+
+        A.5.10:
+          title: "Acceptable use of information and other associated assets"
+          description: "Rules for the acceptable use of information and other associated assets shall be identified, documented and implemented."
+          checks:
+            - id: "A.5.10.a"
+              description: "Verify acceptable use policies are enforced through technical controls"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement SCPs and resource policies to enforce acceptable use boundaries."
+                steps:
+                  aws:
+                    - "Create SCP denying unapproved regions: aws organizations create-policy --name DenyUnapprovedRegions --type SERVICE_CONTROL_POLICY --content '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Action\":\"*\",\"Resource\":\"*\",\"Condition\":{\"StringNotEquals\":{\"aws:RequestedRegion\":[\"us-east-1\",\"eu-west-1\"]}}}]}'"
+                    - "Attach SCP to OU: aws organizations attach-policy --policy-id <policy-id> --target-id <ou-id>"
+                    - "Create Config rule for allowed instance types: aws configservice put-config-rule --config-rule file://allowed-instance-types.json"
+                  azure:
+                    - "Create Azure Policy for allowed locations: az policy assignment create --name AllowedLocations --policy '/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c' --params '{\"listOfAllowedLocations\":{\"value\":[\"eastus\",\"westeurope\"]}}'"
+                console_path:
+                  aws: "AWS Organizations → Policies → Service control policies"
+                  azure: "Policy → Definitions → Allowed locations"
+              cloud_checks:
+                aws:
+                  - service: "organizations"
+                    method: "list_policies"
+                    assertion: "scps_enforce_acceptable_use"
+
+        A.5.11:
+          title: "Return of assets"
+          description: "Personnel and other interested parties as appropriate shall return all the organization's assets in their possession upon change or termination of their employment, contract or agreement."
+          checks:
+            - id: "A.5.11.a"
+              description: "Verify offboarding process includes asset return and access revocation"
+              evidence_type: "hr_record"
+              remediation:
+                summary: "Automate access revocation on personnel departure using identity lifecycle management."
+                steps:
+                  aws:
+                    - "Delete user access keys: aws iam delete-access-key --user-name <user> --access-key-id <key-id>"
+                    - "Deactivate MFA: aws iam deactivate-mfa-device --user-name <user> --serial-number <mfa-arn>"
+                    - "Remove from all groups: aws iam list-groups-for-user --user-name <user> | jq -r '.Groups[].GroupName' | xargs -I {} aws iam remove-user-from-group --user-name <user> --group-name {}"
+                    - "Delete login profile: aws iam delete-login-profile --user-name <user>"
+                    - "Delete user: aws iam delete-user --user-name <user>"
+                  azure:
+                    - "Disable user: az ad user update --id <user-id> --account-enabled false"
+                    - "Revoke sessions: az rest --method POST --uri /users/<user-id>/revokeSignInSessions"
+                console_path:
+                  aws: "IAM → Users → Select user → Delete user"
+                  azure: "Entra ID → Users → Select user → Revoke sessions → Delete"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_users"
+                    assertion: "no_orphaned_accounts"
+
+        A.5.12:
+          title: "Classification of information"
+          description: "Information shall be classified according to the information security needs of the organization based on confidentiality, integrity, availability and relevant interested party requirements."
+          checks:
+            - id: "A.5.12.a"
+              description: "Verify data classification scheme is implemented through tagging"
+              evidence_type: "asset_inventory"
+              remediation:
+                summary: "Implement data classification using resource tags and Macie for automated discovery."
+                steps:
+                  aws:
+                    - "Enable Macie: aws macie2 enable-macie"
+                    - "Create classification job: aws macie2 create-classification-job --job-type ONE_TIME --s3-job-definition '{\"bucketDefinitions\":[{\"accountId\":\"<account-id>\",\"buckets\":[\"<bucket>\"]}]}' --name DataClassification"
+                    - "Tag resources with classification: aws s3api put-bucket-tagging --bucket <bucket> --tagging '{\"TagSet\":[{\"Key\":\"DataClassification\",\"Value\":\"Confidential\"}]}'"
+                    - "Create Config rule for required classification tag: aws configservice put-config-rule --config-rule file://require-classification-tag.json"
+                  azure:
+                    - "Create sensitivity labels: az security assessment create --name DataClassification"
+                    - "Enable Azure Purview for data classification scanning"
+                console_path:
+                  aws: "Macie → Jobs → Create job → Select S3 buckets"
+                  azure: "Microsoft Purview → Information protection → Labels"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "get_macie_session"
+                    assertion: "macie_enabled"
+                  - service: "macie2"
+                    method: "list_classification_jobs"
+                    assertion: "classification_jobs_active"
+
+        A.5.13:
+          title: "Labelling of information"
+          description: "An appropriate set of procedures for information labelling shall be developed and implemented in accordance with the information classification scheme adopted by the organization."
+          checks:
+            - id: "A.5.13.a"
+              description: "Verify information labelling is consistently applied"
+              evidence_type: "asset_inventory"
+              remediation:
+                summary: "Enforce mandatory tagging for data classification labels on all resources."
+                steps:
+                  aws:
+                    - "Create tag policy: aws organizations create-policy --name RequireClassificationTag --type TAG_POLICY --content file://tag-policy.json"
+                    - "Attach tag policy: aws organizations attach-policy --policy-id <policy-id> --target-id <root-id>"
+                    - "Find untagged resources: aws resourcegroupstaggingapi get-resources --tag-filters Key=DataClassification --query 'ResourceTagMappingList[?Tags==`[]`]'"
+                    - "Create Config rule required-tags: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"required-classification\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"REQUIRED_TAGS\"},\"InputParameters\":\"{\\\"tag1Key\\\":\\\"DataClassification\\\"}\"  }'"
+                  azure:
+                    - "Require tag policy: az policy assignment create --name RequireClassification --policy '/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99' --params '{\"tagName\":{\"value\":\"DataClassification\"}}'"
+                console_path:
+                  aws: "AWS Organizations → Policies → Tag policies"
+                  azure: "Policy → Definitions → Require a tag"
+              cloud_checks:
+                aws:
+                  - service: "organizations"
+                    method: "list_policies"
+                    assertion: "tag_policies_enforced"
+
+        A.5.14:
+          title: "Information transfer"
+          description: "Information transfer rules, procedures, or agreements shall be in place for all types of transfer facilities within the organization and between the organization and other parties."
+          checks:
+            - id: "A.5.14.a"
+              description: "Verify encryption in transit is enforced for all data transfers"
+              evidence_type: "network_config"
+              remediation:
+                summary: "Enforce TLS for all data transfers and configure S3 bucket policies to deny unencrypted access."
+                steps:
+                  aws:
+                    - "Deny non-SSL S3 access: aws s3api put-bucket-policy --bucket <bucket> --policy '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"s3:*\",\"Resource\":[\"arn:aws:s3:::<bucket>\",\"arn:aws:s3:::<bucket>/*\"],\"Condition\":{\"Bool\":{\"aws:SecureTransport\":\"false\"}}}]}'"
+                    - "Enforce TLS 1.2 minimum on ELBs: aws elbv2 modify-listener --listener-arn <arn> --ssl-policy ELBSecurityPolicy-TLS13-1-2-2021-06"
+                    - "Enable VPC flow logs to monitor transfers: aws ec2 create-flow-logs --resource-type VPC --resource-ids <vpc-id> --traffic-type ALL --log-destination-type s3 --log-destination arn:aws:s3:::<bucket>"
+                  azure:
+                    - "Enforce HTTPS on storage: az storage account update --name <account> --min-tls-version TLS1_2 --https-only true"
+                console_path:
+                  aws: "S3 → Bucket → Permissions → Bucket policy → Add SSL enforcement"
+                  azure: "Storage accounts → Configuration → Minimum TLS version"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_bucket_policy"
+                    assertion: "ssl_enforced_on_buckets"
+                  - service: "elbv2"
+                    method: "describe_listeners"
+                    assertion: "tls_1_2_minimum"
+
+        A.5.15:
+          title: "Access control"
+          description: "Rules to control physical and logical access to information and other associated assets shall be established and implemented based on business and information security requirements."
+          checks:
+            - id: "A.5.15.a"
+              description: "Verify access control policies enforce least privilege"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Implement role-based access control with least privilege principles."
+                steps:
+                  aws:
+                    - "Run IAM Access Analyzer: aws accessanalyzer create-analyzer --analyzer-name OrgAnalyzer --type ORGANIZATION"
+                    - "List findings for over-permissive access: aws accessanalyzer list-findings --analyzer-arn <arn>"
+                    - "Generate least-privilege policy: aws accessanalyzer start-policy-generation --policy-generation-details '{\"principalArn\":\"<role-arn>\"}' --cloud-trail-details '{\"trailArn\":\"<trail-arn>\",\"startTime\":\"2024-01-01\",\"endTime\":\"2024-12-31\"}'"
+                    - "Enable IAM Access Analyzer unused access: aws accessanalyzer create-analyzer --analyzer-name UnusedAccess --type ORGANIZATION --configuration '{\"unusedAccess\":{\"unusedAccessAge\":90}}'"
+                  azure:
+                    - "Review access with Access Reviews: az rest --method POST --uri /identityGovernance/accessReviews/definitions --body @access-review.json"
+                console_path:
+                  aws: "IAM → Access Analyzer → Create analyzer"
+                  azure: "Entra ID → Identity Governance → Access reviews"
+              cloud_checks:
+                aws:
+                  - service: "accessanalyzer"
+                    method: "list_findings"
+                    assertion: "no_external_access_findings"
+
+        A.5.16:
+          title: "Identity management"
+          description: "The full life cycle of identities shall be managed."
+          checks:
+            - id: "A.5.16.a"
+              description: "Verify identity lifecycle management is in place"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Implement centralized identity management with SSO and lifecycle automation."
+                steps:
+                  aws:
+                    - "Enable IAM Identity Center (SSO): aws sso-admin create-instance"
+                    - "Create permission set: aws sso-admin create-permission-set --instance-arn <arn> --name ReadOnlyAccess --session-duration PT8H"
+                    - "List all users: aws identitystore list-users --identity-store-id <id>"
+                    - "Check for stale credentials: aws iam generate-credential-report && aws iam get-credential-report --output text --query Content | base64 -d"
+                  azure:
+                    - "Configure Entra ID lifecycle workflows: az rest --method GET --uri /identityGovernance/lifecycleWorkflows/workflows"
+                console_path:
+                  aws: "IAM Identity Center → Users → Manage workforce identities"
+                  azure: "Entra ID → Identity Governance → Lifecycle workflows"
+              cloud_checks:
+                aws:
+                  - service: "sso-admin"
+                    method: "list_instances"
+                    assertion: "sso_enabled"
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "no_stale_credentials"
+
+        A.5.17:
+          title: "Authentication information"
+          description: "Allocation and management of authentication information shall be controlled by a management process, including advising personnel on appropriate handling of authentication information."
+          checks:
+            - id: "A.5.17.a"
+              description: "Verify authentication controls including MFA and password policies"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Enforce strong password policies and MFA for all users."
+                steps:
+                  aws:
+                    - "Set password policy: aws iam update-account-password-policy --minimum-password-length 14 --require-symbols --require-numbers --require-uppercase-characters --require-lowercase-characters --max-password-age 90 --password-reuse-prevention 24"
+                    - "Check MFA status: aws iam generate-credential-report && aws iam get-credential-report --output text --query Content | base64 -d | cut -d, -f1,4,8"
+                    - "Create Config rule for MFA: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"mfa-enabled-for-iam-console-access\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"MFA_ENABLED_FOR_IAM_CONSOLE_ACCESS\"}}'"
+                  azure:
+                    - "Configure authentication methods: az rest --method PATCH --uri /policies/authenticationMethodsPolicy --body '{\"registrationEnforcement\":{\"authenticationMethodsRegistrationCampaign\":{\"state\":\"enabled\"}}}'"
+                console_path:
+                  aws: "IAM → Account settings → Password policy → Edit"
+                  azure: "Entra ID → Security → Authentication methods"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_account_password_policy"
+                    assertion: "strong_password_policy"
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "all_users_have_mfa"
+
+        A.5.18:
+          title: "Access rights"
+          description: "Access rights to information and other associated assets shall be provisioned, reviewed, modified and removed in accordance with the organization's topic-specific policy on and rules for access control."
+          checks:
+            - id: "A.5.18.a"
+              description: "Verify access rights are regularly reviewed and appropriate"
+              evidence_type: "iam_roles"
+              remediation:
+                summary: "Implement periodic access reviews and automated removal of unused permissions."
+                steps:
+                  aws:
+                    - "List unused access keys: aws iam generate-credential-report && aws iam get-credential-report --output text --query Content | base64 -d | awk -F, '$5==\"true\" && $6!=\"N/A\" {print $1,$6}'"
+                    - "Create unused credentials rule: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"iam-user-unused-credentials-check\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"IAM_USER_UNUSED_CREDENTIALS_CHECK\"},\"InputParameters\":\"{\\\"maxCredentialUsageAge\\\":\\\"90\\\"}\"  }'"
+                    - "Use IAM Access Analyzer for unused access: aws accessanalyzer list-findings --analyzer-arn <unused-access-analyzer-arn>"
+                  azure:
+                    - "Create access review: az rest --method POST --uri /identityGovernance/accessReviews/definitions --body @quarterly-review.json"
+                console_path:
+                  aws: "IAM → Access Analyzer → Findings → Unused access"
+                  azure: "Entra ID → Identity Governance → Access reviews → New review"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "no_unused_credentials_over_90_days"
+                  - service: "accessanalyzer"
+                    method: "list_findings"
+                    assertion: "no_unused_access_findings"
+
+        A.5.19:
+          title: "Information security in supplier relationships"
+          description: "Processes and procedures shall be defined and implemented to manage the information security risks associated with the use of supplier's products or services."
+          checks:
+            - id: "A.5.19.a"
+              description: "Verify supplier security requirements are documented and monitored"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement third-party access controls and monitor supplier access through dedicated roles."
+                steps:
+                  aws:
+                    - "Create cross-account role for supplier: aws iam create-role --role-name SupplierAccess-<vendor> --assume-role-policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::<supplier-account>:root\"},\"Action\":\"sts:AssumeRole\",\"Condition\":{\"StringEquals\":{\"sts:ExternalId\":\"<external-id>\"}}}]}'"
+                    - "Attach minimal policy: aws iam attach-role-policy --role-name SupplierAccess-<vendor> --policy-arn <scoped-policy-arn>"
+                    - "Monitor supplier access via CloudTrail: aws cloudtrail lookup-events --lookup-attributes AttributeKey=Username,AttributeValue=SupplierAccess-<vendor>"
+                  azure:
+                    - "Configure B2B access: az rest --method POST --uri /policies/crossTenantAccessPolicy/partners --body '{\"tenantId\":\"<supplier-tenant>\"}'"
+                console_path:
+                  aws: "IAM → Roles → Create role → Another AWS account"
+                  azure: "Entra ID → External Identities → Cross-tenant access settings"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_roles"
+                    assertion: "supplier_roles_have_external_id"
+                  - service: "cloudtrail"
+                    method: "lookup_events"
+                    assertion: "supplier_access_logged"
+
+        A.5.20:
+          title: "Addressing information security within supplier agreements"
+          description: "Relevant information security requirements shall be established and agreed with each supplier based on the type of supplier relationship."
+          checks:
+            - id: "A.5.20.a"
+              description: "Verify supplier agreements include security requirements"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Use AWS Artifact and compliance reports to verify supplier (AWS/Azure) compliance."
+                steps:
+                  aws:
+                    - "Access AWS compliance reports: aws artifact get-report-metadata (use AWS Artifact console)"
+                    - "Accept AWS agreements: review and accept AWS BAA, NDA via AWS Artifact Agreements"
+                    - "Review shared responsibility model and document organization's responsibilities"
+                    - "Store supplier agreements in S3 with versioning: aws s3 cp supplier-agreement.pdf s3://<bucket>/agreements/"
+                  azure:
+                    - "Access Azure compliance offerings via Trust Center"
+                    - "Review Microsoft product terms and data protection addendum"
+                console_path:
+                  aws: "AWS Artifact → Agreements → Accept required agreements"
+                  azure: "Trust Center → Compliance → Compliance offerings"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "list_objects_v2"
+                    assertion: "supplier_agreements_stored"
+
+        A.5.21:
+          title: "Managing information security in the ICT supply chain"
+          description: "Processes and procedures shall be defined and implemented to manage the information security risks associated with the ICT products and services supply chain."
+          checks:
+            - id: "A.5.21.a"
+              description: "Verify ICT supply chain security controls are implemented"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement software supply chain security with image scanning and SBOM generation."
+                steps:
+                  aws:
+                    - "Enable ECR image scanning: aws ecr put-image-scanning-configuration --repository-name <repo> --image-scanning-configuration scanOnPush=true"
+                    - "Enable Inspector for container scanning: aws inspector2 enable --resource-types ECR"
+                    - "Check scan findings: aws ecr describe-image-scan-findings --repository-name <repo> --image-id imageTag=latest"
+                    - "Use CodeArtifact for dependency management: aws codeartifact create-repository --domain <domain> --repository <repo>"
+                  azure:
+                    - "Enable Defender for Containers: az security pricing create --name Containers --tier Standard"
+                console_path:
+                  aws: "ECR → Repositories → Select repo → Scan settings → Enable scan on push"
+                  azure: "Defender for Cloud → Environment settings → Containers"
+              cloud_checks:
+                aws:
+                  - service: "ecr"
+                    method: "describe_repositories"
+                    assertion: "image_scanning_enabled"
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "inspector_ecr_scanning_active"
+
+        A.5.22:
+          title: "Monitoring, review and change management of supplier services"
+          description: "The organization shall regularly monitor, review, evaluate and manage change in supplier information security practices and service delivery."
+          checks:
+            - id: "A.5.22.a"
+              description: "Verify supplier service monitoring and review processes"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Monitor third-party service health and security posture through automated checks."
+                steps:
+                  aws:
+                    - "Monitor AWS service health: aws health describe-events --filter '{\"eventTypeCategories\":[\"issue\",\"scheduledChange\"]}'"
+                    - "Set up health event notifications: aws events put-rule --name aws-health-alerts --event-pattern '{\"source\":[\"aws.health\"]}'"
+                    - "Create SNS notification: aws sns create-topic --name supplier-health-alerts && aws events put-targets --rule aws-health-alerts --targets Id=1,Arn=<sns-topic-arn>"
+                    - "Review Trusted Advisor checks: aws support describe-trusted-advisor-checks --language en"
+                  azure:
+                    - "Monitor service health: az monitor activity-log alert create --name ServiceHealthAlert --condition category=ServiceHealth"
+                console_path:
+                  aws: "AWS Health Dashboard → Event log"
+                  azure: "Service Health → Health alerts → Create alert"
+              cloud_checks:
+                aws:
+                  - service: "health"
+                    method: "describe_events"
+                    assertion: "health_monitoring_active"
+
+        A.5.23:
+          title: "Information security for use of cloud services"
+          description: "Processes for acquisition, use, management and exit from cloud services shall be established in accordance with the organization's information security requirements."
+          checks:
+            - id: "A.5.23.a"
+              description: "Verify cloud service security controls and governance"
+              evidence_type: "cloud_config"
+              remediation:
+                summary: "Implement cloud governance with landing zones, guardrails, and centralized security management."
+                steps:
+                  aws:
+                    - "Deploy AWS Control Tower: aws controltower create-landing-zone (use console for initial setup)"
+                    - "Enable Security Hub across org: aws securityhub enable-security-hub --enable-default-standards"
+                    - "Create guardrails via SCPs: aws organizations create-policy --name CloudGuardrails --type SERVICE_CONTROL_POLICY --content file://guardrails.json"
+                    - "Enable AWS CloudTrail org trail: aws cloudtrail create-trail --name org-trail --s3-bucket-name <bucket> --is-organization-trail --is-multi-region-trail"
+                  azure:
+                    - "Deploy Azure Landing Zone using CAF methodology"
+                    - "Enable Defender for Cloud: az security pricing create --name VirtualMachines --tier Standard"
+                console_path:
+                  aws: "AWS Control Tower → Landing zone → Set up"
+                  azure: "Defender for Cloud → Getting started"
+              cloud_checks:
+                aws:
+                  - service: "controltower"
+                    method: "list_landing_zones"
+                    assertion: "landing_zone_deployed"
+                  - service: "securityhub"
+                    method: "describe_hub"
+                    assertion: "security_hub_enabled"
+                  - service: "organizations"
+                    method: "list_policies"
+                    assertion: "guardrail_scps_attached"
+
+        A.5.24:
+          title: "Information security incident management planning and preparation"
+          description: "The organization shall plan and prepare for managing information security incidents by defining, establishing and communicating information security incident management processes, roles and responsibilities."
+          checks:
+            - id: "A.5.24.a"
+              description: "Verify incident response plan and automation are in place"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Establish incident response with automated detection and notification through security services."
+                steps:
+                  aws:
+                    - "Enable GuardDuty: aws guardduty create-detector --enable"
+                    - "Enable Security Hub: aws securityhub enable-security-hub"
+                    - "Create SNS topic for incidents: aws sns create-topic --name security-incidents"
+                    - "Create EventBridge rule for high-severity findings: aws events put-rule --name high-severity-findings --event-pattern '{\"source\":[\"aws.securityhub\"],\"detail\":{\"findings\":{\"Severity\":{\"Label\":[\"CRITICAL\",\"HIGH\"]}}}}'"
+                    - "Set notification target: aws events put-targets --rule high-severity-findings --targets Id=1,Arn=<sns-topic-arn>"
+                    - "Store IR playbooks in SSM documents: aws ssm create-document --name IR-Playbook-Compromised-IAM --content file://playbook.json --document-type Automation"
+                  azure:
+                    - "Create Sentinel playbook: az sentinel incident create --workspace-name <ws>"
+                console_path:
+                  aws: "Security Hub → Settings → Enable; EventBridge → Rules → Create rule"
+                  azure: "Microsoft Sentinel → Automation → Create playbook"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "securityhub"
+                    method: "describe_hub"
+                    assertion: "security_hub_enabled"
+
+        A.5.25:
+          title: "Assessment and decision on information security events"
+          description: "The organization shall assess information security events and decide if they are to be categorized as information security incidents."
+          checks:
+            - id: "A.5.25.a"
+              description: "Verify security event triage and classification process"
+              evidence_type: "logging_config"
+              remediation:
+                summary: "Configure automated severity classification and triage workflows for security events."
+                steps:
+                  aws:
+                    - "Configure Security Hub custom actions: aws securityhub create-action-target --name Triage --description 'Send finding for triage' --id triage-finding"
+                    - "Set up finding aggregation: aws securityhub update-finding-aggregator --finding-aggregator-arn <arn> --region-linking-mode ALL_REGIONS"
+                    - "Create custom insight for triage: aws securityhub create-insight --name UntriagedFindings --filters '{\"WorkflowStatus\":[{\"Value\":\"NEW\",\"Comparison\":\"EQUALS\"}]}' --group-by-attribute SeverityLabel"
+                  azure:
+                    - "Configure Sentinel analytics rules: az sentinel alert-rule create --workspace-name <ws> --name SecurityEventTriage"
+                console_path:
+                  aws: "Security Hub → Findings → Filter by NEW status → Triage"
+                  azure: "Microsoft Sentinel → Analytics → Active rules"
+              cloud_checks:
+                aws:
+                  - service: "securityhub"
+                    method: "get_insights"
+                    assertion: "triage_insights_configured"
+
+        A.5.26:
+          title: "Response to information security incidents"
+          description: "Information security incidents shall be responded to in accordance with the documented procedures."
+          checks:
+            - id: "A.5.26.a"
+              description: "Verify incident response procedures and automation"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement automated incident response using SSM Automation and Lambda."
+                steps:
+                  aws:
+                    - "Create automated remediation for compromised instance: aws ssm create-document --name IR-IsolateInstance --content '{\"schemaVersion\":\"0.3\",\"mainSteps\":[{\"name\":\"isolateInstance\",\"action\":\"aws:changeInstanceState\",\"inputs\":{\"InstanceIds\":[\"{{InstanceId}}\"],\"DesiredState\":\"stopped\"}}]}' --document-type Automation"
+                    - "Create auto-remediation for open security groups: aws config put-remediation-configurations --remediation-configurations file://sg-remediation.json"
+                    - "Enable Detective for investigation: aws detective create-graph"
+                    - "Tag incident findings: aws securityhub batch-update-findings --finding-identifiers '[{\"Id\":\"<finding-id>\",\"ProductArn\":\"<product-arn>\"}]' --workflow Status=NOTIFIED"
+                  azure:
+                    - "Create Logic App playbook for auto-response: az logic workflow create --name IncidentResponse --definition @playbook.json"
+                console_path:
+                  aws: "Systems Manager → Documents → Create document → Automation"
+                  azure: "Microsoft Sentinel → Automation → Playbooks"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "list_documents"
+                    assertion: "ir_automation_documents_exist"
+                  - service: "detective"
+                    method: "list_graphs"
+                    assertion: "detective_enabled"
+
+        A.5.27:
+          title: "Learning from information security incidents"
+          description: "Knowledge gained from information security incidents shall be used to strengthen and improve the information security controls."
+          checks:
+            - id: "A.5.27.a"
+              description: "Verify post-incident review process and lessons learned"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Use Security Hub findings trends and CloudWatch dashboards to track and learn from incidents."
+                steps:
+                  aws:
+                    - "Create Security Hub insight for trends: aws securityhub create-insight --name IncidentTrends --filters '{\"CreatedAt\":[{\"DateRange\":{\"Value\":30,\"Unit\":\"DAYS\"}}]}' --group-by-attribute Type"
+                    - "Export findings for analysis: aws securityhub get-findings --filters '{\"WorkflowStatus\":[{\"Value\":\"RESOLVED\",\"Comparison\":\"EQUALS\"}]}'"
+                    - "Create CloudWatch dashboard for metrics: aws cloudwatch put-dashboard --dashboard-name SecurityMetrics --dashboard-body file://dashboard.json"
+                    - "Store post-incident reports: aws s3 cp post-incident-report.pdf s3://<bucket>/incident-reports/"
+                  azure:
+                    - "Review Sentinel incident analytics: az sentinel incident list --workspace-name <ws> --query '[?status==`Closed`]'"
+                console_path:
+                  aws: "Security Hub → Insights → Create insight for incident trends"
+                  azure: "Microsoft Sentinel → Workbooks → Security operations efficiency"
+              cloud_checks:
+                aws:
+                  - service: "securityhub"
+                    method: "get_insights"
+                    assertion: "incident_trend_insights_exist"
+
+        A.5.28:
+          title: "Collection of evidence"
+          description: "The organization shall establish and implement procedures for the identification, collection, acquisition and preservation of evidence related to information security events."
+          checks:
+            - id: "A.5.28.a"
+              description: "Verify evidence collection and preservation procedures"
+              evidence_type: "logging_config"
+              remediation:
+                summary: "Enable forensic evidence collection with immutable log storage and EBS snapshots."
+                steps:
+                  aws:
+                    - "Enable S3 Object Lock for log bucket: aws s3api put-object-lock-configuration --bucket <log-bucket> --object-lock-configuration '{\"ObjectLockEnabled\":\"Enabled\",\"Rule\":{\"DefaultRetention\":{\"Mode\":\"COMPLIANCE\",\"Days\":365}}}'"
+                    - "Create forensic snapshot of EBS volume: aws ec2 create-snapshot --volume-id <vol-id> --description 'Forensic evidence - Incident <id>' --tag-specifications 'ResourceType=snapshot,Tags=[{Key=ForensicEvidence,Value=true}]'"
+                    - "Enable CloudTrail log file validation: aws cloudtrail update-trail --name <trail> --enable-log-file-validation"
+                    - "Copy forensic artifacts to isolated account: aws s3 sync s3://<source>/evidence/ s3://<forensic-bucket>/case-<id>/"
+                  azure:
+                    - "Create immutable blob storage: az storage container-rm create --storage-account <acct> --name evidence && az storage container immutability-policy create --account-name <acct> -c evidence --period 365"
+                console_path:
+                  aws: "S3 → Log bucket → Properties → Object Lock"
+                  azure: "Storage accounts → Containers → Access policy → Immutable blob storage"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_object_lock_configuration"
+                    assertion: "object_lock_enabled_on_log_buckets"
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "log_file_validation_enabled"
+
+        A.5.29:
+          title: "Information security during disruption"
+          description: "The organization shall plan how to maintain information security at an appropriate level during disruption."
+          checks:
+            - id: "A.5.29.a"
+              description: "Verify security controls remain active during business continuity events"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Ensure security services are deployed multi-region and DR plans include security controls."
+                steps:
+                  aws:
+                    - "Enable multi-region CloudTrail: aws cloudtrail update-trail --name <trail> --is-multi-region-trail"
+                    - "Enable GuardDuty in all regions: for region in $(aws ec2 describe-regions --query 'Regions[].RegionName' --output text); do aws guardduty create-detector --enable --region $region; done"
+                    - "Replicate security configs to DR region: aws s3api put-bucket-replication --bucket <config-bucket> --replication-configuration file://replication.json"
+                    - "Test failover: aws rds failover-db-cluster --db-cluster-identifier <cluster>"
+                  azure:
+                    - "Configure Azure Site Recovery: az backup protection enable-for-vm --resource-group <rg> --vault-name <vault> --vm <vm> --policy-name DefaultPolicy"
+                console_path:
+                  aws: "CloudTrail → Trails → Edit → Enable multi-region"
+                  azure: "Recovery Services vaults → Replicated items"
+              cloud_checks:
+                aws:
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "multi_region_trail_enabled"
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled_all_regions"
+
+        A.5.30:
+          title: "ICT readiness for business continuity"
+          description: "ICT readiness shall be planned, implemented, maintained and tested based on business continuity objectives."
+          checks:
+            - id: "A.5.30.a"
+              description: "Verify ICT systems have tested backup and recovery capabilities"
+              evidence_type: "backup_config"
+              remediation:
+                summary: "Implement and test automated backups using AWS Backup with cross-region replication."
+                steps:
+                  aws:
+                    - "Create backup plan: aws backup create-backup-plan --backup-plan '{\"BackupPlanName\":\"DailyBackup\",\"Rules\":[{\"RuleName\":\"DailyRule\",\"TargetBackupVaultName\":\"Default\",\"ScheduleExpression\":\"cron(0 1 * * ? *)\",\"Lifecycle\":{\"DeleteAfterDays\":90}}]}'"
+                    - "Assign resources to plan: aws backup create-backup-selection --backup-plan-id <plan-id> --backup-selection '{\"SelectionName\":\"AllTagged\",\"IamRoleArn\":\"<role-arn>\",\"ListOfTags\":[{\"ConditionType\":\"STRINGEQUALS\",\"ConditionKey\":\"Backup\",\"ConditionValue\":\"true\"}]}'"
+                    - "Enable cross-region copy: add CopyActions to backup rule"
+                    - "Test restore: aws backup start-restore-job --recovery-point-arn <arn> --iam-role-arn <role-arn> --metadata file://restore-metadata.json"
+                  azure:
+                    - "Create backup policy: az backup policy create --resource-group <rg> --vault-name <vault> --name DailyPolicy --policy @backup-policy.json"
+                console_path:
+                  aws: "AWS Backup → Backup plans → Create plan"
+                  azure: "Recovery Services vaults → Backup policies"
+              cloud_checks:
+                aws:
+                  - service: "backup"
+                    method: "list_backup_plans"
+                    assertion: "backup_plans_exist"
+                  - service: "backup"
+                    method: "list_recovery_points_by_backup_vault"
+                    assertion: "recent_backups_exist"
+
+        A.5.31:
+          title: "Legal, statutory, regulatory and contractual requirements"
+          description: "Legal, statutory, regulatory and contractual requirements relevant to information security and the organization's approach to meet these requirements shall be identified, documented and kept up to date."
+          checks:
+            - id: "A.5.31.a"
+              description: "Verify compliance requirements are documented and tracked"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Use Security Hub compliance standards and AWS Audit Manager to track regulatory compliance."
+                steps:
+                  aws:
+                    - "Enable compliance standards in Security Hub: aws securityhub batch-enable-standards --standards-subscription-requests StandardsArn=arn:aws:securityhub:::standards/cis-aws-foundations-benchmark/v/1.4.0"
+                    - "Create Audit Manager assessment: aws auditmanager create-assessment --name ISO27001Assessment --framework-id <framework-id> --assessment-reports-destination '{\"destinationType\":\"S3\",\"destination\":\"s3://<bucket>/audit-reports\"}' --roles '[{\"roleArn\":\"<arn>\",\"roleType\":\"PROCESS_OWNER\"}]' --scope '{\"awsAccounts\":[{\"id\":\"<account-id>\"}]}'"
+                    - "List available frameworks: aws auditmanager list-assessment-frameworks --framework-type Standard"
+                  azure:
+                    - "View compliance in Defender for Cloud: az security regulatory-compliance-standards list"
+                console_path:
+                  aws: "Security Hub → Security standards → Enable standards"
+                  azure: "Defender for Cloud → Regulatory compliance"
+              cloud_checks:
+                aws:
+                  - service: "securityhub"
+                    method: "get_enabled_standards"
+                    assertion: "compliance_standards_enabled"
+                  - service: "auditmanager"
+                    method: "list_assessments"
+                    assertion: "active_assessments_exist"
+
+        A.5.32:
+          title: "Intellectual property rights"
+          description: "The organization shall implement appropriate procedures to protect intellectual property rights."
+          checks:
+            - id: "A.5.32.a"
+              description: "Verify intellectual property protection controls"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Implement DLP controls and license tracking to protect intellectual property."
+                steps:
+                  aws:
+                    - "Enable Macie for sensitive data discovery: aws macie2 enable-macie"
+                    - "Create custom data identifiers for proprietary patterns: aws macie2 create-custom-data-identifier --name ProprietaryCode --regex '(?i)(proprietary|confidential|trade.?secret)' --keywords '[\"internal only\"]'"
+                    - "Restrict code repository access: configure CodeCommit or CodeArtifact repository policies"
+                    - "Use License Manager: aws license-manager create-license-configuration --name 'Software Licenses' --license-counting-type Instance"
+                  azure:
+                    - "Enable Microsoft Purview DLP: configure DLP policies via Microsoft 365 compliance center"
+                console_path:
+                  aws: "Macie → Custom data identifiers → Create"
+                  azure: "Microsoft Purview → Data loss prevention → Policies"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "get_macie_session"
+                    assertion: "macie_enabled"
+                  - service: "license-manager"
+                    method: "list_license_configurations"
+                    assertion: "license_tracking_active"
+
+        A.5.33:
+          title: "Protection of records"
+          description: "Records shall be protected from loss, destruction, falsification, unauthorized access and unauthorized release."
+          checks:
+            - id: "A.5.33.a"
+              description: "Verify records are protected with versioning, encryption, and access controls"
+              evidence_type: "storage_config"
+              remediation:
+                summary: "Enable S3 versioning, encryption, Object Lock and access logging for record storage."
+                steps:
+                  aws:
+                    - "Enable versioning: aws s3api put-bucket-versioning --bucket <records-bucket> --versioning-configuration Status=Enabled"
+                    - "Enable default encryption: aws s3api put-bucket-encryption --bucket <records-bucket> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\",\"KMSMasterKeyID\":\"<key-id>\"}}]}'"
+                    - "Enable Object Lock: aws s3api put-object-lock-configuration --bucket <records-bucket> --object-lock-configuration '{\"ObjectLockEnabled\":\"Enabled\",\"Rule\":{\"DefaultRetention\":{\"Mode\":\"GOVERNANCE\",\"Days\":2555}}}'"
+                    - "Enable access logging: aws s3api put-bucket-logging --bucket <records-bucket> --bucket-logging-status '{\"LoggingEnabled\":{\"TargetBucket\":\"<log-bucket>\",\"TargetPrefix\":\"records-access/\"}}'"
+                  azure:
+                    - "Enable soft delete and versioning: az storage blob service-properties update --account-name <acct> --enable-versioning true --delete-retention-days 365"
+                console_path:
+                  aws: "S3 → Bucket → Properties → Versioning, Encryption, Object Lock"
+                  azure: "Storage accounts → Data protection → Enable soft delete"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_bucket_versioning"
+                    assertion: "versioning_enabled"
+                  - service: "s3"
+                    method: "get_bucket_encryption"
+                    assertion: "encryption_enabled"
+
+        A.5.34:
+          title: "Privacy and protection of personal identifiable information (PII)"
+          description: "The organization shall identify and meet the requirements regarding the preservation of privacy and protection of PII as required in applicable legislation and regulation and contractual requirements."
+          checks:
+            - id: "A.5.34.a"
+              description: "Verify PII is discovered, classified, and protected"
+              evidence_type: "data_classification"
+              remediation:
+                summary: "Use Macie to discover and classify PII, and implement data protection controls."
+                steps:
+                  aws:
+                    - "Enable Macie: aws macie2 enable-macie"
+                    - "Create PII discovery job: aws macie2 create-classification-job --job-type ONE_TIME --s3-job-definition '{\"bucketDefinitions\":[{\"accountId\":\"<acct>\",\"buckets\":[\"<bucket>\"]}]}' --managed-data-identifier-selector ALL --name PIIDiscovery"
+                    - "Review PII findings: aws macie2 get-finding-statistics --group-by type"
+                    - "Block public access for PII buckets: aws s3api put-public-access-block --bucket <bucket> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                  azure:
+                    - "Enable Purview scanning: az purview account create --resource-group <rg> --name <acct>"
+                console_path:
+                  aws: "Macie → Jobs → Create job → Enable PII detection"
+                  azure: "Microsoft Purview → Data map → Scans"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "list_classification_jobs"
+                    assertion: "pii_discovery_jobs_running"
+                  - service: "s3"
+                    method: "get_public_access_block"
+                    assertion: "public_access_blocked"
+
+        A.5.35:
+          title: "Independent review of information security"
+          description: "The organization's approach to managing information security and its implementation including people, processes and technologies shall be reviewed independently at planned intervals, or when significant changes occur."
+          checks:
+            - id: "A.5.35.a"
+              description: "Verify independent security reviews are conducted"
+              evidence_type: "audit_report"
+              remediation:
+                summary: "Use AWS Audit Manager for automated evidence collection and schedule independent audits."
+                steps:
+                  aws:
+                    - "Create Audit Manager assessment: aws auditmanager create-assessment --name IndependentReview --framework-id <iso-27001-framework-id> --assessment-reports-destination '{\"destinationType\":\"S3\",\"destination\":\"s3://<bucket>/audit\"}' --roles '[{\"roleArn\":\"<arn>\",\"roleType\":\"PROCESS_OWNER\"}]' --scope '{\"awsAccounts\":[{\"id\":\"<account-id>\"}]}'"
+                    - "Generate assessment report: aws auditmanager create-assessment-report --name AnnualReview --assessment-id <id>"
+                    - "Enable Security Hub CIS benchmark: aws securityhub batch-enable-standards --standards-subscription-requests StandardsArn=arn:aws:securityhub:::standards/cis-aws-foundations-benchmark/v/1.4.0"
+                  azure:
+                    - "View compliance score: az security regulatory-compliance-standards list"
+                console_path:
+                  aws: "Audit Manager → Assessments → Create assessment"
+                  azure: "Defender for Cloud → Regulatory compliance → Download report"
+              cloud_checks:
+                aws:
+                  - service: "auditmanager"
+                    method: "list_assessments"
+                    assertion: "active_assessments_exist"
+                  - service: "securityhub"
+                    method: "get_enabled_standards"
+                    assertion: "cis_benchmark_enabled"
+
+        A.5.36:
+          title: "Compliance with policies, rules and standards for information security"
+          description: "Compliance with the organization's established information security policy, topic-specific policies, rules and standards shall be regularly reviewed."
+          checks:
+            - id: "A.5.36.a"
+              description: "Verify compliance monitoring and reporting is active"
+              evidence_type: "compliance_report"
+              remediation:
+                summary: "Use AWS Config conformance packs and Security Hub for continuous compliance monitoring."
+                steps:
+                  aws:
+                    - "Deploy conformance pack: aws configservice put-conformance-pack --conformance-pack-name Operational-Best-Practices-for-ISO-27001 --template-s3-uri s3://aws-configservice-templates/Operational-Best-Practices-for-ISO27001-2013.template.yaml"
+                    - "Check compliance: aws configservice describe-conformance-pack-compliance --conformance-pack-name Operational-Best-Practices-for-ISO-27001"
+                    - "Create compliance dashboard: aws cloudwatch put-dashboard --dashboard-name ComplianceStatus --dashboard-body file://compliance-dashboard.json"
+                  azure:
+                    - "Assign ISO 27001 policy initiative: az policy assignment create --name ISO27001 --policy-set-definition '/providers/Microsoft.Authorization/policySetDefinitions/89c6cddc-1c73-4ac1-b19c-54d1a15a42f2'"
+                console_path:
+                  aws: "AWS Config → Conformance packs → Deploy pack"
+                  azure: "Policy → Compliance → ISO 27001"
+              cloud_checks:
+                aws:
+                  - service: "configservice"
+                    method: "describe_conformance_pack_compliance"
+                    assertion: "conformance_pack_compliant"
+
+        A.5.37:
+          title: "Documented operating procedures"
+          description: "Operating procedures for information processing facilities shall be documented and made available to personnel who need them."
+          checks:
+            - id: "A.5.37.a"
+              description: "Verify operating procedures are documented and accessible"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Document operational runbooks in SSM and make them accessible to operations teams."
+                steps:
+                  aws:
+                    - "Create SSM runbook: aws ssm create-document --name OpsRunbook-PatchManagement --content file://patch-runbook.json --document-type Automation --document-format JSON"
+                    - "Share document with team: aws ssm modify-document-permission --name OpsRunbook-PatchManagement --permission-type Share --account-ids-to-add <account-id>"
+                    - "List available documents: aws ssm list-documents --filters Key=DocumentType,Values=Automation"
+                    - "Store procedures in S3 wiki: aws s3 sync ./runbooks/ s3://<bucket>/runbooks/"
+                  azure:
+                    - "Create Azure Automation runbook: az automation runbook create --resource-group <rg> --automation-account-name <acct> --name PatchManagement --type PowerShell"
+                console_path:
+                  aws: "Systems Manager → Documents → Create document"
+                  azure: "Automation Accounts → Runbooks → Create"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "list_documents"
+                    assertion: "operational_runbooks_exist"
+
+    A6:
+      name: "People Controls"
+      controls:
+        A.6.1:
+          title: "Screening"
+          description: "Background verification checks on all candidates to become personnel shall be carried out prior to joining the organization and on an ongoing basis taking into account applicable laws, regulations and ethics and be proportional to the business requirements, the classification of the information to be accessed and the perceived risks."
+          checks:
+            - id: "A.6.1.a"
+              description: "Verify background screening processes are documented and automated where possible"
+              evidence_type: "hr_record"
+              remediation:
+                summary: "Implement identity verification and access provisioning controls that require screening completion before granting access."
+                steps:
+                  aws:
+                    - "Create IAM user only after screening flag in SSM: aws ssm get-parameter --name /hr/screening/<user>/status --query 'Parameter.Value'"
+                    - "Tag users with screening status: aws iam tag-user --user-name <user> --tags Key=ScreeningCompleted,Value=true Key=ScreeningDate,Value=2026-01-15"
+                    - "Create Config rule to check user tags: aws configservice put-config-rule --config-rule file://screening-tag-rule.json"
+                    - "List users missing screening tag: aws configservice get-compliance-details-by-config-rule --config-rule-name RequireScreeningTag --compliance-types NON_COMPLIANT"
+                  azure:
+                    - "Check user provisioning status: az ad user show --id <user-id> --query '{displayName:displayName, accountEnabled:accountEnabled}'"
+                console_path:
+                  aws: "IAM → Users → Tags → Verify ScreeningCompleted tag"
+                  azure: "Entra ID → Users → Properties → Verify onboarding status"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_user_tags"
+                    assertion: "screening_tags_present"
+
+        A.6.2:
+          title: "Terms and conditions of employment"
+          description: "The employment contractual agreements shall state the personnel's and the organization's responsibilities for information security."
+          checks:
+            - id: "A.6.2.a"
+              description: "Verify employment agreements include security responsibilities and are acknowledged"
+              evidence_type: "hr_record"
+              remediation:
+                summary: "Store signed employment agreements with security clauses and track acknowledgment digitally."
+                steps:
+                  aws:
+                    - "Store signed agreements in S3: aws s3 cp employment-agreement-signed.pdf s3://<hr-bucket>/agreements/<user>/"
+                    - "Enable versioning on HR bucket: aws s3api put-bucket-versioning --bucket <hr-bucket> --versioning-configuration Status=Enabled"
+                    - "Track acknowledgment in SSM Parameter Store: aws ssm put-parameter --name /hr/agreements/<user>/security-acknowledged --value 'true' --type String"
+                    - "Enforce encryption on HR bucket: aws s3api put-bucket-encryption --bucket <hr-bucket> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\"}}]}'"
+                  azure:
+                    - "Upload agreement to secure blob: az storage blob upload --container-name hr-agreements --file agreement.pdf --name <user>/agreement.pdf --account-name <storage>"
+                console_path:
+                  aws: "S3 → hr-bucket → agreements/ → Upload signed document"
+                  azure: "Storage accounts → hr-storage → hr-agreements → Upload"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "list_objects_v2"
+                    assertion: "employment_agreements_stored"
+                  - service: "ssm"
+                    method: "get_parameter"
+                    assertion: "security_acknowledgment_recorded"
+
+        A.6.3:
+          title: "Information security awareness, education and training"
+          description: "Personnel of the organization and relevant interested parties shall receive appropriate information security awareness, education and training and regular updates of the organization's information security policy, topic-specific policies and procedures, as relevant for their job function."
+          checks:
+            - id: "A.6.3.a"
+              description: "Verify security awareness training is delivered and tracked"
+              evidence_type: "training_record"
+              remediation:
+                summary: "Track security training completion and enforce training requirements before granting elevated access."
+                steps:
+                  aws:
+                    - "Store training records in SSM: aws ssm put-parameter --name /training/<user>/security-awareness --value '{\"completed\":true,\"date\":\"2026-01-15\",\"score\":95}' --type String"
+                    - "Tag IAM users with training status: aws iam tag-user --user-name <user> --tags Key=SecurityTrainingCompleted,Value=2026-01-15"
+                    - "Create Config rule for training tags: aws configservice put-config-rule --config-rule file://training-tag-required.json"
+                    - "Query non-compliant users: aws configservice get-compliance-details-by-config-rule --config-rule-name RequireTrainingTag --compliance-types NON_COMPLIANT"
+                  azure:
+                    - "Check training compliance via Graph API: az rest --method GET --uri /users/<user-id>/memberOf"
+                console_path:
+                  aws: "IAM → Users → Tags → SecurityTrainingCompleted"
+                  azure: "Entra ID → Users → Check training group membership"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_user_tags"
+                    assertion: "training_completion_tags_present"
+                  - service: "configservice"
+                    method: "get_compliance_details_by_config_rule"
+                    assertion: "all_users_training_compliant"
+
+        A.6.4:
+          title: "Disciplinary process"
+          description: "A disciplinary process shall be formalized and communicated to take actions against personnel and other relevant interested parties who have committed an information security policy violation."
+          checks:
+            - id: "A.6.4.a"
+              description: "Verify disciplinary process is documented and security violations are tracked"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Document disciplinary procedures and implement automated detection of policy violations."
+                steps:
+                  aws:
+                    - "Store disciplinary policy in S3: aws s3 cp disciplinary-policy.pdf s3://<policy-bucket>/hr-policies/"
+                    - "Enable CloudTrail for user activity monitoring: aws cloudtrail create-trail --name UserActivityTrail --s3-bucket-name <trail-bucket> --is-multi-region-trail"
+                    - "Create CloudWatch alarm for unauthorized access attempts: aws cloudwatch put-metric-alarm --alarm-name UnauthorizedAccessAttempts --metric-name UnauthorizedAttempts --namespace Security --threshold 5 --comparison-operator GreaterThanThreshold --evaluation-periods 1 --period 300 --statistic Sum --alarm-actions <sns-arn>"
+                    - "Create EventBridge rule for policy violations: aws events put-rule --name PolicyViolationDetection --event-pattern '{\"source\":[\"aws.guardduty\"],\"detail-type\":[\"GuardDuty Finding\"]}'"
+                  azure:
+                    - "Store policy in SharePoint: az storage blob upload --container-name policies --file disciplinary-policy.pdf --name hr-policies/disciplinary-policy.pdf"
+                console_path:
+                  aws: "S3 → policy-bucket → hr-policies/ → Upload"
+                  azure: "Storage accounts → Containers → policies → Upload"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "list_objects_v2"
+                    assertion: "disciplinary_policy_documented"
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "user_activity_trail_enabled"
+
+        A.6.5:
+          title: "Responsibilities after employment termination or change"
+          description: "Information security responsibilities and duties that remain valid after termination or change of employment shall be defined, enforced and communicated to relevant personnel and other interested parties."
+          checks:
+            - id: "A.6.5.a"
+              description: "Verify offboarding procedures revoke access and enforce post-employment obligations"
+              evidence_type: "hr_record"
+              remediation:
+                summary: "Automate access revocation upon employment termination and maintain audit trail of offboarding actions."
+                steps:
+                  aws:
+                    - "List user access keys for revocation: aws iam list-access-keys --user-name <user>"
+                    - "Deactivate access keys: aws iam update-access-key --user-name <user> --access-key-id <key-id> --status Inactive"
+                    - "Remove console access: aws iam delete-login-profile --user-name <user>"
+                    - "Deactivate MFA devices: aws iam deactivate-mfa-device --user-name <user> --serial-number <mfa-arn>"
+                    - "Remove from all groups: aws iam list-groups-for-user --user-name <user> --query 'Groups[].GroupName' --output text | xargs -I {} aws iam remove-user-from-group --user-name <user> --group-name {}"
+                    - "Tag user as terminated: aws iam tag-user --user-name <user> --tags Key=Status,Value=Terminated Key=TerminationDate,Value=2026-01-15"
+                  azure:
+                    - "Disable user account: az ad user update --id <user-id> --account-enabled false"
+                    - "Revoke all sessions: az rest --method POST --uri /users/<user-id>/revokeSignInSessions"
+                console_path:
+                  aws: "IAM → Users → <user> → Security credentials → Deactivate"
+                  azure: "Entra ID → Users → <user> → Revoke sessions"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_access_keys"
+                    assertion: "terminated_user_keys_inactive"
+                  - service: "iam"
+                    method: "get_login_profile"
+                    assertion: "terminated_user_no_console_access"
+
+        A.6.6:
+          title: "Confidentiality or non-disclosure agreements"
+          description: "Confidentiality or non-disclosure agreements reflecting the organization's needs for the protection of information shall be identified, documented, regularly reviewed and signed by personnel and other relevant interested parties."
+          checks:
+            - id: "A.6.6.a"
+              description: "Verify NDAs are signed and stored securely with review tracking"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Store signed NDAs in encrypted storage with versioning and track review dates."
+                steps:
+                  aws:
+                    - "Store signed NDAs in S3: aws s3 cp nda-signed.pdf s3://<hr-bucket>/ndas/<user>/"
+                    - "Enable encryption on HR bucket: aws s3api put-bucket-encryption --bucket <hr-bucket> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\",\"KMSMasterKeyID\":\"<kms-key-id>\"}}]}'"
+                    - "Track NDA status in SSM: aws ssm put-parameter --name /hr/nda/<user>/status --value '{\"signed\":true,\"date\":\"2026-01-15\",\"review_due\":\"2027-01-15\"}' --type String"
+                    - "Block public access on HR bucket: aws s3api put-public-access-block --bucket <hr-bucket> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                  azure:
+                    - "Upload NDA to secure storage: az storage blob upload --container-name ndas --file nda-signed.pdf --name <user>/nda-signed.pdf --account-name <storage>"
+                console_path:
+                  aws: "S3 → hr-bucket → ndas/ → Upload signed NDA"
+                  azure: "Storage accounts → hr-storage → ndas → Upload"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "list_objects_v2"
+                    assertion: "nda_documents_stored"
+                  - service: "s3"
+                    method: "get_bucket_encryption"
+                    assertion: "hr_bucket_encrypted"
+
+        A.6.7:
+          title: "Remote working"
+          description: "Security measures shall be implemented when personnel are working remotely to protect information accessed, processed or stored outside the organization's premises."
+          checks:
+            - id: "A.6.7.a"
+              description: "Verify remote working security controls including VPN and endpoint protection"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement VPN access controls, endpoint compliance checks, and secure remote access policies."
+                steps:
+                  aws:
+                    - "Create Client VPN endpoint: aws ec2 create-client-vpn-endpoint --client-cidr-block 10.0.0.0/16 --server-certificate-arn <cert-arn> --authentication-options Type=certificate-authentication,MutualAuthentication={ClientRootCertificateChainArn=<client-cert-arn>} --connection-log-options Enabled=true,CloudwatchLogGroup=/aws/vpn/connections"
+                    - "Associate VPN with subnet: aws ec2 associate-client-vpn-target-network --client-vpn-endpoint-id <vpn-id> --subnet-id <subnet-id>"
+                    - "Add authorization rule: aws ec2 authorize-client-vpn-ingress --client-vpn-endpoint-id <vpn-id> --target-network-cidr 10.0.0.0/16 --authorize-all-groups"
+                    - "Verify VPN connections: aws ec2 describe-client-vpn-connections --client-vpn-endpoint-id <vpn-id>"
+                  azure:
+                    - "Create VPN gateway: az network vnet-gateway create --name RemoteVPN --resource-group <rg> --vnet <vnet> --gateway-type Vpn --vpn-type RouteBased --sku VpnGw1"
+                console_path:
+                  aws: "VPC → Client VPN endpoints → Create endpoint"
+                  azure: "Virtual network gateways → Create"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_client_vpn_endpoints"
+                    assertion: "client_vpn_configured"
+                  - service: "ec2"
+                    method: "describe_client_vpn_connections"
+                    assertion: "vpn_logging_enabled"
+
+        A.6.8:
+          title: "Information security event reporting"
+          description: "The organization shall provide a mechanism for personnel to report observed or suspected information security events through appropriate channels in a timely manner."
+          checks:
+            - id: "A.6.8.a"
+              description: "Verify security event reporting mechanisms are in place and accessible"
+              evidence_type: "incident_report"
+              remediation:
+                summary: "Implement automated security event detection and reporting channels for personnel."
+                steps:
+                  aws:
+                    - "Enable GuardDuty for automated event detection: aws guardduty create-detector --enable --finding-publishing-frequency FIFTEEN_MINUTES"
+                    - "Create SNS topic for security event reporting: aws sns create-topic --name SecurityEventReporting"
+                    - "Subscribe security team: aws sns subscribe --topic-arn <topic-arn> --protocol email --notification-endpoint security-team@example.com"
+                    - "Create EventBridge rule to route security events: aws events put-rule --name SecurityEventNotification --event-pattern '{\"source\":[\"aws.guardduty\",\"aws.securityhub\"],\"detail-type\":[\"GuardDuty Finding\",\"Security Hub Findings - Imported\"]}'"
+                    - "Add SNS target to EventBridge rule: aws events put-targets --rule SecurityEventNotification --targets Id=1,Arn=<topic-arn>"
+                  azure:
+                    - "Configure Defender for Cloud alerts: az security alert list --query '[].{Name:alertDisplayName, Severity:severity}'"
+                console_path:
+                  aws: "GuardDuty → Settings → Findings → SNS notification"
+                  azure: "Defender for Cloud → Security alerts → Configure notifications"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "sns"
+                    method: "list_topics"
+                    assertion: "security_reporting_topic_exists"
+
+    A7:
+      name: "Physical Controls"
+      controls:
+        A.7.1:
+          title: "Physical security perimeters"
+          description: "Security perimeters shall be defined and used to protect areas that contain information and other associated assets."
+          checks:
+            - id: "A.7.1.a"
+              description: "Verify physical security perimeters are defined for cloud infrastructure regions"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Restrict workloads to approved AWS regions and document physical security perimeter requirements."
+                steps:
+                  aws:
+                    - "Create SCP to restrict regions: aws organizations create-policy --name AllowedRegionsOnly --type SERVICE_CONTROL_POLICY --content '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Action\":\"*\",\"Resource\":\"*\",\"Condition\":{\"StringNotEquals\":{\"aws:RequestedRegion\":[\"us-east-1\",\"eu-west-1\"]}}}]}'"
+                    - "Attach SCP to organizational unit: aws organizations attach-policy --policy-id <policy-id> --target-id <ou-id>"
+                    - "Verify region restrictions: aws ec2 describe-regions --query 'Regions[].RegionName'"
+                    - "Store physical security documentation in S3: aws s3 cp physical-security-perimeter-doc.pdf s3://<policy-bucket>/physical-security/"
+                  azure:
+                    - "Create allowed locations policy: az policy assignment create --name AllowedLocations --policy '/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c' --params '{\"listOfAllowedLocations\":{\"value\":[\"eastus\",\"westeurope\"]}}'"
+                console_path:
+                  aws: "AWS Organizations → Policies → Service control policies → Create"
+                  azure: "Policy → Assignments → Allowed locations"
+              cloud_checks:
+                aws:
+                  - service: "organizations"
+                    method: "list_policies"
+                    assertion: "region_restriction_scps_exist"
+
+        A.7.2:
+          title: "Physical entry"
+          description: "Secure areas shall be protected by appropriate entry controls and access points."
+          checks:
+            - id: "A.7.2.a"
+              description: "Verify physical entry controls via CloudTrail and console access monitoring"
+              evidence_type: "access_log"
+              remediation:
+                summary: "Monitor console and API access patterns to detect unauthorized physical or logical entry."
+                steps:
+                  aws:
+                    - "Enable CloudTrail for management events: aws cloudtrail create-trail --name ManagementAuditTrail --s3-bucket-name <trail-bucket> --is-multi-region-trail --enable-log-file-validation"
+                    - "Start logging: aws cloudtrail start-logging --name ManagementAuditTrail"
+                    - "Create metric filter for console sign-ins: aws logs put-metric-filter --log-group-name CloudTrail/ManagementEvents --filter-name ConsoleSignIns --filter-pattern '{($.eventName=ConsoleLogin)}' --metric-transformations metricName=ConsoleSignInCount,metricNamespace=Security,metricValue=1"
+                    - "Create alarm for unusual sign-ins: aws cloudwatch put-metric-alarm --alarm-name UnusualConsoleSignIn --metric-name ConsoleSignInCount --namespace Security --threshold 10 --comparison-operator GreaterThanThreshold --evaluation-periods 1 --period 3600 --statistic Sum --alarm-actions <sns-arn>"
+                  azure:
+                    - "Review sign-in logs: az monitor activity-log list --query \"[?contains(operationName.value,'Microsoft.Authorization')]\" --start-time 2026-01-01"
+                console_path:
+                  aws: "CloudTrail → Event history → Filter by ConsoleLogin"
+                  azure: "Entra ID → Sign-in logs"
+              cloud_checks:
+                aws:
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "management_trail_enabled"
+                  - service: "cloudtrail"
+                    method: "get_trail_status"
+                    assertion: "trail_logging_active"
+
+        A.7.3:
+          title: "Securing offices, rooms and facilities"
+          description: "Physical security for offices, rooms and facilities shall be designed and implemented."
+          checks:
+            - id: "A.7.3.a"
+              description: "Verify facility security documentation and restricted area configurations"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Document physical facility security controls and enforce network segmentation for sensitive zones."
+                steps:
+                  aws:
+                    - "Store facility security plans in S3: aws s3 cp facility-security-plan.pdf s3://<policy-bucket>/physical-security/"
+                    - "Create VPC for sensitive workloads: aws ec2 create-vpc --cidr-block 10.1.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Zone,Value=Restricted}]'"
+                    - "Create private subnet: aws ec2 create-subnet --vpc-id <vpc-id> --cidr-block 10.1.1.0/24 --tag-specifications 'ResourceType=subnet,Tags=[{Key=Zone,Value=Restricted}]'"
+                    - "Verify no public subnets in restricted VPC: aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc-id> --query 'Subnets[?MapPublicIpOnLaunch==`true`]'"
+                  azure:
+                    - "Create network security group for restricted zone: az network nsg create --resource-group <rg> --name RestrictedZoneNSG"
+                console_path:
+                  aws: "VPC → Your VPCs → Create VPC"
+                  azure: "Virtual networks → Subnets → Network security groups"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_vpcs"
+                    assertion: "restricted_vpcs_exist"
+
+        A.7.4:
+          title: "Physical security monitoring"
+          description: "Premises shall be continuously monitored for unauthorized physical access."
+          checks:
+            - id: "A.7.4.a"
+              description: "Verify continuous monitoring of access patterns and anomaly detection"
+              evidence_type: "monitoring_log"
+              remediation:
+                summary: "Implement continuous monitoring of infrastructure access using CloudTrail, GuardDuty, and Security Hub."
+                steps:
+                  aws:
+                    - "Enable GuardDuty: aws guardduty create-detector --enable --finding-publishing-frequency FIFTEEN_MINUTES"
+                    - "Enable Security Hub: aws securityhub enable-security-hub --enable-default-standards"
+                    - "Create CloudWatch dashboard for security monitoring: aws cloudwatch put-dashboard --dashboard-name SecurityMonitoring --dashboard-body file://security-dashboard.json"
+                    - "Enable VPC Flow Logs: aws ec2 create-flow-logs --resource-type VPC --resource-ids <vpc-id> --traffic-type ALL --log-destination-type cloud-watch-logs --log-group-name /aws/vpc/flowlogs"
+                  azure:
+                    - "Enable Defender for Cloud: az security pricing create --name VirtualMachines --tier Standard"
+                console_path:
+                  aws: "Security Hub → Summary → View findings"
+                  azure: "Defender for Cloud → Overview"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "securityhub"
+                    method: "describe_hub"
+                    assertion: "security_hub_enabled"
+
+        A.7.5:
+          title: "Protecting against physical and environmental threats"
+          description: "Protection against physical and environmental threats, such as natural disasters and other intentional or unintentional physical threats to infrastructure shall be designed and implemented."
+          checks:
+            - id: "A.7.5.a"
+              description: "Verify multi-AZ and disaster recovery configurations for environmental resilience"
+              evidence_type: "config"
+              remediation:
+                summary: "Deploy workloads across multiple availability zones and configure disaster recovery."
+                steps:
+                  aws:
+                    - "Verify RDS multi-AZ deployment: aws rds describe-db-instances --query 'DBInstances[].{DBInstanceIdentifier:DBInstanceIdentifier,MultiAZ:MultiAZ,AvailabilityZone:AvailabilityZone}'"
+                    - "Enable S3 cross-region replication: aws s3api put-bucket-replication --bucket <source-bucket> --replication-configuration file://replication-config.json"
+                    - "Describe EC2 instances across AZs: aws ec2 describe-instances --query 'Reservations[].Instances[].{InstanceId:InstanceId,AZ:Placement.AvailabilityZone}'"
+                    - "Create backup plan: aws backup create-backup-plan --backup-plan '{\"BackupPlanName\":\"DR-Plan\",\"Rules\":[{\"RuleName\":\"DailyBackup\",\"TargetBackupVaultName\":\"Default\",\"ScheduleExpression\":\"cron(0 12 * * ? *)\",\"Lifecycle\":{\"DeleteAfterDays\":90}}]}'"
+                  azure:
+                    - "Check availability zones: az vm list --query '[].{Name:name, Zones:zones}' -o table"
+                console_path:
+                  aws: "RDS → Databases → Modify → Enable Multi-AZ"
+                  azure: "Virtual machines → Availability + scaling"
+              cloud_checks:
+                aws:
+                  - service: "rds"
+                    method: "describe_db_instances"
+                    assertion: "multi_az_enabled"
+                  - service: "backup"
+                    method: "list_backup_plans"
+                    assertion: "backup_plans_exist"
+
+        A.7.6:
+          title: "Working in secure areas"
+          description: "Security measures for working in secure areas shall be designed and implemented."
+          checks:
+            - id: "A.7.6.a"
+              description: "Verify access controls for secure/restricted environments"
+              evidence_type: "access_log"
+              remediation:
+                summary: "Implement strict access controls for sensitive environments using IAM policies and network isolation."
+                steps:
+                  aws:
+                    - "Create IAM policy restricting access to production: aws iam create-policy --policy-name RestrictedProductionAccess --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"ec2:Describe*\",\"rds:Describe*\"],\"Resource\":\"*\",\"Condition\":{\"StringEquals\":{\"aws:RequestedRegion\":\"us-east-1\"}}}]}'"
+                    - "Create restricted IAM group: aws iam create-group --group-name SecureAreaAccess"
+                    - "Attach policy to group: aws iam attach-group-policy --group-name SecureAreaAccess --policy-arn <policy-arn>"
+                    - "Enable session logging with SSM: aws ssm start-session --target <instance-id> --document-name AWS-StartInteractiveCommand"
+                  azure:
+                    - "Create PIM eligible assignment: az rest --method POST --uri /providers/Microsoft.Authorization/roleEligibilityScheduleRequests --body @pim-request.json"
+                console_path:
+                  aws: "IAM → Policies → Create policy → RestrictedProductionAccess"
+                  azure: "Entra ID → Privileged Identity Management → Eligible assignments"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_policies"
+                    assertion: "restricted_access_policies_exist"
+
+        A.7.7:
+          title: "Clear desk and clear screen"
+          description: "Clear desk rules for papers and removable storage media and clear screen rules for information processing facilities shall be defined and appropriately enforced."
+          checks:
+            - id: "A.7.7.a"
+              description: "Verify screen lock policies and session timeout configurations"
+              evidence_type: "config"
+              remediation:
+                summary: "Enforce session timeouts and screen lock policies for cloud console and CLI access."
+                steps:
+                  aws:
+                    - "Set IAM password policy with session controls: aws iam update-account-password-policy --max-password-age 90 --password-reuse-prevention 24 --minimum-password-length 14 --require-symbols --require-numbers --require-uppercase-characters --require-lowercase-characters"
+                    - "Set maximum CLI session duration for roles: aws iam update-role --role-name <role> --max-session-duration 3600"
+                    - "Create SCP to enforce session duration: aws organizations create-policy --name EnforceSessionDuration --type SERVICE_CONTROL_POLICY --content file://session-duration-scp.json"
+                    - "Check current session durations: aws iam list-roles --query 'Roles[].{RoleName:RoleName,MaxSessionDuration:MaxSessionDuration}'"
+                  azure:
+                    - "Set conditional access session controls: az rest --method POST --uri /identity/conditionalAccess/policies --body @session-policy.json"
+                console_path:
+                  aws: "IAM → Account settings → Password policy"
+                  azure: "Entra ID → Conditional Access → Session controls"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_account_password_policy"
+                    assertion: "password_policy_enforced"
+                  - service: "iam"
+                    method: "list_roles"
+                    assertion: "session_duration_limited"
+
+        A.7.8:
+          title: "Equipment siting and protection"
+          description: "Equipment shall be sited securely and protected."
+          checks:
+            - id: "A.7.8.a"
+              description: "Verify infrastructure deployment in compliant and protected locations"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure infrastructure is deployed in approved regions with appropriate protections."
+                steps:
+                  aws:
+                    - "List all resources by region: aws ec2 describe-instances --query 'Reservations[].Instances[].{InstanceId:InstanceId,Region:Placement.AvailabilityZone}' --region <region>"
+                    - "Verify dedicated hosts if required: aws ec2 describe-hosts --query 'Hosts[].{HostId:HostId,State:State,InstanceType:HostProperties.InstanceType}'"
+                    - "Check placement groups: aws ec2 describe-placement-groups --query 'PlacementGroups[].{Name:GroupName,Strategy:Strategy,State:State}'"
+                    - "Verify Nitro-based instances: aws ec2 describe-instance-types --filters Name=hypervisor,Values=nitro --query 'InstanceTypes[].InstanceType'"
+                  azure:
+                    - "List resource locations: az resource list --query '[].{Name:name, Location:location}' -o table"
+                console_path:
+                  aws: "EC2 → Instances → Check placement and region"
+                  azure: "All resources → Filter by location"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_instances"
+                    assertion: "instances_in_approved_regions"
+
+        A.7.9:
+          title: "Security of assets off-premises"
+          description: "Off-site assets shall be protected."
+          checks:
+            - id: "A.7.9.a"
+              description: "Verify encryption and protection of data stored or transferred off-premises"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure all off-premises data is encrypted in transit and at rest with appropriate key management."
+                steps:
+                  aws:
+                    - "Verify S3 bucket encryption: aws s3api get-bucket-encryption --bucket <bucket>"
+                    - "Enable default encryption on all buckets: aws s3api put-bucket-encryption --bucket <bucket> --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"aws:kms\"}}]}'"
+                    - "Check EBS encryption by default: aws ec2 get-ebs-encryption-by-default"
+                    - "Enable EBS encryption by default: aws ec2 enable-ebs-encryption-by-default"
+                    - "Verify SSL/TLS on load balancers: aws elbv2 describe-listeners --load-balancer-arn <lb-arn> --query 'Listeners[].{Protocol:Protocol,SslPolicy:SslPolicy}'"
+                  azure:
+                    - "Check storage account encryption: az storage account show --name <account> --query encryption"
+                console_path:
+                  aws: "S3 → Bucket → Properties → Default encryption"
+                  azure: "Storage accounts → Encryption"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_bucket_encryption"
+                    assertion: "bucket_encryption_enabled"
+                  - service: "ec2"
+                    method: "get_ebs_encryption_by_default"
+                    assertion: "ebs_encryption_default_enabled"
+
+        A.7.10:
+          title: "Storage media"
+          description: "Storage media shall be managed through their life cycle of acquisition, use, transportation and disposal in accordance with the organization's classification scheme and handling requirements."
+          checks:
+            - id: "A.7.10.a"
+              description: "Verify storage media lifecycle management and encryption"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement lifecycle policies for storage media and ensure encryption throughout the lifecycle."
+                steps:
+                  aws:
+                    - "Create S3 lifecycle policy: aws s3api put-bucket-lifecycle-configuration --bucket <bucket> --lifecycle-configuration '{\"Rules\":[{\"ID\":\"MediaRetention\",\"Status\":\"Enabled\",\"Transitions\":[{\"Days\":90,\"StorageClass\":\"GLACIER\"}],\"Expiration\":{\"Days\":365},\"Filter\":{\"Prefix\":\"\"}}]}'"
+                    - "Verify EBS volume encryption: aws ec2 describe-volumes --query 'Volumes[?Encrypted==`false`].{VolumeId:VolumeId,Size:Size,State:State}'"
+                    - "Check KMS key rotation: aws kms get-key-rotation-status --key-id <key-id>"
+                    - "Enable automatic key rotation: aws kms enable-key-rotation --key-id <key-id>"
+                  azure:
+                    - "Set blob lifecycle management: az storage account management-policy create --account-name <account> --resource-group <rg> --policy @lifecycle-policy.json"
+                console_path:
+                  aws: "S3 → Bucket → Management → Lifecycle rules"
+                  azure: "Storage accounts → Lifecycle management"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_bucket_lifecycle_configuration"
+                    assertion: "lifecycle_policies_configured"
+                  - service: "ec2"
+                    method: "describe_volumes"
+                    assertion: "all_volumes_encrypted"
+
+        A.7.11:
+          title: "Supporting utilities"
+          description: "Information processing facilities shall be protected from power failures and other disruptions caused by failures in supporting utilities."
+          checks:
+            - id: "A.7.11.a"
+              description: "Verify redundancy and failover configurations for supporting infrastructure"
+              evidence_type: "config"
+              remediation:
+                summary: "Configure multi-AZ deployments and auto-scaling to protect against infrastructure failures."
+                steps:
+                  aws:
+                    - "Verify multi-AZ RDS: aws rds describe-db-instances --query 'DBInstances[].{DB:DBInstanceIdentifier,MultiAZ:MultiAZ}'"
+                    - "Check Auto Scaling groups: aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[].{Name:AutoScalingGroupName,MinSize:MinSize,MaxSize:MaxSize,AZs:AvailabilityZones}'"
+                    - "Verify ELB cross-zone load balancing: aws elbv2 describe-load-balancers --query 'LoadBalancers[].{Name:LoadBalancerName,AZs:AvailabilityZones[].ZoneName}'"
+                    - "Check Route 53 health checks: aws route53 list-health-checks --query 'HealthChecks[].{Id:Id,Type:HealthCheckConfig.Type,FQDN:HealthCheckConfig.FullyQualifiedDomainName}'"
+                  azure:
+                    - "Check availability sets: az vm availability-set list --query '[].{Name:name, FaultDomains:platformFaultDomainCount}'"
+                console_path:
+                  aws: "EC2 → Auto Scaling Groups → Verify multi-AZ"
+                  azure: "Virtual machines → Availability sets"
+              cloud_checks:
+                aws:
+                  - service: "autoscaling"
+                    method: "describe_auto_scaling_groups"
+                    assertion: "multi_az_autoscaling_configured"
+                  - service: "rds"
+                    method: "describe_db_instances"
+                    assertion: "multi_az_rds_enabled"
+
+        A.7.12:
+          title: "Cabling security"
+          description: "Cables carrying power, data or supporting information services shall be protected from interception, interference or damage."
+          checks:
+            - id: "A.7.12.a"
+              description: "Verify network encryption and secure connectivity configurations"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure all network communications use encrypted channels and private connectivity where available."
+                steps:
+                  aws:
+                    - "Verify VPN connections: aws ec2 describe-vpn-connections --query 'VpnConnections[].{VpnId:VpnConnectionId,State:State,Type:Type}'"
+                    - "Check Direct Connect connections: aws directconnect describe-connections --query 'connections[].{ConnectionId:connectionId,State:connectionState,Bandwidth:bandwidth}'"
+                    - "Verify TLS on load balancers: aws elbv2 describe-listeners --load-balancer-arn <lb-arn> --query 'Listeners[].{Protocol:Protocol,SslPolicy:SslPolicy}'"
+                    - "Check VPC endpoints for private connectivity: aws ec2 describe-vpc-endpoints --query 'VpcEndpoints[].{Service:ServiceName,State:State,Type:VpcEndpointType}'"
+                  azure:
+                    - "Check ExpressRoute circuits: az network express-route list --query '[].{Name:name, ServiceProviderProperties:serviceProviderProperties}'"
+                console_path:
+                  aws: "VPC → VPN connections → Verify encryption"
+                  azure: "ExpressRoute circuits → Overview"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_vpn_connections"
+                    assertion: "vpn_connections_encrypted"
+                  - service: "ec2"
+                    method: "describe_vpc_endpoints"
+                    assertion: "vpc_endpoints_configured"
+
+        A.7.13:
+          title: "Equipment maintenance"
+          description: "Equipment shall be maintained correctly to ensure availability, integrity and confidentiality of information."
+          checks:
+            - id: "A.7.13.a"
+              description: "Verify patching and maintenance schedules for managed infrastructure"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement automated patching using Systems Manager and track maintenance windows."
+                steps:
+                  aws:
+                    - "Create SSM maintenance window: aws ssm create-maintenance-window --name WeeklyPatching --schedule 'cron(0 2 ? * SUN *)' --duration 4 --cutoff 1 --allow-unassociated-targets"
+                    - "Register targets: aws ssm register-target-with-maintenance-window --window-id <window-id> --resource-type INSTANCE --targets Key=tag:PatchGroup,Values=Production"
+                    - "Create patch baseline: aws ssm create-patch-baseline --name ProductionBaseline --operating-system AMAZON_LINUX_2 --approval-rules '{\"PatchRules\":[{\"PatchFilterGroup\":{\"PatchFilters\":[{\"Key\":\"SEVERITY\",\"Values\":[\"Critical\",\"Important\"]}]},\"ApproveAfterDays\":7}]}'"
+                    - "Check patch compliance: aws ssm describe-instance-patch-states --instance-ids <instance-id>"
+                  azure:
+                    - "Enable Update Management: az maintenance configuration create --resource-group <rg> --name WeeklyPatching --maintenance-scope InGuestPatch --install-patches-linux-parameters '{\"classificationsToInclude\":[\"Critical\",\"Security\"]}'"
+                console_path:
+                  aws: "Systems Manager → Patch Manager → Patch baselines"
+                  azure: "Update management center → Machines → Schedule updates"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "describe_maintenance_windows"
+                    assertion: "maintenance_windows_configured"
+                  - service: "ssm"
+                    method: "describe_instance_patch_states"
+                    assertion: "instances_patch_compliant"
+
+        A.7.14:
+          title: "Secure disposal or re-use of equipment"
+          description: "Items of equipment containing storage media shall be verified to ensure that any sensitive data and licensed software has been removed or securely overwritten prior to disposal or re-use."
+          checks:
+            - id: "A.7.14.a"
+              description: "Verify secure data deletion and volume cleanup procedures"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure EBS volumes and snapshots are securely deleted and S3 objects have lifecycle expiration."
+                steps:
+                  aws:
+                    - "List unattached EBS volumes: aws ec2 describe-volumes --filters Name=status,Values=available --query 'Volumes[].{VolumeId:VolumeId,Size:Size,Encrypted:Encrypted,CreateTime:CreateTime}'"
+                    - "Delete unattached volume: aws ec2 delete-volume --volume-id <vol-id>"
+                    - "List old snapshots: aws ec2 describe-snapshots --owner-ids self --query 'Snapshots[?StartTime<`2025-01-01`].{SnapshotId:SnapshotId,StartTime:StartTime}'"
+                    - "Delete old snapshot: aws ec2 delete-snapshot --snapshot-id <snap-id>"
+                    - "Verify S3 object deletion with MFA: aws s3api put-bucket-versioning --bucket <bucket> --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa '<mfa-serial> <mfa-code>'"
+                  azure:
+                    - "List unattached disks: az disk list --query '[?diskState==`Unattached`].{Name:name, DiskSizeGb:diskSizeGb}'"
+                    - "Delete unattached disk: az disk delete --name <disk-name> --resource-group <rg> --yes"
+                console_path:
+                  aws: "EC2 → Volumes → Filter by Available → Delete"
+                  azure: "Disks → Filter by Unattached → Delete"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_volumes"
+                    assertion: "no_unattached_unencrypted_volumes"
+
+    A8:
+      name: "Technological Controls"
+      controls:
+        A.8.1:
+          title: "User endpoint devices"
+          description: "Information stored on, processed by or accessible via user endpoint devices shall be protected."
+          checks:
+            - id: "A.8.1.a"
+              description: "Verify endpoint device security policies and access controls"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement endpoint device management and conditional access policies."
+                steps:
+                  aws:
+                    - "Create IAM policy requiring MFA: aws iam create-policy --policy-name RequireMFA --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"NotAction\":[\"iam:CreateVirtualMFADevice\",\"iam:EnableMFADevice\",\"iam:ListMFADevices\"],\"Resource\":\"*\",\"Condition\":{\"BoolIfExists\":{\"aws:MultiFactorAuthPresent\":\"false\"}}}]}'"
+                    - "Verify MFA is enabled for all users: aws iam generate-credential-report && aws iam get-credential-report --query 'Content' --output text | base64 -d | cut -d',' -f1,4,8"
+                    - "Create SSM association for endpoint compliance: aws ssm create-association --name AWS-GatherSoftwareInventory --targets Key=instanceids,Values=* --schedule-expression 'rate(12 hours)'"
+                    - "Check SSM managed instances: aws ssm describe-instance-information --query 'InstanceInformationList[].{InstanceId:InstanceId,PingStatus:PingStatus,PlatformType:PlatformType}'"
+                  azure:
+                    - "List Intune managed devices: az rest --method GET --uri /deviceManagement/managedDevices"
+                console_path:
+                  aws: "IAM → Account settings → MFA enforcement"
+                  azure: "Intune → Devices → Compliance policies"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "all_users_mfa_enabled"
+                  - service: "ssm"
+                    method: "describe_instance_information"
+                    assertion: "endpoints_managed_by_ssm"
+
+        A.8.2:
+          title: "Privileged access rights"
+          description: "The allocation and use of privileged access rights shall be restricted and managed."
+          checks:
+            - id: "A.8.2.a"
+              description: "Verify privileged access is restricted and monitored"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Restrict administrative access using least privilege, require MFA for privileged actions, and monitor usage."
+                steps:
+                  aws:
+                    - "List users with AdministratorAccess: aws iam list_entities_for_policy --policy-arn arn:aws:iam::aws:policy/AdministratorAccess --entity-filter User"
+                    - "Check for root account usage: aws iam generate-credential-report && aws iam get-credential-report --query 'Content' --output text | base64 -d | head -2"
+                    - "Create Config rule for root usage: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"root-account-mfa-enabled\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"ROOT_ACCOUNT_MFA_ENABLED\"}}'"
+                    - "Enable IAM Access Analyzer: aws accessanalyzer create-analyzer --analyzer-name PrivilegeAnalyzer --type ACCOUNT"
+                    - "List Access Analyzer findings: aws accessanalyzer list-findings --analyzer-arn <analyzer-arn> --filter '{\"resourceType\":{\"eq\":[\"AWS::IAM::Role\"]}}'"
+                  azure:
+                    - "List Global Administrators: az role assignment list --role 'Global Administrator' --query '[].{Principal:principalName}'"
+                console_path:
+                  aws: "IAM → Access Analyzer → Findings"
+                  azure: "Entra ID → Roles → Global Administrator → Assignments"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "root_account_mfa_enabled"
+                  - service: "accessanalyzer"
+                    method: "list_analyzers"
+                    assertion: "access_analyzer_enabled"
+
+        A.8.3:
+          title: "Information access restriction"
+          description: "Access to information and other associated assets shall be restricted in accordance with the established topic-specific policy on access control."
+          checks:
+            - id: "A.8.3.a"
+              description: "Verify information access restrictions are enforced through IAM and resource policies"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Implement resource-based access controls and least privilege policies."
+                steps:
+                  aws:
+                    - "Review S3 bucket policies: aws s3api get-bucket-policy --bucket <bucket>"
+                    - "Check for public S3 buckets: aws s3api list-buckets --query 'Buckets[].Name' | xargs -I {} aws s3api get-public-access-block --bucket {}"
+                    - "Enable S3 Block Public Access at account level: aws s3control put-public-access-block --account-id <account-id> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                    - "Review KMS key policies: aws kms get-key-policy --key-id <key-id> --policy-name default"
+                    - "Create Config rule for public access: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"s3-bucket-public-read-prohibited\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"S3_BUCKET_PUBLIC_READ_PROHIBITED\"}}'"
+                  azure:
+                    - "Check storage account network rules: az storage account show --name <account> --query networkRuleSet"
+                console_path:
+                  aws: "S3 → Block Public Access → Account settings"
+                  azure: "Storage accounts → Networking → Firewalls and virtual networks"
+              cloud_checks:
+                aws:
+                  - service: "s3control"
+                    method: "get_public_access_block"
+                    assertion: "account_public_access_blocked"
+                  - service: "configservice"
+                    method: "get_compliance_details_by_config_rule"
+                    assertion: "no_public_s3_buckets"
+
+        A.8.4:
+          title: "Access to source code"
+          description: "Read and write access to source code, development tools and software libraries shall be appropriately managed."
+          checks:
+            - id: "A.8.4.a"
+              description: "Verify source code access controls and repository security"
+              evidence_type: "config"
+              remediation:
+                summary: "Restrict source code repository access and implement branch protection."
+                steps:
+                  aws:
+                    - "List CodeCommit repositories: aws codecommit list-repositories"
+                    - "Get repository permissions: aws codecommit get-repository --repository-name <repo>"
+                    - "Create IAM policy restricting repo access: aws iam create-policy --policy-name CodeCommitReadOnly --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"codecommit:GitPull\",\"codecommit:Get*\",\"codecommit:List*\"],\"Resource\":\"arn:aws:codecommit:<region>:<account>:<repo>\"}]}'"
+                    - "Set approval rule template: aws codecommit create-approval-rule-template --approval-rule-template-name RequireTwoApprovals --approval-rule-template-content '{\"Version\":\"2018-11-08\",\"DestinationReferences\":[\"refs/heads/main\"],\"Statements\":[{\"Type\":\"Approvers\",\"NumberOfApprovalsNeeded\":2}]}'"
+                  azure:
+                    - "List DevOps repositories: az repos list --query '[].{Name:name, DefaultBranch:defaultBranch}'"
+                console_path:
+                  aws: "CodeCommit → Repositories → Settings → Approval rules"
+                  azure: "Azure DevOps → Repos → Branch policies"
+              cloud_checks:
+                aws:
+                  - service: "codecommit"
+                    method: "list_repositories"
+                    assertion: "repositories_have_access_controls"
+                  - service: "codecommit"
+                    method: "list_approval_rule_templates"
+                    assertion: "approval_rules_configured"
+
+        A.8.5:
+          title: "Secure authentication"
+          description: "Secure authentication technologies and procedures shall be established and implemented based on information access restrictions and the topic-specific policy on access control."
+          checks:
+            - id: "A.8.5.a"
+              description: "Verify secure authentication mechanisms including MFA and password policies"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Enforce strong authentication with MFA, password complexity, and federation where possible."
+                steps:
+                  aws:
+                    - "Set strong password policy: aws iam update-account-password-policy --minimum-password-length 14 --require-symbols --require-numbers --require-uppercase-characters --require-lowercase-characters --max-password-age 90 --password-reuse-prevention 24 --hard-expiry"
+                    - "List users without MFA: aws iam generate-credential-report && aws iam get-credential-report --query 'Content' --output text | base64 -d | awk -F',' '$4==\"true\" && $8==\"false\" {print $1}'"
+                    - "Create SAML identity provider: aws iam create-saml-provider --saml-metadata-document file://metadata.xml --name CorporateIdP"
+                    - "Verify MFA on root: aws iam get-account-summary --query 'SummaryMap.AccountMFAEnabled'"
+                  azure:
+                    - "Enforce MFA via conditional access: az rest --method POST --uri /identity/conditionalAccess/policies --body @mfa-policy.json"
+                console_path:
+                  aws: "IAM → Account settings → Password policy"
+                  azure: "Entra ID → Security → Conditional Access → Require MFA"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_account_password_policy"
+                    assertion: "strong_password_policy_set"
+                  - service: "iam"
+                    method: "get_account_summary"
+                    assertion: "root_mfa_enabled"
+
+        A.8.6:
+          title: "Capacity management"
+          description: "The use of resources shall be monitored and adjusted in line with current and expected capacity requirements."
+          checks:
+            - id: "A.8.6.a"
+              description: "Verify capacity monitoring and auto-scaling configurations"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement capacity monitoring with CloudWatch and auto-scaling policies."
+                steps:
+                  aws:
+                    - "Check Auto Scaling configurations: aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[].{Name:AutoScalingGroupName,Min:MinSize,Max:MaxSize,Desired:DesiredCapacity}'"
+                    - "Create CPU utilization alarm: aws cloudwatch put-metric-alarm --alarm-name HighCPU --metric-name CPUUtilization --namespace AWS/EC2 --threshold 80 --comparison-operator GreaterThanThreshold --evaluation-periods 3 --period 300 --statistic Average --alarm-actions <sns-arn>"
+                    - "Enable Compute Optimizer: aws compute-optimizer update-enrollment-status --status Active"
+                    - "Get rightsizing recommendations: aws compute-optimizer get-ec2-instance-recommendations --query 'instanceRecommendations[].{InstanceId:instanceArn,Finding:finding,RecommendedType:recommendationOptions[0].instanceType}'"
+                  azure:
+                    - "Check VM scale sets: az vmss list --query '[].{Name:name, Capacity:sku.capacity}' -o table"
+                console_path:
+                  aws: "EC2 → Auto Scaling Groups → Scaling policies"
+                  azure: "Virtual machine scale sets → Scaling"
+              cloud_checks:
+                aws:
+                  - service: "autoscaling"
+                    method: "describe_auto_scaling_groups"
+                    assertion: "autoscaling_configured"
+                  - service: "cloudwatch"
+                    method: "describe_alarms"
+                    assertion: "capacity_alarms_configured"
+
+        A.8.7:
+          title: "Protection against malware"
+          description: "Protection against malware shall be implemented and supported by appropriate user awareness."
+          checks:
+            - id: "A.8.7.a"
+              description: "Verify malware protection services are enabled"
+              evidence_type: "config"
+              remediation:
+                summary: "Enable GuardDuty Malware Protection and Inspector for vulnerability scanning."
+                steps:
+                  aws:
+                    - "Enable GuardDuty Malware Protection: aws guardduty update-detector --detector-id <id> --features '[{\"Name\":\"EBS_MALWARE_PROTECTION\",\"Status\":\"ENABLED\"}]'"
+                    - "Enable Inspector for EC2 scanning: aws inspector2 enable --resource-types EC2"
+                    - "List Inspector findings: aws inspector2 list-findings --filter-criteria '{\"severity\":[{\"comparison\":\"EQUALS\",\"value\":\"CRITICAL\"}]}'"
+                    - "Enable GuardDuty S3 protection: aws guardduty update-detector --detector-id <id> --data-sources S3Logs={Enable=true}"
+                    - "Check GuardDuty findings for malware: aws guardduty list-findings --detector-id <id> --finding-criteria '{\"Criterion\":{\"type\":{\"Eq\":[\"Trojan:EC2/DropPoint\",\"Trojan:EC2/BlackholeTraffic\"]}}}'"
+                  azure:
+                    - "Enable Defender for Servers: az security pricing create --name VirtualMachines --tier Standard"
+                console_path:
+                  aws: "GuardDuty → Settings → Malware Protection → Enable"
+                  azure: "Defender for Cloud → Environment settings → Servers → On"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "get_detector"
+                    assertion: "malware_protection_enabled"
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "inspector_ec2_scanning_enabled"
+
+        A.8.8:
+          title: "Management of technical vulnerabilities"
+          description: "Information about technical vulnerabilities of information systems in use shall be obtained, the organization's exposure to such vulnerabilities shall be evaluated and appropriate measures shall be taken."
+          checks:
+            - id: "A.8.8.a"
+              description: "Verify vulnerability scanning and remediation processes"
+              evidence_type: "vulnerability_scan"
+              remediation:
+                summary: "Enable automated vulnerability scanning with Inspector and implement patching via Systems Manager."
+                steps:
+                  aws:
+                    - "Enable Inspector: aws inspector2 enable --resource-types EC2 ECR LAMBDA"
+                    - "List critical findings: aws inspector2 list-findings --filter-criteria '{\"severity\":[{\"comparison\":\"EQUALS\",\"value\":\"CRITICAL\"}]}' --sort-criteria '{\"field\":\"SEVERITY\",\"sortOrder\":\"DESC\"}'"
+                    - "Create SSM patch baseline: aws ssm create-patch-baseline --name SecurityPatchBaseline --operating-system AMAZON_LINUX_2 --approval-rules '{\"PatchRules\":[{\"PatchFilterGroup\":{\"PatchFilters\":[{\"Key\":\"SEVERITY\",\"Values\":[\"Critical\",\"Important\"]}]},\"ApproveAfterDays\":3,\"ComplianceLevel\":\"CRITICAL\"}]}'"
+                    - "Run patch scan: aws ssm send-command --document-name AWS-RunPatchBaseline --targets Key=instanceids,Values=<instance-id> --parameters Operation=Scan"
+                    - "Check patch compliance: aws ssm list-compliance-items --resource-ids <instance-id> --resource-types ManagedInstance --filters Key=ComplianceType,Values=Patch,Type=EQUAL"
+                  azure:
+                    - "Check Defender vulnerability findings: az security assessment list --query '[?status.code!=`Healthy`].{Name:displayName, Status:status.code}'"
+                console_path:
+                  aws: "Inspector → Findings → Filter by severity"
+                  azure: "Defender for Cloud → Recommendations → Vulnerabilities"
+              cloud_checks:
+                aws:
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "inspector_enabled_all_resource_types"
+                  - service: "ssm"
+                    method: "list_compliance_summaries"
+                    assertion: "patch_compliance_met"
+
+        A.8.9:
+          title: "Configuration management"
+          description: "Configurations, including security configurations, of hardware, software, services and networks shall be established, documented, implemented, monitored and reviewed."
+          checks:
+            - id: "A.8.9.a"
+              description: "Verify configuration management and drift detection"
+              evidence_type: "config"
+              remediation:
+                summary: "Use AWS Config to track and enforce configuration baselines."
+                steps:
+                  aws:
+                    - "Enable AWS Config: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=<role-arn> --recording-group allSupported=true"
+                    - "Start recording: aws configservice start-configuration-recorder --configuration-recorder-name default"
+                    - "Deploy conformance pack: aws configservice put-conformance-pack --conformance-pack-name SecurityBaseline --template-body file://security-conformance-pack.yaml"
+                    - "Check compliance: aws configservice describe-compliance-by-config-rule --query 'ComplianceByConfigRules[?Compliance.ComplianceType!=`COMPLIANT`]'"
+                    - "Get configuration history: aws configservice get-resource-config-history --resource-type AWS::EC2::Instance --resource-id <instance-id>"
+                  azure:
+                    - "List policy compliance: az policy state list --query '[?complianceState!=`Compliant`].{Resource:resourceId, Policy:policyDefinitionName}'"
+                console_path:
+                  aws: "AWS Config → Dashboard → Compliance status"
+                  azure: "Policy → Compliance → Non-compliant resources"
+              cloud_checks:
+                aws:
+                  - service: "configservice"
+                    method: "describe_configuration_recorders"
+                    assertion: "config_recorder_enabled"
+                  - service: "configservice"
+                    method: "describe_compliance_by_config_rule"
+                    assertion: "config_rules_compliant"
+
+        A.8.10:
+          title: "Information deletion"
+          description: "Information stored in information systems, devices or in any other storage media shall be deleted when no longer required."
+          checks:
+            - id: "A.8.10.a"
+              description: "Verify data retention and deletion policies are configured"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement lifecycle policies for automatic data deletion and verify secure deletion procedures."
+                steps:
+                  aws:
+                    - "Set S3 lifecycle expiration: aws s3api put-bucket-lifecycle-configuration --bucket <bucket> --lifecycle-configuration '{\"Rules\":[{\"ID\":\"DataRetention\",\"Status\":\"Enabled\",\"Expiration\":{\"Days\":365},\"Filter\":{\"Prefix\":\"\"}}]}'"
+                    - "Set CloudWatch log retention: aws logs put-retention-policy --log-group-name <log-group> --retention-in-days 365"
+                    - "List log groups without retention: aws logs describe-log-groups --query 'logGroups[?!retentionInDays].{Name:logGroupName}'"
+                    - "Set DynamoDB TTL: aws dynamodb update-time-to-live --table-name <table> --time-to-live-specification Enabled=true,AttributeName=ttl"
+                  azure:
+                    - "Set storage lifecycle: az storage account management-policy create --account-name <account> --resource-group <rg> --policy @retention-policy.json"
+                console_path:
+                  aws: "S3 → Bucket → Management → Lifecycle rules → Add rule"
+                  azure: "Storage accounts → Lifecycle management → Add rule"
+              cloud_checks:
+                aws:
+                  - service: "s3"
+                    method: "get_bucket_lifecycle_configuration"
+                    assertion: "retention_policies_configured"
+                  - service: "logs"
+                    method: "describe_log_groups"
+                    assertion: "log_retention_policies_set"
+
+        A.8.11:
+          title: "Data masking"
+          description: "Data masking shall be used in accordance with the organization's topic-specific policy on access control and other related topic-specific policies, and business requirements, taking into consideration applicable legislation."
+          checks:
+            - id: "A.8.11.a"
+              description: "Verify data masking is implemented for sensitive data"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement data masking using Macie for discovery and DynamoDB/RDS features for masking."
+                steps:
+                  aws:
+                    - "Enable Macie: aws macie2 enable-macie"
+                    - "Create classification job: aws macie2 create-classification-job --job-type ONE_TIME --s3-job-definition '{\"bucketDefinitions\":[{\"accountId\":\"<account-id>\",\"buckets\":[\"<bucket>\"]}]}' --name SensitiveDataScan"
+                    - "List Macie findings: aws macie2 list-findings --finding-criteria '{\"criterion\":{\"severity.description\":{\"eq\":[\"High\"]}}}'"
+                    - "Create RDS snapshot for masked copy: aws rds create-db-snapshot --db-instance-identifier <db-id> --db-snapshot-identifier masked-snapshot"
+                    - "Check CloudWatch Logs data protection: aws logs describe-log-groups --query 'logGroups[].{Name:logGroupName,DataProtection:dataProtectionStatus}'"
+                  azure:
+                    - "Enable dynamic data masking: az sql db data-masking-rule create --resource-group <rg> --server <server> --database <db> --schema dbo --table Users --column SSN --masking-function Default"
+                console_path:
+                  aws: "Macie → Jobs → Create job"
+                  azure: "SQL Database → Dynamic Data Masking → Add masking rule"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "get_macie_session"
+                    assertion: "macie_enabled"
+                  - service: "macie2"
+                    method: "list_classification_jobs"
+                    assertion: "classification_jobs_configured"
+
+        A.8.12:
+          title: "Data leakage prevention"
+          description: "Data leakage prevention measures shall be applied to systems, networks and any other devices that process, store or transmit sensitive information."
+          checks:
+            - id: "A.8.12.a"
+              description: "Verify data leakage prevention controls are active"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement DLP using Macie, VPC endpoints, and S3 access controls."
+                steps:
+                  aws:
+                    - "Enable Macie for S3 DLP: aws macie2 enable-macie"
+                    - "Block S3 public access at account level: aws s3control put-public-access-block --account-id <account-id> --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+                    - "Create VPC endpoint for S3: aws ec2 create-vpc-endpoint --vpc-id <vpc-id> --service-name com.amazonaws.<region>.s3 --route-table-ids <rtb-id>"
+                    - "Create SCP denying data exfiltration services: aws organizations create-policy --name DenyDataExfiltration --type SERVICE_CONTROL_POLICY --content '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Action\":[\"s3:PutBucketPolicy\"],\"Resource\":\"*\",\"Condition\":{\"StringNotEquals\":{\"aws:PrincipalOrgID\":\"<org-id>\"}}}]}'"
+                    - "Enable CloudWatch Logs data protection: aws logs create-log-group --log-group-name /secure/application && aws logs put-data-protection-policy --log-group-identifier /secure/application --policy-document file://data-protection-policy.json"
+                  azure:
+                    - "Create DLP policy: az rest --method POST --uri /compliance/dataLossPreventionPolicies --body @dlp-policy.json"
+                console_path:
+                  aws: "Macie → Summary → S3 bucket findings"
+                  azure: "Microsoft Purview → Data loss prevention"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "get_macie_session"
+                    assertion: "macie_enabled"
+                  - service: "s3control"
+                    method: "get_public_access_block"
+                    assertion: "account_public_access_blocked"
+
+        A.8.13:
+          title: "Information backup"
+          description: "Backup copies of information, software and systems shall be maintained and regularly tested in accordance with the agreed topic-specific policy on backup."
+          checks:
+            - id: "A.8.13.a"
+              description: "Verify backup policies and regular backup testing"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement automated backups using AWS Backup with regular testing."
+                steps:
+                  aws:
+                    - "Create backup plan: aws backup create-backup-plan --backup-plan '{\"BackupPlanName\":\"DailyBackupPlan\",\"Rules\":[{\"RuleName\":\"DailyBackup\",\"TargetBackupVaultName\":\"Default\",\"ScheduleExpression\":\"cron(0 5 ? * * *)\",\"StartWindowMinutes\":60,\"CompletionWindowMinutes\":180,\"Lifecycle\":{\"DeleteAfterDays\":90}}]}'"
+                    - "Assign resources: aws backup create-backup-selection --backup-plan-id <plan-id> --backup-selection '{\"SelectionName\":\"AllResources\",\"IamRoleArn\":\"<role-arn>\",\"Resources\":[\"*\"]}'"
+                    - "List recovery points: aws backup list-recovery-points-by-backup-vault --backup-vault-name Default --query 'RecoveryPoints[].{ResourceArn:ResourceArn,CreationDate:CreationDate,Status:Status}'"
+                    - "Create restore testing plan: aws backup create-restore-testing-plan --restore-testing-plan '{\"RestoreTestingPlanName\":\"MonthlyRestoreTest\",\"ScheduleExpression\":\"cron(0 8 1 * ? *)\",\"RecoveryPointSelection\":{\"Algorithm\":\"LATEST_WITHIN_WINDOW\",\"RecoveryPointTypes\":[\"CONTINUOUS\",\"SNAPSHOT\"],\"IncludeVaults\":[\"*\"]}}'"
+                  azure:
+                    - "Create backup policy: az backup policy create --resource-group <rg> --vault-name <vault> --name DailyPolicy --policy @backup-policy.json"
+                console_path:
+                  aws: "AWS Backup → Backup plans → Create plan"
+                  azure: "Recovery Services vaults → Backup policies"
+              cloud_checks:
+                aws:
+                  - service: "backup"
+                    method: "list_backup_plans"
+                    assertion: "backup_plans_exist"
+                  - service: "backup"
+                    method: "list_recovery_points_by_backup_vault"
+                    assertion: "recent_recovery_points_exist"
+
+        A.8.14:
+          title: "Redundancy of information processing facilities"
+          description: "Information processing facilities shall be implemented with redundancy sufficient to meet availability requirements."
+          checks:
+            - id: "A.8.14.a"
+              description: "Verify redundancy and high availability configurations"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement multi-AZ deployments and redundancy for critical services."
+                steps:
+                  aws:
+                    - "Check RDS multi-AZ: aws rds describe-db-instances --query 'DBInstances[].{DB:DBInstanceIdentifier,MultiAZ:MultiAZ,Engine:Engine}'"
+                    - "Verify ELB across AZs: aws elbv2 describe-load-balancers --query 'LoadBalancers[].{Name:LoadBalancerName,AZs:AvailabilityZones[].ZoneName,Scheme:Scheme}'"
+                    - "Check Auto Scaling group AZ distribution: aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[].{Name:AutoScalingGroupName,AZs:AvailabilityZones,MinSize:MinSize}'"
+                    - "Verify ElastiCache replication: aws elasticache describe-replication-groups --query 'ReplicationGroups[].{Id:ReplicationGroupId,MultiAZ:MultiAZ,Clusters:MemberClusters}'"
+                  azure:
+                    - "Check zone redundancy: az vm list --query '[].{Name:name, Zones:zones}' -o table"
+                console_path:
+                  aws: "RDS → Databases → Modify → Multi-AZ deployment"
+                  azure: "Virtual machines → Availability + scaling"
+              cloud_checks:
+                aws:
+                  - service: "rds"
+                    method: "describe_db_instances"
+                    assertion: "multi_az_enabled"
+                  - service: "elbv2"
+                    method: "describe_load_balancers"
+                    assertion: "load_balancers_multi_az"
+
+        A.8.15:
+          title: "Logging"
+          description: "Logs that record activities, exceptions, faults and other relevant events shall be produced, stored, protected and analysed."
+          checks:
+            - id: "A.8.15.a"
+              description: "Verify comprehensive logging is enabled across all services"
+              evidence_type: "log_config"
+              remediation:
+                summary: "Enable CloudTrail, VPC Flow Logs, and CloudWatch Logs for comprehensive audit logging."
+                steps:
+                  aws:
+                    - "Enable CloudTrail with log validation: aws cloudtrail create-trail --name AuditTrail --s3-bucket-name <trail-bucket> --is-multi-region-trail --enable-log-file-validation --include-global-service-events"
+                    - "Start CloudTrail logging: aws cloudtrail start-logging --name AuditTrail"
+                    - "Enable VPC Flow Logs: aws ec2 create-flow-logs --resource-type VPC --resource-ids <vpc-id> --traffic-type ALL --log-destination-type cloud-watch-logs --log-group-name /aws/vpc/flowlogs"
+                    - "Set log retention: aws logs put-retention-policy --log-group-name /aws/vpc/flowlogs --retention-in-days 365"
+                    - "Enable S3 access logging: aws s3api put-bucket-logging --bucket <bucket> --bucket-logging-status '{\"LoggingEnabled\":{\"TargetBucket\":\"<log-bucket>\",\"TargetPrefix\":\"s3-access-logs/\"}}'"
+                  azure:
+                    - "Enable diagnostic logging: az monitor diagnostic-settings create --resource <resource-id> --name AuditLogs --logs '[{\"category\":\"AuditEvent\",\"enabled\":true,\"retentionPolicy\":{\"days\":365,\"enabled\":true}}]' --workspace <workspace-id>"
+                console_path:
+                  aws: "CloudTrail → Trails → Create trail"
+                  azure: "Monitor → Diagnostic settings"
+              cloud_checks:
+                aws:
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "multi_region_trail_enabled"
+                  - service: "cloudtrail"
+                    method: "get_trail_status"
+                    assertion: "trail_logging_active"
+
+        A.8.16:
+          title: "Monitoring activities"
+          description: "Networks, systems and applications shall be monitored for anomalous behaviour and appropriate actions taken to evaluate potential information security incidents."
+          checks:
+            - id: "A.8.16.a"
+              description: "Verify anomaly detection and monitoring are configured"
+              evidence_type: "monitoring_log"
+              remediation:
+                summary: "Enable GuardDuty, Security Hub, and CloudWatch anomaly detection for continuous monitoring."
+                steps:
+                  aws:
+                    - "Enable GuardDuty: aws guardduty create-detector --enable --finding-publishing-frequency FIFTEEN_MINUTES"
+                    - "Enable Security Hub: aws securityhub enable-security-hub --enable-default-standards"
+                    - "Create CloudWatch anomaly detector: aws cloudwatch put-anomaly-detector --namespace AWS/EC2 --metric-name CPUUtilization --stat Average"
+                    - "Create anomaly alarm: aws cloudwatch put-metric-alarm --alarm-name CPUAnomaly --metric-name CPUUtilization --namespace AWS/EC2 --threshold-metric-id ad1 --comparison-operator LessThanLowerOrGreaterThanUpperThreshold --evaluation-periods 3 --alarm-actions <sns-arn> --metrics '[{\"Id\":\"m1\",\"MetricStat\":{\"Metric\":{\"Namespace\":\"AWS/EC2\",\"MetricName\":\"CPUUtilization\"},\"Period\":300,\"Stat\":\"Average\"}},{\"Id\":\"ad1\",\"Expression\":\"ANOMALY_DETECTION_BAND(m1, 2)\"}]'"
+                    - "List GuardDuty findings: aws guardduty list-findings --detector-id <id> --finding-criteria '{\"Criterion\":{\"severity\":{\"Gte\":4}}}'"
+                  azure:
+                    - "Enable Sentinel: az sentinel alert-rule list --workspace-name <ws> --resource-group <rg>"
+                console_path:
+                  aws: "GuardDuty → Findings → Filter by severity"
+                  azure: "Microsoft Sentinel → Analytics → Active rules"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "securityhub"
+                    method: "describe_hub"
+                    assertion: "security_hub_enabled"
+
+        A.8.17:
+          title: "Clock synchronization"
+          description: "The clocks of information processing systems used by the organization shall be synchronized to approved time sources."
+          checks:
+            - id: "A.8.17.a"
+              description: "Verify NTP synchronization across all instances"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure all instances use Amazon Time Sync Service or approved NTP sources."
+                steps:
+                  aws:
+                    - "Check instance NTP configuration via SSM: aws ssm send-command --document-name AWS-RunShellScript --targets Key=instanceids,Values=<instance-id> --parameters 'commands=[\"chronyc tracking\"]'"
+                    - "Verify CloudTrail timestamps are consistent: aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=ConsoleLogin --max-results 5 --query 'Events[].{EventTime:EventTime,EventName:EventName}'"
+                    - "Check instance metadata for time sync: aws ssm send-command --document-name AWS-RunShellScript --targets Key=instanceids,Values=<instance-id> --parameters 'commands=[\"timedatectl status\"]'"
+                    - "Deploy SSM document for NTP configuration: aws ssm create-document --name ConfigureNTP --content file://ntp-config-document.json --document-type Command"
+                  azure:
+                    - "Check VM time sync: az vm run-command invoke --resource-group <rg> --name <vm> --command-id RunShellScript --scripts 'timedatectl status'"
+                console_path:
+                  aws: "Systems Manager → Run Command → AWS-RunShellScript → chronyc tracking"
+                  azure: "Virtual machines → Run command → timedatectl"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "list_commands"
+                    assertion: "ntp_check_commands_executed"
+
+        A.8.18:
+          title: "Use of privileged utility programs"
+          description: "The use of utility programs that might be capable of overriding system and application controls shall be restricted and tightly controlled."
+          checks:
+            - id: "A.8.18.a"
+              description: "Verify privileged utility program usage is restricted and monitored"
+              evidence_type: "config"
+              remediation:
+                summary: "Restrict access to privileged tools and monitor their usage via CloudTrail and SSM."
+                steps:
+                  aws:
+                    - "Create IAM policy denying privileged actions: aws iam create-policy --policy-name DenyPrivilegedUtilities --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Action\":[\"ssm:SendCommand\",\"ssm:StartSession\"],\"Resource\":\"*\",\"Condition\":{\"StringNotEquals\":{\"aws:PrincipalTag/Role\":\"Admin\"}}}]}'"
+                    - "Enable SSM session logging: aws ssm update-document --name SSM-SessionManagerRunShell --content '{\"schemaVersion\":\"1.0\",\"description\":\"Session Manager Settings\",\"sessionType\":\"Standard_Stream\",\"inputs\":{\"cloudWatchLogGroupName\":\"/aws/ssm/sessions\",\"cloudWatchEncryptionEnabled\":true,\"s3BucketName\":\"<session-log-bucket>\"}}' --document-version '$LATEST'"
+                    - "Monitor privileged API calls: aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=SendCommand --max-results 10"
+                    - "Create EventBridge rule for privileged actions: aws events put-rule --name PrivilegedUtilityUsage --event-pattern '{\"source\":[\"aws.ssm\"],\"detail-type\":[\"AWS API Call via CloudTrail\"],\"detail\":{\"eventName\":[\"SendCommand\",\"StartSession\"]}}'"
+                  azure:
+                    - "Check privileged operations log: az monitor activity-log list --query \"[?authorization.action=='Microsoft.Compute/virtualMachines/runCommand/action']\" --start-time 2026-01-01"
+                console_path:
+                  aws: "Systems Manager → Session Manager → Preferences → Logging"
+                  azure: "Monitor → Activity log → Filter by Run Command"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "describe_document"
+                    assertion: "session_logging_enabled"
+                  - service: "cloudtrail"
+                    method: "lookup_events"
+                    assertion: "privileged_utility_usage_monitored"
+
+        A.8.19:
+          title: "Installation of software on operational systems"
+          description: "Procedures and measures shall be implemented to securely manage software installation on operational systems."
+          checks:
+            - id: "A.8.19.a"
+              description: "Verify software installation controls and approved package management"
+              evidence_type: "config"
+              remediation:
+                summary: "Control software installation using SSM, restrict package sources, and monitor changes."
+                steps:
+                  aws:
+                    - "Create SSM association for software inventory: aws ssm create-association --name AWS-GatherSoftwareInventory --targets Key=instanceids,Values=* --schedule-expression 'rate(12 hours)'"
+                    - "List installed software: aws ssm list-inventory-entries --instance-id <instance-id> --type-name AWS:Application"
+                    - "Create Config rule for approved AMIs: aws configservice put-config-rule --config-rule file://approved-amis-rule.json"
+                    - "Deploy software via SSM: aws ssm send-command --document-name AWS-RunShellScript --targets Key=tag:PatchGroup,Values=Production --parameters 'commands=[\"yum install -y approved-package\"]'"
+                  azure:
+                    - "Check installed applications: az vm run-command invoke --resource-group <rg> --name <vm> --command-id RunShellScript --scripts 'rpm -qa'"
+                console_path:
+                  aws: "Systems Manager → Inventory → Managed instances → Software"
+                  azure: "Virtual machines → Run command"
+              cloud_checks:
+                aws:
+                  - service: "ssm"
+                    method: "list_inventory_entries"
+                    assertion: "software_inventory_collected"
+                  - service: "configservice"
+                    method: "get_compliance_details_by_config_rule"
+                    assertion: "approved_amis_compliant"
+
+        A.8.20:
+          title: "Networks security"
+          description: "Networks and network devices shall be secured, managed and controlled to protect information in systems and applications."
+          checks:
+            - id: "A.8.20.a"
+              description: "Verify network security controls including security groups and NACLs"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement network security using VPC security groups, NACLs, and network firewalls."
+                steps:
+                  aws:
+                    - "Audit security groups for unrestricted access: aws ec2 describe-security-groups --query 'SecurityGroups[?IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`]]].{GroupId:GroupId,GroupName:GroupName}'"
+                    - "Create Config rule for restricted SSH: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"restricted-ssh\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"INCOMING_SSH_DISABLED\"}}'"
+                    - "Enable VPC Flow Logs: aws ec2 create-flow-logs --resource-type VPC --resource-ids <vpc-id> --traffic-type ALL --log-destination-type cloud-watch-logs --log-group-name /aws/vpc/flowlogs"
+                    - "Create network ACL rule: aws ec2 create-network-acl-entry --network-acl-id <nacl-id> --rule-number 100 --protocol tcp --port-range From=443,To=443 --cidr-block 10.0.0.0/8 --rule-action allow --ingress"
+                  azure:
+                    - "List NSG rules: az network nsg rule list --resource-group <rg> --nsg-name <nsg> -o table"
+                console_path:
+                  aws: "VPC → Security Groups → Review inbound rules"
+                  azure: "Network security groups → Inbound security rules"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_security_groups"
+                    assertion: "no_unrestricted_ingress"
+                  - service: "ec2"
+                    method: "describe_flow_logs"
+                    assertion: "vpc_flow_logs_enabled"
+
+        A.8.21:
+          title: "Security of network services"
+          description: "Security mechanisms, service levels and service requirements of network services shall be identified, implemented and monitored."
+          checks:
+            - id: "A.8.21.a"
+              description: "Verify network service security configurations"
+              evidence_type: "config"
+              remediation:
+                summary: "Secure network services with TLS, WAF, and API Gateway controls."
+                steps:
+                  aws:
+                    - "Verify ALB HTTPS listeners: aws elbv2 describe-listeners --load-balancer-arn <lb-arn> --query 'Listeners[].{Protocol:Protocol,SslPolicy:SslPolicy,Port:Port}'"
+                    - "Create WAF web ACL: aws wafv2 create-web-acl --name AppProtection --scope REGIONAL --default-action '{\"Allow\":{}}' --visibility-config '{\"SampledRequestsEnabled\":true,\"CloudWatchMetricsEnabled\":true,\"MetricName\":\"AppProtection\"}' --rules file://waf-rules.json"
+                    - "Check API Gateway authentication: aws apigateway get-rest-apis --query 'items[].{Name:name,Id:id}'"
+                    - "Verify CloudFront uses TLS: aws cloudfront list-distributions --query 'DistributionList.Items[].{Id:Id,ViewerProtocol:DefaultCacheBehavior.ViewerProtocolPolicy}'"
+                  azure:
+                    - "Check Application Gateway WAF: az network application-gateway waf-config show --resource-group <rg> --gateway-name <gw>"
+                console_path:
+                  aws: "WAF & Shield → Web ACLs → Create web ACL"
+                  azure: "Application Gateway → Web application firewall"
+              cloud_checks:
+                aws:
+                  - service: "elbv2"
+                    method: "describe_listeners"
+                    assertion: "https_listeners_configured"
+                  - service: "wafv2"
+                    method: "list_web_acls"
+                    assertion: "waf_acls_configured"
+
+        A.8.22:
+          title: "Segregation of networks"
+          description: "Groups of information services, users and information systems shall be segregated in the organization's networks."
+          checks:
+            - id: "A.8.22.a"
+              description: "Verify network segregation through VPCs, subnets, and security groups"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement network segregation using separate VPCs, subnets, and security groups for different tiers."
+                steps:
+                  aws:
+                    - "List VPCs and their CIDR blocks: aws ec2 describe-vpcs --query 'Vpcs[].{VpcId:VpcId,CidrBlock:CidrBlock,Tags:Tags[?Key==`Name`].Value|[0]}'"
+                    - "List subnets with tier tags: aws ec2 describe-subnets --query 'Subnets[].{SubnetId:SubnetId,VpcId:VpcId,CidrBlock:CidrBlock,AZ:AvailabilityZone,Name:Tags[?Key==`Name`].Value|[0]}'"
+                    - "Verify route table isolation: aws ec2 describe-route-tables --query 'RouteTables[].{RouteTableId:RouteTableId,VpcId:VpcId,Routes:Routes[].{Destination:DestinationCidrBlock,Target:GatewayId}}'"
+                    - "Check for VPC peering: aws ec2 describe-vpc-peering-connections --query 'VpcPeeringConnections[].{PeeringId:VpcPeeringConnectionId,Status:Status.Code,Requester:RequesterVpcInfo.VpcId,Accepter:AccepterVpcInfo.VpcId}'"
+                  azure:
+                    - "List virtual networks: az network vnet list --query '[].{Name:name, AddressSpace:addressSpace.addressPrefixes}' -o table"
+                console_path:
+                  aws: "VPC → Your VPCs → Verify separate VPCs per environment"
+                  azure: "Virtual networks → Subnets"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_vpcs"
+                    assertion: "multiple_vpcs_for_segregation"
+                  - service: "ec2"
+                    method: "describe_subnets"
+                    assertion: "subnets_segregated_by_tier"
+
+        A.8.23:
+          title: "Web filtering"
+          description: "Access to external websites shall be managed to reduce exposure to malicious content."
+          checks:
+            - id: "A.8.23.a"
+              description: "Verify web filtering controls are implemented"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement web filtering using Network Firewall and DNS filtering."
+                steps:
+                  aws:
+                    - "Create Network Firewall rule group: aws network-firewall create-rule-group --rule-group-name WebFiltering --type STATEFUL --capacity 100 --rule-group file://web-filter-rules.json"
+                    - "Create Network Firewall: aws network-firewall create-firewall --firewall-name WebFilter --vpc-id <vpc-id> --subnet-mappings SubnetId=<subnet-id> --firewall-policy-arn <policy-arn>"
+                    - "Enable Route 53 Resolver DNS Firewall: aws route53resolver create-firewall-domain-list --name BlockedDomains --domains file://blocked-domains.txt"
+                    - "Associate DNS firewall with VPC: aws route53resolver associate-firewall-rule-group --firewall-rule-group-id <group-id> --vpc-id <vpc-id> --priority 100 --name WebFilterAssociation"
+                  azure:
+                    - "Create Azure Firewall policy: az network firewall policy create --name WebFilterPolicy --resource-group <rg>"
+                console_path:
+                  aws: "Network Firewall → Firewall policies → Create policy"
+                  azure: "Firewall → Rules → Application rules"
+              cloud_checks:
+                aws:
+                  - service: "network-firewall"
+                    method: "list_firewalls"
+                    assertion: "network_firewall_deployed"
+                  - service: "route53resolver"
+                    method: "list_firewall_rule_groups"
+                    assertion: "dns_firewall_configured"
+
+        A.8.24:
+          title: "Use of cryptography"
+          description: "Rules for the effective use of cryptography, including cryptographic key management, shall be defined and implemented."
+          checks:
+            - id: "A.8.24.a"
+              description: "Verify cryptographic controls and key management"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement KMS for key management with rotation, and enforce encryption across services."
+                steps:
+                  aws:
+                    - "List KMS keys: aws kms list-keys --query 'Keys[].KeyId'"
+                    - "Check key rotation: aws kms get-key-rotation-status --key-id <key-id>"
+                    - "Enable automatic key rotation: aws kms enable-key-rotation --key-id <key-id>"
+                    - "Create KMS key with policy: aws kms create-key --description 'Data encryption key' --key-usage ENCRYPT_DECRYPT --origin AWS_KMS --policy file://key-policy.json"
+                    - "Verify S3 bucket encryption: aws s3api get-bucket-encryption --bucket <bucket>"
+                    - "Create Config rule for encrypted volumes: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"encrypted-volumes\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"ENCRYPTED_VOLUMES\"}}'"
+                  azure:
+                    - "List Key Vault keys: az keyvault key list --vault-name <vault> --query '[].{Name:name, Enabled:attributes.enabled}'"
+                console_path:
+                  aws: "KMS → Customer managed keys → Create/Review"
+                  azure: "Key vaults → Keys → Create/Import"
+              cloud_checks:
+                aws:
+                  - service: "kms"
+                    method: "list_keys"
+                    assertion: "kms_keys_exist"
+                  - service: "kms"
+                    method: "get_key_rotation_status"
+                    assertion: "key_rotation_enabled"
+
+        A.8.25:
+          title: "Secure development life cycle"
+          description: "Rules for the secure development of software and systems shall be established and applied."
+          checks:
+            - id: "A.8.25.a"
+              description: "Verify secure SDLC practices are implemented in CI/CD pipelines"
+              evidence_type: "config"
+              remediation:
+                summary: "Integrate security scanning into CI/CD pipelines with automated quality gates."
+                steps:
+                  aws:
+                    - "List CodePipeline pipelines: aws codepipeline list-pipelines --query 'pipelines[].{Name:name,Created:created}'"
+                    - "Get pipeline details: aws codepipeline get-pipeline --name <pipeline> --query 'pipeline.stages[].{Name:name,Actions:actions[].{Name:name,Category:actionTypeId.category}}'"
+                    - "Enable CodeGuru Reviewer: aws codeguru-reviewer associate-repository --repository '{\"CodeCommit\":{\"Name\":\"<repo>\"}}'"
+                    - "Enable Inspector for container scanning: aws inspector2 enable --resource-types ECR"
+                    - "Check ECR scan findings: aws ecr describe-image-scan-findings --repository-name <repo> --image-id imageTag=latest --query 'imageScanFindings.findingSeverityCounts'"
+                  azure:
+                    - "List Azure DevOps pipelines: az pipelines list --query '[].{Name:name, QueueStatus:queueStatus}'"
+                console_path:
+                  aws: "CodePipeline → Pipelines → Edit → Security stages"
+                  azure: "Azure DevOps → Pipelines → Edit"
+              cloud_checks:
+                aws:
+                  - service: "codepipeline"
+                    method: "list_pipelines"
+                    assertion: "pipelines_exist"
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "ecr_scanning_enabled"
+
+        A.8.26:
+          title: "Application security requirements"
+          description: "Information security requirements shall be identified, specified and approved when developing or acquiring applications."
+          checks:
+            - id: "A.8.26.a"
+              description: "Verify application security requirements are defined and enforced"
+              evidence_type: "policy_doc"
+              remediation:
+                summary: "Define application security requirements and validate through automated scanning."
+                steps:
+                  aws:
+                    - "Store security requirements in S3: aws s3 cp application-security-requirements.pdf s3://<policy-bucket>/security-requirements/"
+                    - "Enable WAF for application protection: aws wafv2 create-web-acl --name AppSecRequirements --scope REGIONAL --default-action '{\"Allow\":{}}' --visibility-config '{\"SampledRequestsEnabled\":true,\"CloudWatchMetricsEnabled\":true,\"MetricName\":\"AppSecReqs\"}' --rules file://appsec-rules.json"
+                    - "Enable Inspector for Lambda scanning: aws inspector2 enable --resource-types LAMBDA"
+                    - "Check Security Hub application findings: aws securityhub get-findings --filters '{\"ProductName\":[{\"Value\":\"Inspector\",\"Comparison\":\"EQUALS\"}],\"SeverityLabel\":[{\"Value\":\"CRITICAL\",\"Comparison\":\"EQUALS\"}]}'"
+                  azure:
+                    - "Check application security with Defender: az security assessment list --query '[?contains(displayName,`application`)].{Name:displayName, Status:status.code}'"
+                console_path:
+                  aws: "WAF & Shield → Web ACLs → Application security"
+                  azure: "Defender for Cloud → Recommendations → Application"
+              cloud_checks:
+                aws:
+                  - service: "wafv2"
+                    method: "list_web_acls"
+                    assertion: "application_waf_configured"
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "lambda_scanning_enabled"
+
+        A.8.27:
+          title: "Secure system architecture and engineering principles"
+          description: "Principles for engineering secure systems shall be established, documented, maintained and applied to any information system development activities."
+          checks:
+            - id: "A.8.27.a"
+              description: "Verify secure architecture principles are applied to infrastructure"
+              evidence_type: "config"
+              remediation:
+                summary: "Apply Well-Architected Framework principles and enforce security best practices."
+                steps:
+                  aws:
+                    - "Run Well-Architected review: aws wellarchitected create-workload --workload-name ProductionWorkload --lenses wellarchitected --environment PRODUCTION --aws-regions us-east-1 --review-owner security-team@example.com"
+                    - "Deploy Security Hub best practices standard: aws securityhub batch-enable-standards --standards-subscription-requests StandardsArn=arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0"
+                    - "Enable Trusted Advisor checks: aws support describe-trusted-advisor-checks --language en --query 'checks[?category==`security`].{Name:name,Id:id}'"
+                    - "Check Config conformance pack: aws configservice describe-conformance-pack-compliance --conformance-pack-name SecurityBaseline"
+                  azure:
+                    - "Run Azure Advisor security recommendations: az advisor recommendation list --category Security"
+                console_path:
+                  aws: "Well-Architected Tool → Workloads → Create review"
+                  azure: "Advisor → Security recommendations"
+              cloud_checks:
+                aws:
+                  - service: "securityhub"
+                    method: "describe_standards_subscriptions"
+                    assertion: "security_standards_enabled"
+                  - service: "wellarchitected"
+                    method: "list_workloads"
+                    assertion: "workload_reviews_exist"
+
+        A.8.28:
+          title: "Secure coding"
+          description: "Secure coding principles shall be applied to software development."
+          checks:
+            - id: "A.8.28.a"
+              description: "Verify secure coding practices and automated code analysis"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement automated code review and static analysis in CI/CD pipelines."
+                steps:
+                  aws:
+                    - "Associate CodeGuru Reviewer: aws codeguru-reviewer associate-repository --repository '{\"CodeCommit\":{\"Name\":\"<repo>\"}}'"
+                    - "List CodeGuru recommendations: aws codeguru-reviewer list-recommendations --repository-association-arn <arn> --query 'RecommendationSummaries[].{FilePath:FilePath,Description:Description,Severity:Severity}'"
+                    - "Create CodeBuild project with security scanning: aws codebuild create-project --name SecureCodeScan --source '{\"type\":\"CODECOMMIT\",\"location\":\"<repo-url>\"}' --artifacts '{\"type\":\"NO_ARTIFACTS\"}' --environment '{\"type\":\"LINUX_CONTAINER\",\"computeType\":\"BUILD_GENERAL1_SMALL\",\"image\":\"aws/codebuild/amazonlinux2-x86_64-standard:4.0\"}'"
+                    - "Check ECR image scan results: aws ecr describe-image-scan-findings --repository-name <repo> --image-id imageTag=latest"
+                  azure:
+                    - "Check Azure DevOps code analysis: az pipelines runs list --query '[].{Name:pipeline.name, Result:result}'"
+                console_path:
+                  aws: "CodeGuru → Reviewer → Repository associations"
+                  azure: "Azure DevOps → Pipelines → Code analysis tasks"
+              cloud_checks:
+                aws:
+                  - service: "codeguru-reviewer"
+                    method: "list_repository_associations"
+                    assertion: "codeguru_reviewer_associated"
+
+        A.8.29:
+          title: "Security testing in development and acceptance"
+          description: "Security testing processes shall be defined and implemented in the development life cycle."
+          checks:
+            - id: "A.8.29.a"
+              description: "Verify security testing is integrated into development and acceptance processes"
+              evidence_type: "config"
+              remediation:
+                summary: "Integrate security testing stages into CI/CD pipelines for continuous validation."
+                steps:
+                  aws:
+                    - "Add security test stage to pipeline: aws codepipeline update-pipeline --pipeline file://pipeline-with-security-testing.json"
+                    - "Enable Inspector for continuous scanning: aws inspector2 enable --resource-types EC2 ECR LAMBDA"
+                    - "Run on-demand Inspector scan: aws inspector2 create-findings-report --report-format CSV --s3-destination '{\"bucketName\":\"<report-bucket>\",\"keyPrefix\":\"security-reports/\",\"kmsKeyArn\":\"<kms-arn>\"}'"
+                    - "Check CodeBuild test reports: aws codebuild list-report-groups --query 'reportGroups'"
+                    - "Verify test reports: aws codebuild list-reports-for-report-group --report-group-arn <arn> --query 'reports'"
+                  azure:
+                    - "Check test results: az pipelines runs list --query '[?result==`succeeded`].{Name:pipeline.name, Result:result}'"
+                console_path:
+                  aws: "CodePipeline → Edit → Add security testing stage"
+                  azure: "Azure DevOps → Test Plans → Security tests"
+              cloud_checks:
+                aws:
+                  - service: "inspector2"
+                    method: "batch_get_account_status"
+                    assertion: "inspector_scanning_enabled"
+                  - service: "codebuild"
+                    method: "list_report_groups"
+                    assertion: "security_test_reports_exist"
+
+        A.8.30:
+          title: "Outsourced development"
+          description: "The organization shall direct, monitor and review the activities related to outsourced system development."
+          checks:
+            - id: "A.8.30.a"
+              description: "Verify outsourced development access controls and monitoring"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement strict access controls and monitoring for third-party development access."
+                steps:
+                  aws:
+                    - "Create cross-account role for vendor: aws iam create-role --role-name VendorDevelopmentAccess --assume-role-policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::<vendor-account>:root\"},\"Action\":\"sts:AssumeRole\",\"Condition\":{\"StringEquals\":{\"sts:ExternalId\":\"<external-id>\"},\"Bool\":{\"aws:MultiFactorAuthPresent\":\"true\"}}}]}'"
+                    - "Add permission boundary: aws iam put-role-permissions-boundary --role-name VendorDevelopmentAccess --permissions-boundary arn:aws:iam::<account>:policy/VendorBoundary"
+                    - "Enable CloudTrail for vendor monitoring: aws cloudtrail put-event-selectors --trail-name AuditTrail --event-selectors '[{\"ReadWriteType\":\"All\",\"IncludeManagementEvents\":true}]'"
+                    - "Create CloudWatch alarm for vendor activity: aws cloudwatch put-metric-alarm --alarm-name VendorActivity --metric-name VendorAPICallCount --namespace Security --threshold 100 --comparison-operator GreaterThanThreshold --evaluation-periods 1 --period 3600 --statistic Sum --alarm-actions <sns-arn>"
+                  azure:
+                    - "Create guest user for vendor: az ad user create --display-name 'Vendor Developer' --user-principal-name vendor@external.com --password <temp-password>"
+                console_path:
+                  aws: "IAM → Roles → VendorDevelopmentAccess → Trust relationships"
+                  azure: "Entra ID → External Identities → Guest users"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_role"
+                    assertion: "vendor_role_has_boundary"
+                  - service: "cloudtrail"
+                    method: "get_event_selectors"
+                    assertion: "vendor_activity_monitored"
+
+        A.8.31:
+          title: "Separation of development, test and production environments"
+          description: "Development, testing and production environments shall be separated and secured."
+          checks:
+            - id: "A.8.31.a"
+              description: "Verify environment separation through accounts or VPCs"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement environment separation using AWS Organizations with separate accounts or VPCs."
+                steps:
+                  aws:
+                    - "List organizational accounts: aws organizations list-accounts --query 'Accounts[].{Id:Id,Name:Name,Email:Email,Status:Status}'"
+                    - "List OUs: aws organizations list-organizational-units-for-parent --parent-id <root-id> --query 'OrganizationalUnits[].{Id:Id,Name:Name}'"
+                    - "Verify separate VPCs: aws ec2 describe-vpcs --query 'Vpcs[].{VpcId:VpcId,CidrBlock:CidrBlock,Tags:Tags[?Key==`Environment`].Value|[0]}'"
+                    - "Create SCP preventing production changes from dev: aws organizations create-policy --name DenyDevToProd --type SERVICE_CONTROL_POLICY --content file://dev-prod-separation-scp.json"
+                    - "Tag resources with environment: aws ec2 create-tags --resources <resource-id> --tags Key=Environment,Value=Production"
+                  azure:
+                    - "List subscriptions for environment separation: az account list --query '[].{Name:name, Id:id, State:state}'"
+                console_path:
+                  aws: "AWS Organizations → Accounts → Verify dev/test/prod separation"
+                  azure: "Subscriptions → Verify separate subscriptions per environment"
+              cloud_checks:
+                aws:
+                  - service: "organizations"
+                    method: "list_accounts"
+                    assertion: "separate_accounts_per_environment"
+                  - service: "ec2"
+                    method: "describe_vpcs"
+                    assertion: "vpcs_tagged_with_environment"
+
+        A.8.32:
+          title: "Change management"
+          description: "Changes to information processing facilities and information systems shall be subject to change management procedures."
+          checks:
+            - id: "A.8.32.a"
+              description: "Verify change management processes and approval workflows"
+              evidence_type: "config"
+              remediation:
+                summary: "Implement change management using Infrastructure as Code with approval workflows."
+                steps:
+                  aws:
+                    - "List CloudFormation stacks: aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --query 'StackSummaries[].{Name:StackName,Status:StackStatus,LastUpdated:LastUpdatedTime}'"
+                    - "Check CloudFormation drift: aws cloudformation detect-stack-drift --stack-name <stack-name>"
+                    - "Get drift results: aws cloudformation describe-stack-drift-detection-status --stack-drift-detection-id <detection-id>"
+                    - "Create CodePipeline approval stage: aws codepipeline update-pipeline --pipeline file://pipeline-with-approval.json"
+                    - "Enable Config change tracking: aws configservice put-config-rule --config-rule '{\"ConfigRuleName\":\"cloudformation-stack-drift-detection-check\",\"Source\":{\"Owner\":\"AWS\",\"SourceIdentifier\":\"CLOUDFORMATION_STACK_DRIFT_DETECTION_CHECK\"}}'"
+                  azure:
+                    - "List deployment operations: az deployment group list --resource-group <rg> --query '[].{Name:name, Timestamp:timestamp}'"
+                console_path:
+                  aws: "CloudFormation → Stacks → Detect drift"
+                  azure: "Resource groups → Deployments → History"
+              cloud_checks:
+                aws:
+                  - service: "cloudformation"
+                    method: "list_stacks"
+                    assertion: "infrastructure_managed_by_cloudformation"
+                  - service: "configservice"
+                    method: "get_compliance_details_by_config_rule"
+                    assertion: "no_stack_drift_detected"
+
+        A.8.33:
+          title: "Test information"
+          description: "Test information shall be appropriately selected, protected and managed."
+          checks:
+            - id: "A.8.33.a"
+              description: "Verify test data is sanitized and protected"
+              evidence_type: "config"
+              remediation:
+                summary: "Ensure test environments do not contain production data, and sanitize any test data."
+                steps:
+                  aws:
+                    - "Enable Macie to scan test buckets: aws macie2 create-classification-job --job-type ONE_TIME --s3-job-definition '{\"bucketDefinitions\":[{\"accountId\":\"<account-id>\",\"buckets\":[\"<test-bucket>\"]}]}' --name TestDataScan"
+                    - "Tag test resources: aws ec2 create-tags --resources <resource-id> --tags Key=Environment,Value=Test Key=DataClassification,Value=Sanitized"
+                    - "Create Config rule for test environment tags: aws configservice put-config-rule --config-rule file://test-environment-tags.json"
+                    - "Verify RDS test instances use sanitized snapshots: aws rds describe-db-instances --query 'DBInstances[?TagList[?Key==`Environment` && Value==`Test`]].{DB:DBInstanceIdentifier,Tags:TagList}'"
+                  azure:
+                    - "Tag test resources: az tag create --resource-id <id> --tags Environment=Test DataClassification=Sanitized"
+                console_path:
+                  aws: "Macie → Jobs → Scan test data buckets"
+                  azure: "All resources → Filter by Environment=Test"
+              cloud_checks:
+                aws:
+                  - service: "macie2"
+                    method: "list_classification_jobs"
+                    assertion: "test_data_scanned"
+                  - service: "configservice"
+                    method: "get_compliance_details_by_config_rule"
+                    assertion: "test_resources_properly_tagged"
+
+        A.8.34:
+          title: "Protection of information systems during audit testing"
+          description: "Audit tests and other assurance activities involving assessment of operational systems shall be planned and agreed between the tester and appropriate management."
+          checks:
+            - id: "A.8.34.a"
+              description: "Verify audit testing controls and read-only access for auditors"
+              evidence_type: "iam_policy"
+              remediation:
+                summary: "Create time-limited read-only access for auditors with full activity logging."
+                steps:
+                  aws:
+                    - "Create auditor role with read-only access: aws iam create-role --role-name AuditorReadOnly --assume-role-policy-document file://auditor-trust.json --max-session-duration 3600"
+                    - "Attach SecurityAudit policy: aws iam attach-role-policy --role-name AuditorReadOnly --policy-arn arn:aws:iam::aws:policy/SecurityAudit"
+                    - "Attach ViewOnlyAccess policy: aws iam attach-role-policy --role-name AuditorReadOnly --policy-arn arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
+                    - "Add permission boundary: aws iam put-role-permissions-boundary --role-name AuditorReadOnly --permissions-boundary arn:aws:iam::aws:policy/ReadOnlyAccess"
+                    - "Monitor auditor activity: aws cloudtrail lookup-events --lookup-attributes AttributeKey=Username,AttributeValue=AuditorReadOnly --max-results 20"
+                  azure:
+                    - "Assign Reader role: az role assignment create --assignee <auditor-id> --role Reader --scope /subscriptions/<sub-id>"
+                console_path:
+                  aws: "IAM → Roles → AuditorReadOnly → Permissions"
+                  azure: "Subscriptions → Access control (IAM) → Add Reader role"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "get_role"
+                    assertion: "auditor_role_read_only"
+                  - service: "iam"
+                    method: "list_attached_role_policies"
+                    assertion: "auditor_has_security_audit_policy"

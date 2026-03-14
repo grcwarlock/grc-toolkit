@@ -25,11 +25,8 @@ def _load_frameworks() -> dict:
     global _frameworks_cache
     if _frameworks_cache is not None:
         return _frameworks_cache
-    path = Path("config/frameworks.yaml")
-    if not path.exists():
-        return {}
-    with open(path) as f:
-        _frameworks_cache = yaml.safe_load(f) or {}
+    from modules.evidence_collector import load_all_framework_data
+    _frameworks_cache = load_all_framework_data("config")
     return _frameworks_cache
 
 

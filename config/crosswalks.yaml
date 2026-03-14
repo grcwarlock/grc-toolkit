@@ -1,63 +1,873 @@
 crosswalks:
+  # ─────────────────────────────────────────────────────────────────
+  # NIST 800-53 → SOC 2 Trust Services Criteria
+  # ─────────────────────────────────────────────────────────────────
   nist_to_soc2:
     source: "nist_800_53"
     target: "soc2"
     mappings:
+      # AC - Access Control
+      AC-1:
+        - {control: "CC5.2", confidence: "high", notes: "Access control policy → Control activities"}
       AC-2:
         - {control: "CC6.1", confidence: "high", notes: "Account management → Logical access"}
         - {control: "CC6.2", confidence: "medium", notes: "Account provisioning"}
+      AC-3:
+        - {control: "CC6.1", confidence: "high", notes: "Access enforcement → Logical access"}
+      AC-4:
+        - {control: "CC6.1", confidence: "high", notes: "Information flow → Access control"}
+        - {control: "CC6.6", confidence: "medium", notes: "Information flow → Boundary protection"}
+      AC-5:
+        - {control: "CC6.1", confidence: "high", notes: "Separation of duties"}
+        - {control: "CC6.3", confidence: "high", notes: "Role-based separation"}
       AC-6:
         - {control: "CC6.1", confidence: "high", notes: "Least privilege"}
         - {control: "CC6.3", confidence: "high", notes: "Role-based access"}
+      AC-7:
+        - {control: "CC6.1", confidence: "high", notes: "Unsuccessful logon attempts"}
+      AC-8:
+        - {control: "CC6.1", confidence: "low", notes: "System use notification"}
+      AC-11:
+        - {control: "CC6.1", confidence: "medium", notes: "Session lock → Access control"}
+      AC-12:
+        - {control: "CC6.1", confidence: "medium", notes: "Session termination"}
+      AC-14:
+        - {control: "CC6.1", confidence: "medium", notes: "Permitted actions without identification"}
+      AC-17:
+        - {control: "CC6.1", confidence: "high", notes: "Remote access → Logical access"}
+        - {control: "CC6.6", confidence: "medium", notes: "Remote access → Boundary protection"}
+      AC-18:
+        - {control: "CC6.1", confidence: "medium", notes: "Wireless access"}
+      AC-19:
+        - {control: "CC6.1", confidence: "medium", notes: "Access control for mobile devices"}
+      AC-20:
+        - {control: "CC6.1", confidence: "medium", notes: "Use of external systems"}
+      AC-22:
+        - {control: "CC6.1", confidence: "medium", notes: "Publicly accessible content"}
+
+      # AT - Awareness and Training
+      AT-1:
+        - {control: "CC1.4", confidence: "high", notes: "Security awareness policy → Training commitment"}
+      AT-2:
+        - {control: "CC1.4", confidence: "high", notes: "Awareness training → Competence"}
+      AT-3:
+        - {control: "CC1.4", confidence: "high", notes: "Role-based training → Competence"}
+      AT-4:
+        - {control: "CC1.4", confidence: "medium", notes: "Training records → Accountability"}
+
+      # AU - Audit and Accountability
+      AU-1:
+        - {control: "CC7.1", confidence: "high", notes: "Audit policy → Monitoring"}
       AU-2:
         - {control: "CC7.1", confidence: "high", notes: "Event logging → Monitoring"}
         - {control: "CC7.2", confidence: "medium", notes: "Anomaly detection"}
+      AU-3:
+        - {control: "CC7.1", confidence: "high", notes: "Content of audit records"}
+      AU-4:
+        - {control: "CC7.1", confidence: "medium", notes: "Audit log storage capacity"}
+      AU-5:
+        - {control: "CC7.1", confidence: "medium", notes: "Response to audit failures"}
       AU-6:
         - {control: "CC7.2", confidence: "high", notes: "Audit review → Analysis"}
         - {control: "CC7.3", confidence: "medium", notes: "Response evaluation"}
+      AU-7:
+        - {control: "CC7.1", confidence: "medium", notes: "Audit record reduction and reporting"}
+      AU-8:
+        - {control: "CC7.1", confidence: "medium", notes: "Time stamps"}
+      AU-9:
+        - {control: "CC7.1", confidence: "high", notes: "Protection of audit information"}
+      AU-11:
+        - {control: "CC7.1", confidence: "medium", notes: "Audit record retention"}
+      AU-12:
+        - {control: "CC7.1", confidence: "high", notes: "Audit record generation"}
+
+      # CA - Assessment, Authorization, and Monitoring
+      CA-1:
+        - {control: "CC4.1", confidence: "high", notes: "Assessment policy → Monitoring activities"}
+      CA-2:
+        - {control: "CC4.1", confidence: "high", notes: "Control assessments → Monitoring"}
+      CA-3:
+        - {control: "CC6.6", confidence: "high", notes: "Information exchange → Boundary protection"}
+      CA-5:
+        - {control: "CC4.2", confidence: "high", notes: "POA&M → Deficiency communication"}
+      CA-6:
+        - {control: "CC3.4", confidence: "medium", notes: "Authorization → Risk acceptance"}
+      CA-7:
+        - {control: "CC4.1", confidence: "high", notes: "Continuous monitoring"}
+      CA-8:
+        - {control: "CC4.1", confidence: "medium", notes: "Penetration testing → Assessment"}
+      CA-9:
+        - {control: "CC6.6", confidence: "medium", notes: "Internal system connections"}
+
+      # CM - Configuration Management
+      CM-1:
+        - {control: "CC8.1", confidence: "high", notes: "Configuration policy → Change management"}
+      CM-2:
+        - {control: "CC8.1", confidence: "high", notes: "Baseline configuration"}
+      CM-3:
+        - {control: "CC8.1", confidence: "high", notes: "Configuration change control"}
+      CM-4:
+        - {control: "CC8.1", confidence: "high", notes: "Impact analysis"}
+      CM-5:
+        - {control: "CC8.1", confidence: "high", notes: "Access restrictions for change"}
+      CM-6:
+        - {control: "CC8.1", confidence: "medium", notes: "Configuration settings"}
+      CM-7:
+        - {control: "CC6.8", confidence: "high", notes: "Least functionality"}
+      CM-8:
+        - {control: "CC6.1", confidence: "medium", notes: "System component inventory"}
+      CM-9:
+        - {control: "CC8.1", confidence: "medium", notes: "Configuration management plan"}
+      CM-10:
+        - {control: "CC6.8", confidence: "medium", notes: "Software usage restrictions"}
+      CM-11:
+        - {control: "CC6.8", confidence: "medium", notes: "User-installed software"}
+
+      # CP - Contingency Planning
+      CP-1:
+        - {control: "A1.1", confidence: "high", notes: "Contingency policy → Availability commitment"}
+      CP-2:
+        - {control: "A1.2", confidence: "high", notes: "Contingency plan → Recovery objectives"}
+      CP-3:
+        - {control: "A1.2", confidence: "medium", notes: "Contingency training"}
+      CP-4:
+        - {control: "A1.2", confidence: "high", notes: "Contingency plan testing → Recovery testing"}
+      CP-6:
+        - {control: "A1.2", confidence: "high", notes: "Alternate storage site"}
+      CP-7:
+        - {control: "A1.2", confidence: "high", notes: "Alternate processing site"}
+      CP-8:
+        - {control: "A1.2", confidence: "medium", notes: "Telecommunications services"}
+      CP-9:
+        - {control: "A1.2", confidence: "high", notes: "System backup → Recovery mechanisms"}
+      CP-10:
+        - {control: "A1.2", confidence: "high", notes: "System recovery and reconstitution"}
+
+      # IA - Identification and Authentication
+      IA-1:
+        - {control: "CC6.1", confidence: "high", notes: "I&A policy → Logical access"}
+      IA-2:
+        - {control: "CC6.1", confidence: "high", notes: "Identification → Authentication"}
+      IA-3:
+        - {control: "CC6.1", confidence: "medium", notes: "Device identification"}
+      IA-4:
+        - {control: "CC6.1", confidence: "high", notes: "Identifier management"}
+      IA-5:
+        - {control: "CC6.1", confidence: "high", notes: "Authenticator management"}
+      IA-6:
+        - {control: "CC6.1", confidence: "medium", notes: "Authentication feedback"}
+      IA-7:
+        - {control: "CC6.1", confidence: "medium", notes: "Cryptographic module authentication"}
+      IA-8:
+        - {control: "CC6.1", confidence: "medium", notes: "Non-organizational user identification"}
+      IA-11:
+        - {control: "CC6.1", confidence: "medium", notes: "Re-authentication"}
+      IA-12:
+        - {control: "CC6.1", confidence: "medium", notes: "Identity proofing"}
+
+      # IR - Incident Response
+      IR-1:
+        - {control: "CC7.3", confidence: "high", notes: "Incident response policy"}
+        - {control: "CC7.4", confidence: "high", notes: "Response activities"}
+      IR-2:
+        - {control: "CC7.3", confidence: "medium", notes: "Incident response training"}
+      IR-3:
+        - {control: "CC7.3", confidence: "medium", notes: "Incident response testing"}
+      IR-4:
+        - {control: "CC7.3", confidence: "high", notes: "Incident handling"}
+        - {control: "CC7.4", confidence: "high", notes: "Response and recovery"}
+      IR-5:
+        - {control: "CC7.3", confidence: "high", notes: "Incident monitoring"}
+      IR-6:
+        - {control: "CC7.4", confidence: "high", notes: "Incident reporting"}
+      IR-7:
+        - {control: "CC7.4", confidence: "medium", notes: "Incident response assistance"}
+      IR-8:
+        - {control: "CC7.3", confidence: "high", notes: "Incident response plan"}
+
+      # MA - Maintenance
+      MA-1:
+        - {control: "CC6.1", confidence: "medium", notes: "Maintenance policy → Access management"}
+      MA-2:
+        - {control: "CC6.1", confidence: "medium", notes: "Controlled maintenance"}
+      MA-3:
+        - {control: "CC6.1", confidence: "low", notes: "Maintenance tools"}
+      MA-4:
+        - {control: "CC6.1", confidence: "medium", notes: "Nonlocal maintenance → Remote access"}
+      MA-5:
+        - {control: "CC6.2", confidence: "medium", notes: "Maintenance personnel → Access provisioning"}
+
+      # MP - Media Protection
+      MP-1:
+        - {control: "CC6.7", confidence: "high", notes: "Media protection policy → Data restriction"}
+      MP-2:
+        - {control: "CC6.7", confidence: "high", notes: "Media access → Restricting data"}
+      MP-3:
+        - {control: "CC6.7", confidence: "medium", notes: "Media marking"}
+      MP-4:
+        - {control: "CC6.7", confidence: "high", notes: "Media storage"}
+      MP-5:
+        - {control: "CC6.7", confidence: "high", notes: "Media transport"}
+      MP-6:
+        - {control: "CC6.5", confidence: "high", notes: "Media sanitization → Disposal"}
+      MP-7:
+        - {control: "CC6.7", confidence: "medium", notes: "Media use"}
+
+      # PE - Physical and Environmental Protection
+      PE-1:
+        - {control: "CC6.4", confidence: "high", notes: "Physical security policy → Physical access"}
+      PE-2:
+        - {control: "CC6.4", confidence: "high", notes: "Physical access authorizations"}
+      PE-3:
+        - {control: "CC6.4", confidence: "high", notes: "Physical access control"}
+      PE-4:
+        - {control: "CC6.4", confidence: "high", notes: "Access control for transmission"}
+      PE-5:
+        - {control: "CC6.4", confidence: "medium", notes: "Access control for output devices"}
+      PE-6:
+        - {control: "CC6.4", confidence: "high", notes: "Physical access monitoring"}
+      PE-8:
+        - {control: "CC6.4", confidence: "medium", notes: "Visitor access records"}
+      PE-9:
+        - {control: "A1.1", confidence: "medium", notes: "Power equipment → Availability"}
+      PE-10:
+        - {control: "A1.1", confidence: "medium", notes: "Emergency shutoff"}
+      PE-11:
+        - {control: "A1.1", confidence: "medium", notes: "Emergency power"}
+      PE-12:
+        - {control: "A1.1", confidence: "medium", notes: "Emergency lighting"}
+      PE-13:
+        - {control: "A1.1", confidence: "medium", notes: "Fire protection"}
+      PE-14:
+        - {control: "A1.1", confidence: "medium", notes: "Environmental controls"}
+      PE-15:
+        - {control: "A1.1", confidence: "medium", notes: "Water damage protection"}
+      PE-16:
+        - {control: "CC6.7", confidence: "medium", notes: "Delivery and removal"}
+      PE-17:
+        - {control: "CC6.4", confidence: "medium", notes: "Alternate work site"}
+
+      # PL - Planning
+      PL-1:
+        - {control: "CC5.1", confidence: "high", notes: "Planning policy → Control selection"}
+      PL-2:
+        - {control: "CC5.1", confidence: "high", notes: "Security plan → Risk-based controls"}
+      PL-4:
+        - {control: "CC1.1", confidence: "high", notes: "Rules of behavior → Ethical values"}
+      PL-10:
+        - {control: "CC5.2", confidence: "medium", notes: "Baseline selection"}
+      PL-11:
+        - {control: "CC5.3", confidence: "medium", notes: "Tailoring analysis"}
+
+      # PM - Program Management
+      PM-1:
+        - {control: "CC1.2", confidence: "high", notes: "Information security program → Board oversight"}
+      PM-2:
+        - {control: "CC1.3", confidence: "high", notes: "Senior information security officer"}
+      PM-3:
+        - {control: "CC5.1", confidence: "medium", notes: "Information security resources"}
+      PM-4:
+        - {control: "CC4.2", confidence: "high", notes: "POA&M process → Deficiency communication"}
+      PM-5:
+        - {control: "CC3.1", confidence: "medium", notes: "System inventory"}
+      PM-6:
+        - {control: "CC3.1", confidence: "medium", notes: "Measures of performance"}
+      PM-9:
+        - {control: "CC3.1", confidence: "high", notes: "Risk management strategy"}
+      PM-10:
+        - {control: "CC4.1", confidence: "medium", notes: "Authorization process"}
+      PM-11:
+        - {control: "CC1.5", confidence: "high", notes: "Mission/business process definition → Accountability"}
+      PM-14:
+        - {control: "CC4.1", confidence: "medium", notes: "Testing, training, monitoring"}
+
+      # PS - Personnel Security
+      PS-1:
+        - {control: "CC1.4", confidence: "high", notes: "Personnel security policy"}
+      PS-2:
+        - {control: "CC1.4", confidence: "medium", notes: "Position risk designation"}
+      PS-3:
+        - {control: "CC1.4", confidence: "high", notes: "Personnel screening"}
+      PS-4:
+        - {control: "CC6.2", confidence: "high", notes: "Personnel termination → Deprovisioning"}
+      PS-5:
+        - {control: "CC6.2", confidence: "high", notes: "Personnel transfer → Access modification"}
+      PS-6:
+        - {control: "CC1.1", confidence: "high", notes: "Access agreements → Ethical values"}
+      PS-7:
+        - {control: "CC1.4", confidence: "medium", notes: "External personnel security"}
+      PS-8:
+        - {control: "CC1.1", confidence: "medium", notes: "Personnel sanctions"}
+
+      # PT - PII Processing and Transparency
+      PT-1:
+        - {control: "P1.1", confidence: "high", notes: "PII processing policy → Privacy notice"}
+      PT-2:
+        - {control: "P1.1", confidence: "high", notes: "Authority to process PII"}
+      PT-3:
+        - {control: "P1.2", confidence: "high", notes: "PII processing purposes → Choice and consent"}
+      PT-4:
+        - {control: "P1.1", confidence: "medium", notes: "Consent"}
+      PT-5:
+        - {control: "P1.1", confidence: "medium", notes: "Privacy notice"}
+      PT-6:
+        - {control: "P1.3", confidence: "medium", notes: "System of records notice"}
+      PT-7:
+        - {control: "P1.4", confidence: "medium", notes: "Specific categories of PII"}
+      PT-8:
+        - {control: "P1.8", confidence: "medium", notes: "Computer matching requirements"}
+
+      # RA - Risk Assessment
+      RA-1:
+        - {control: "CC3.1", confidence: "high", notes: "Risk assessment policy → Risk identification"}
+      RA-2:
+        - {control: "CC3.1", confidence: "high", notes: "Security categorization → Risk identification"}
+      RA-3:
+        - {control: "CC3.2", confidence: "high", notes: "Risk assessment → Risk analysis"}
+      RA-5:
+        - {control: "CC7.1", confidence: "high", notes: "Vulnerability monitoring → Monitoring"}
+        - {control: "CC3.2", confidence: "medium", notes: "Vulnerability scanning → Risk analysis"}
+      RA-7:
+        - {control: "CC3.4", confidence: "medium", notes: "Risk response → Risk acceptance"}
+      RA-9:
+        - {control: "CC3.2", confidence: "medium", notes: "Criticality analysis"}
+
+      # SA - System and Services Acquisition
+      SA-1:
+        - {control: "CC5.1", confidence: "medium", notes: "Acquisition policy → Control selection"}
+      SA-2:
+        - {control: "CC5.1", confidence: "medium", notes: "Allocation of resources"}
+      SA-3:
+        - {control: "CC8.1", confidence: "medium", notes: "System development lifecycle"}
+      SA-4:
+        - {control: "CC9.2", confidence: "high", notes: "Acquisition process → Vendor risk"}
+      SA-5:
+        - {control: "CC8.1", confidence: "low", notes: "System documentation"}
+      SA-8:
+        - {control: "CC5.2", confidence: "medium", notes: "Security engineering principles"}
+      SA-9:
+        - {control: "CC9.2", confidence: "high", notes: "External system services → Vendor management"}
+      SA-10:
+        - {control: "CC8.1", confidence: "high", notes: "Developer configuration management"}
+      SA-11:
+        - {control: "CC8.1", confidence: "high", notes: "Developer testing and evaluation"}
+      SA-22:
+        - {control: "CC9.1", confidence: "medium", notes: "Unsupported system components"}
+
+      # SC - System and Communications Protection
+      SC-1:
+        - {control: "CC6.6", confidence: "high", notes: "SC policy → System boundaries"}
+      SC-5:
+        - {control: "A1.1", confidence: "high", notes: "Denial-of-service protection → Availability"}
       SC-7:
         - {control: "CC6.1", confidence: "high", notes: "Network boundary → Access control"}
         - {control: "CC6.6", confidence: "high", notes: "System boundary protection"}
-      IA-2:
-        - {control: "CC6.1", confidence: "high", notes: "Identification → Authentication"}
-      CM-6:
-        - {control: "CC8.1", confidence: "medium", notes: "Configuration → Change management"}
+      SC-8:
+        - {control: "CC6.1", confidence: "high", notes: "Transmission confidentiality"}
+        - {control: "C1.1", confidence: "high", notes: "Transmission confidentiality"}
+      SC-12:
+        - {control: "CC6.1", confidence: "high", notes: "Cryptographic key establishment"}
+      SC-13:
+        - {control: "CC6.1", confidence: "high", notes: "Cryptographic protection"}
+      SC-17:
+        - {control: "CC6.1", confidence: "medium", notes: "PKI certificates"}
+      SC-20:
+        - {control: "CC6.6", confidence: "medium", notes: "Secure name resolution"}
+      SC-21:
+        - {control: "CC6.6", confidence: "medium", notes: "Secure name resolution (recursive)"}
+      SC-22:
+        - {control: "CC6.6", confidence: "medium", notes: "Architecture and provisioning (DNS)"}
+      SC-23:
+        - {control: "CC6.1", confidence: "medium", notes: "Session authenticity"}
+      SC-28:
+        - {control: "C1.1", confidence: "high", notes: "Protection of information at rest → Confidentiality"}
+      SC-39:
+        - {control: "CC6.8", confidence: "medium", notes: "Process isolation"}
+
+      # SI - System and Information Integrity
+      SI-1:
+        - {control: "CC7.1", confidence: "high", notes: "SI policy → Monitoring"}
+      SI-2:
+        - {control: "CC7.1", confidence: "high", notes: "Flaw remediation → Monitoring"}
+      SI-3:
+        - {control: "CC6.8", confidence: "high", notes: "Malicious code protection"}
       SI-4:
         - {control: "CC7.1", confidence: "high", notes: "System monitoring"}
         - {control: "CC7.2", confidence: "high", notes: "Anomaly detection"}
+      SI-5:
+        - {control: "CC7.2", confidence: "medium", notes: "Security alerts and advisories"}
+      SI-7:
+        - {control: "PI1.4", confidence: "high", notes: "Software and information integrity"}
+      SI-10:
+        - {control: "PI1.2", confidence: "high", notes: "Information input validation"}
+      SI-11:
+        - {control: "CC7.1", confidence: "medium", notes: "Error handling"}
+      SI-12:
+        - {control: "C1.2", confidence: "high", notes: "Information management and retention"}
+      SI-16:
+        - {control: "CC6.8", confidence: "medium", notes: "Memory protection"}
 
+      # SR - Supply Chain Risk Management
+      SR-1:
+        - {control: "CC9.2", confidence: "high", notes: "Supply chain policy → Vendor management"}
+      SR-2:
+        - {control: "CC9.2", confidence: "high", notes: "Supply chain risk plan"}
+      SR-3:
+        - {control: "CC9.2", confidence: "high", notes: "Supply chain controls"}
+      SR-5:
+        - {control: "CC9.2", confidence: "medium", notes: "Acquisition strategies"}
+      SR-6:
+        - {control: "CC9.2", confidence: "medium", notes: "Supplier assessments"}
+      SR-8:
+        - {control: "CC4.2", confidence: "medium", notes: "Notification agreements"}
+
+  # ─────────────────────────────────────────────────────────────────
+  # NIST 800-53 → ISO 27001:2022
+  # ─────────────────────────────────────────────────────────────────
   nist_to_iso27001:
     source: "nist_800_53"
     target: "iso27001"
     mappings:
-      AC-2: [{control: "A.5.15", confidence: "high", notes: "Access control"}]
-      AC-6: [{control: "A.8.2", confidence: "high", notes: "Privileged access rights"}]
-      AU-2: [{control: "A.8.15", confidence: "high", notes: "Logging"}]
-      AU-6: [{control: "A.8.16", confidence: "high", notes: "Monitoring activities"}]
-      SC-7: [{control: "A.8.20", confidence: "high", notes: "Networks security"}, {control: "A.8.21", confidence: "high", notes: "Security of network services"}]
-      IA-2: [{control: "A.8.5", confidence: "high", notes: "Secure authentication"}]
-      CM-6: [{control: "A.8.9", confidence: "medium", notes: "Configuration management"}]
-      SI-4: [{control: "A.8.16", confidence: "high", notes: "Monitoring activities"}]
+      # AC - Access Control
+      AC-1: [{control: "A.5.1", confidence: "high", notes: "Access control policies"}]
+      AC-2:
+        - {control: "A.5.15", confidence: "high", notes: "Access control"}
+        - {control: "A.5.16", confidence: "high", notes: "Identity management"}
+      AC-3: [{control: "A.5.15", confidence: "high", notes: "Access enforcement"}]
+      AC-4: [{control: "A.8.22", confidence: "high", notes: "Information flow → Network segregation"}]
+      AC-5: [{control: "A.5.3", confidence: "high", notes: "Segregation of duties"}]
+      AC-6:
+        - {control: "A.8.2", confidence: "high", notes: "Privileged access rights"}
+        - {control: "A.5.15", confidence: "high", notes: "Least privilege → Access control"}
+      AC-7: [{control: "A.8.5", confidence: "high", notes: "Unsuccessful logon → Secure authentication"}]
+      AC-8: [{control: "A.8.5", confidence: "low", notes: "System use notification"}]
+      AC-11: [{control: "A.8.1", confidence: "medium", notes: "Session lock → User endpoint devices"}]
+      AC-12: [{control: "A.8.5", confidence: "medium", notes: "Session termination → Authentication"}]
+      AC-14: [{control: "A.5.15", confidence: "medium", notes: "Permitted actions without auth"}]
+      AC-17:
+        - {control: "A.8.5", confidence: "high", notes: "Remote access → Secure authentication"}
+        - {control: "A.6.7", confidence: "high", notes: "Remote access → Remote working"}
+      AC-18: [{control: "A.8.1", confidence: "medium", notes: "Wireless access → User endpoints"}]
+      AC-19: [{control: "A.8.1", confidence: "high", notes: "Mobile devices → User endpoint devices"}]
+      AC-20: [{control: "A.5.19", confidence: "high", notes: "External systems → Supplier relationships"}]
+      AC-22: [{control: "A.5.14", confidence: "medium", notes: "Publicly accessible content → Information transfer"}]
 
+      # AT - Awareness and Training
+      AT-1: [{control: "A.6.3", confidence: "high", notes: "Training policy → Awareness program"}]
+      AT-2: [{control: "A.6.3", confidence: "high", notes: "Awareness training"}]
+      AT-3: [{control: "A.6.3", confidence: "high", notes: "Role-based training"}]
+      AT-4: [{control: "A.6.3", confidence: "medium", notes: "Training records"}]
+
+      # AU - Audit and Accountability
+      AU-1: [{control: "A.5.1", confidence: "high", notes: "Audit policy → Information security policies"}]
+      AU-2: [{control: "A.8.15", confidence: "high", notes: "Event logging → Logging"}]
+      AU-3: [{control: "A.8.15", confidence: "high", notes: "Audit record content → Logging"}]
+      AU-4: [{control: "A.8.15", confidence: "medium", notes: "Audit log storage capacity"}]
+      AU-5: [{control: "A.8.15", confidence: "medium", notes: "Response to audit failures"}]
+      AU-6: [{control: "A.8.16", confidence: "high", notes: "Audit review → Monitoring activities"}]
+      AU-7: [{control: "A.8.15", confidence: "medium", notes: "Audit reduction and reporting"}]
+      AU-8: [{control: "A.8.17", confidence: "high", notes: "Time stamps → Clock synchronization"}]
+      AU-9: [{control: "A.8.15", confidence: "high", notes: "Protection of audit information"}]
+      AU-11: [{control: "A.8.15", confidence: "medium", notes: "Audit record retention"}]
+      AU-12: [{control: "A.8.15", confidence: "high", notes: "Audit record generation"}]
+
+      # CA - Assessment, Authorization, and Monitoring
+      CA-1: [{control: "A.5.35", confidence: "high", notes: "Assessment policy → Independent review"}]
+      CA-2: [{control: "A.5.35", confidence: "high", notes: "Control assessments → Independent review"}]
+      CA-3: [{control: "A.5.14", confidence: "high", notes: "Information exchange → Information transfer"}]
+      CA-5: [{control: "A.5.35", confidence: "medium", notes: "POA&M → Review findings"}]
+      CA-7: [{control: "A.5.35", confidence: "high", notes: "Continuous monitoring → Independent review"}]
+      CA-8: [{control: "A.8.34", confidence: "high", notes: "Penetration testing"}]
+
+      # CM - Configuration Management
+      CM-1: [{control: "A.5.1", confidence: "medium", notes: "Configuration policy → Security policies"}]
+      CM-2: [{control: "A.8.9", confidence: "high", notes: "Baseline configuration → Configuration management"}]
+      CM-3: [{control: "A.8.32", confidence: "high", notes: "Change control → Change management"}]
+      CM-4: [{control: "A.8.32", confidence: "high", notes: "Impact analysis → Change management"}]
+      CM-5: [{control: "A.8.32", confidence: "high", notes: "Access restrictions for change"}]
+      CM-6: [{control: "A.8.9", confidence: "high", notes: "Configuration settings"}]
+      CM-7: [{control: "A.8.19", confidence: "high", notes: "Least functionality → Software installation"}]
+      CM-8: [{control: "A.5.9", confidence: "high", notes: "System inventory → Inventory of assets"}]
+      CM-9: [{control: "A.8.9", confidence: "medium", notes: "Configuration management plan"}]
+      CM-10: [{control: "A.8.19", confidence: "medium", notes: "Software usage restrictions"}]
+      CM-11: [{control: "A.8.19", confidence: "medium", notes: "User-installed software"}]
+
+      # CP - Contingency Planning
+      CP-1: [{control: "A.5.29", confidence: "high", notes: "Contingency policy → ICT readiness for BC"}]
+      CP-2: [{control: "A.5.29", confidence: "high", notes: "Contingency plan → Business continuity"}]
+      CP-3: [{control: "A.5.29", confidence: "medium", notes: "Contingency training"}]
+      CP-4: [{control: "A.5.29", confidence: "high", notes: "Contingency plan testing"}]
+      CP-6: [{control: "A.5.29", confidence: "high", notes: "Alternate storage site"}]
+      CP-7: [{control: "A.5.29", confidence: "high", notes: "Alternate processing site"}]
+      CP-9: [{control: "A.8.13", confidence: "high", notes: "System backup → Information backup"}]
+      CP-10: [{control: "A.5.29", confidence: "high", notes: "System recovery → Business continuity"}]
+
+      # IA - Identification and Authentication
+      IA-1: [{control: "A.5.1", confidence: "high", notes: "I&A policy → Security policies"}]
+      IA-2: [{control: "A.8.5", confidence: "high", notes: "User identification → Secure authentication"}]
+      IA-3: [{control: "A.8.5", confidence: "medium", notes: "Device identification → Authentication"}]
+      IA-4: [{control: "A.5.16", confidence: "high", notes: "Identifier management → Identity management"}]
+      IA-5: [{control: "A.5.17", confidence: "high", notes: "Authenticator management → Authentication info"}]
+      IA-6: [{control: "A.8.5", confidence: "medium", notes: "Authentication feedback"}]
+      IA-7: [{control: "A.8.24", confidence: "medium", notes: "Cryptographic module authentication → Use of crypto"}]
+      IA-8: [{control: "A.5.16", confidence: "medium", notes: "Non-org user identification"}]
+      IA-11: [{control: "A.8.5", confidence: "medium", notes: "Re-authentication"}]
+      IA-12: [{control: "A.5.16", confidence: "medium", notes: "Identity proofing"}]
+
+      # IR - Incident Response
+      IR-1: [{control: "A.5.24", confidence: "high", notes: "IR policy → Incident management planning"}]
+      IR-2: [{control: "A.6.3", confidence: "medium", notes: "IR training → Awareness"}]
+      IR-3: [{control: "A.5.24", confidence: "medium", notes: "IR testing"}]
+      IR-4: [{control: "A.5.26", confidence: "high", notes: "Incident handling → Response to incidents"}]
+      IR-5: [{control: "A.5.25", confidence: "high", notes: "Incident monitoring → Assessment"}]
+      IR-6: [{control: "A.5.26", confidence: "high", notes: "Incident reporting → Response to incidents"}]
+      IR-7: [{control: "A.5.26", confidence: "medium", notes: "IR assistance → Response"}]
+      IR-8: [{control: "A.5.24", confidence: "high", notes: "IR plan → Planning and preparation"}]
+
+      # MA - Maintenance
+      MA-1: [{control: "A.7.13", confidence: "high", notes: "Maintenance policy → Equipment maintenance"}]
+      MA-2: [{control: "A.7.13", confidence: "high", notes: "Controlled maintenance → Equipment maintenance"}]
+      MA-3: [{control: "A.7.13", confidence: "medium", notes: "Maintenance tools"}]
+      MA-4: [{control: "A.7.13", confidence: "medium", notes: "Nonlocal maintenance"}]
+      MA-5: [{control: "A.6.1", confidence: "medium", notes: "Maintenance personnel → Screening"}]
+
+      # MP - Media Protection
+      MP-1: [{control: "A.7.10", confidence: "high", notes: "Media protection policy → Storage media"}]
+      MP-2: [{control: "A.7.10", confidence: "high", notes: "Media access → Storage media"}]
+      MP-4: [{control: "A.7.10", confidence: "high", notes: "Media storage"}]
+      MP-5: [{control: "A.7.10", confidence: "high", notes: "Media transport"}]
+      MP-6: [{control: "A.7.14", confidence: "high", notes: "Media sanitization → Secure disposal"}]
+      MP-7: [{control: "A.7.10", confidence: "medium", notes: "Media use"}]
+
+      # PE - Physical and Environmental Protection
+      PE-1: [{control: "A.7.1", confidence: "high", notes: "Physical security policy → Physical perimeters"}]
+      PE-2: [{control: "A.7.2", confidence: "high", notes: "Physical access authorizations → Physical entry"}]
+      PE-3: [{control: "A.7.2", confidence: "high", notes: "Physical access control → Physical entry"}]
+      PE-6: [{control: "A.7.4", confidence: "high", notes: "Physical access monitoring"}]
+      PE-8: [{control: "A.7.2", confidence: "medium", notes: "Visitor access records"}]
+      PE-9: [{control: "A.7.11", confidence: "high", notes: "Power equipment → Supporting utilities"}]
+      PE-11: [{control: "A.7.11", confidence: "high", notes: "Emergency power → Supporting utilities"}]
+      PE-13: [{control: "A.7.5", confidence: "high", notes: "Fire protection → Physical threats"}]
+      PE-14: [{control: "A.7.5", confidence: "high", notes: "Environmental controls → Physical threats"}]
+      PE-16: [{control: "A.7.10", confidence: "medium", notes: "Delivery and removal → Storage media"}]
+
+      # PL - Planning
+      PL-1: [{control: "A.5.1", confidence: "high", notes: "Planning policy → Security policies"}]
+      PL-2: [{control: "A.5.1", confidence: "high", notes: "Security plan → Security policies"}]
+      PL-4: [{control: "A.5.10", confidence: "high", notes: "Rules of behavior → Acceptable use"}]
+
+      # PM - Program Management
+      PM-1: [{control: "A.5.1", confidence: "high", notes: "Info security program plan → Security policies"}]
+      PM-2: [{control: "A.5.2", confidence: "high", notes: "Senior officer → Roles and responsibilities"}]
+      PM-3: [{control: "A.5.4", confidence: "medium", notes: "Resources → Management responsibilities"}]
+      PM-5: [{control: "A.5.9", confidence: "medium", notes: "System inventory → Inventory of assets"}]
+      PM-9: [{control: "A.5.1", confidence: "high", notes: "Risk management strategy → Security policies"}]
+
+      # PS - Personnel Security
+      PS-1: [{control: "A.6.1", confidence: "high", notes: "Personnel security policy → Screening"}]
+      PS-2: [{control: "A.6.1", confidence: "medium", notes: "Position risk designation"}]
+      PS-3: [{control: "A.6.1", confidence: "high", notes: "Personnel screening"}]
+      PS-4: [{control: "A.6.5", confidence: "high", notes: "Personnel termination → Responsibilities after termination"}]
+      PS-5: [{control: "A.6.5", confidence: "high", notes: "Personnel transfer → Responsibilities after termination"}]
+      PS-6: [{control: "A.6.2", confidence: "high", notes: "Access agreements → Terms of employment"}]
+      PS-7: [{control: "A.6.1", confidence: "medium", notes: "External personnel security"}]
+
+      # PT - PII Processing and Transparency
+      PT-1: [{control: "A.5.34", confidence: "high", notes: "PII policy → Privacy legislation"}]
+      PT-2: [{control: "A.5.34", confidence: "high", notes: "Authority to process PII → Privacy"}]
+      PT-3: [{control: "A.5.34", confidence: "high", notes: "PII processing purposes → Privacy"}]
+
+      # RA - Risk Assessment
+      RA-1: [{control: "A.5.1", confidence: "high", notes: "Risk assessment policy → Security policies"}]
+      RA-2: [{control: "A.5.12", confidence: "high", notes: "Security categorization → Classification of info"}]
+      RA-3: [{control: "A.5.12", confidence: "high", notes: "Risk assessment → Classification"}]
+      RA-5: [{control: "A.8.8", confidence: "high", notes: "Vulnerability monitoring → Technical vulnerability management"}]
+      RA-7: [{control: "A.5.12", confidence: "medium", notes: "Risk response"}]
+
+      # SA - System and Services Acquisition
+      SA-1: [{control: "A.5.1", confidence: "medium", notes: "Acquisition policy → Security policies"}]
+      SA-3: [{control: "A.8.25", confidence: "high", notes: "System dev lifecycle → Secure development lifecycle"}]
+      SA-4: [{control: "A.5.20", confidence: "high", notes: "Acquisition → Supplier agreements"}]
+      SA-8: [{control: "A.8.27", confidence: "high", notes: "Security engineering → Secure system architecture"}]
+      SA-9:
+        - {control: "A.5.19", confidence: "high", notes: "External services → Supplier relationships"}
+        - {control: "A.5.21", confidence: "high", notes: "External services → ICT supply chain"}
+      SA-10: [{control: "A.8.32", confidence: "high", notes: "Developer config management → Change management"}]
+      SA-11: [{control: "A.8.29", confidence: "high", notes: "Developer testing → Security testing"}]
+
+      # SC - System and Communications Protection
+      SC-5: [{control: "A.8.6", confidence: "high", notes: "DoS protection → Capacity management"}]
+      SC-7:
+        - {control: "A.8.20", confidence: "high", notes: "Network boundary → Network security"}
+        - {control: "A.8.21", confidence: "high", notes: "Boundary protection → Network services security"}
+      SC-8: [{control: "A.8.24", confidence: "high", notes: "Transmission confidentiality → Use of cryptography"}]
+      SC-12: [{control: "A.8.24", confidence: "high", notes: "Key management → Use of cryptography"}]
+      SC-13: [{control: "A.8.24", confidence: "high", notes: "Cryptographic protection → Use of cryptography"}]
+      SC-17: [{control: "A.8.24", confidence: "medium", notes: "PKI certificates → Use of cryptography"}]
+      SC-23: [{control: "A.8.5", confidence: "medium", notes: "Session authenticity → Secure authentication"}]
+      SC-28: [{control: "A.8.24", confidence: "high", notes: "Data at rest protection → Use of cryptography"}]
+
+      # SI - System and Information Integrity
+      SI-1: [{control: "A.5.1", confidence: "high", notes: "SI policy → Security policies"}]
+      SI-2: [{control: "A.8.8", confidence: "high", notes: "Flaw remediation → Technical vulnerability management"}]
+      SI-3: [{control: "A.8.7", confidence: "high", notes: "Malicious code → Protection against malware"}]
+      SI-4: [{control: "A.8.16", confidence: "high", notes: "System monitoring → Monitoring activities"}]
+      SI-5: [{control: "A.5.7", confidence: "high", notes: "Security alerts → Threat intelligence"}]
+      SI-7: [{control: "A.8.7", confidence: "medium", notes: "Software integrity → Malware protection"}]
+      SI-10: [{control: "A.8.28", confidence: "high", notes: "Input validation → Secure coding"}]
+      SI-12: [{control: "A.5.33", confidence: "high", notes: "Information management → Records protection"}]
+
+      # SR - Supply Chain Risk Management
+      SR-1: [{control: "A.5.19", confidence: "high", notes: "Supply chain policy → Supplier relationships"}]
+      SR-2: [{control: "A.5.21", confidence: "high", notes: "Supply chain plan → ICT supply chain"}]
+      SR-3: [{control: "A.5.21", confidence: "high", notes: "Supply chain controls → ICT supply chain"}]
+      SR-5: [{control: "A.5.20", confidence: "medium", notes: "Acquisition strategies → Supplier agreements"}]
+      SR-6: [{control: "A.5.22", confidence: "high", notes: "Supplier assessments → Monitoring suppliers"}]
+
+  # ─────────────────────────────────────────────────────────────────
+  # NIST 800-53 → CMMC Level 2
+  # ─────────────────────────────────────────────────────────────────
   nist_to_cmmc:
     source: "nist_800_53"
     target: "cmmc_l2"
     mappings:
+      AC-1: [{control: "AC.L2-3.1.1", confidence: "medium", notes: "Access control policy"}]
       AC-2: [{control: "AC.L2-3.1.1", confidence: "high", notes: "Authorized access"}]
+      AC-3: [{control: "AC.L2-3.1.2", confidence: "high", notes: "Access enforcement → Transaction control"}]
+      AC-4: [{control: "AC.L2-3.1.3", confidence: "high", notes: "Information flow enforcement"}]
+      AC-5: [{control: "AC.L2-3.1.4", confidence: "high", notes: "Separation of duties"}]
       AC-6: [{control: "AC.L2-3.1.5", confidence: "high", notes: "Least privilege"}]
+      AC-7: [{control: "AC.L2-3.1.8", confidence: "high", notes: "Unsuccessful logon attempts"}]
+      AC-8: [{control: "AC.L2-3.1.9", confidence: "high", notes: "System use notification → Privacy notice"}]
+      AC-11: [{control: "AC.L2-3.1.10", confidence: "high", notes: "Session lock"}]
+      AC-12: [{control: "AC.L2-3.1.11", confidence: "high", notes: "Session termination"}]
+      AC-17: [{control: "AC.L2-3.1.12", confidence: "high", notes: "Remote access control"}]
+      AC-18: [{control: "AC.L2-3.1.16", confidence: "high", notes: "Wireless access"}]
+      AC-19: [{control: "AC.L2-3.1.18", confidence: "high", notes: "Mobile device access control"}]
+      AC-20: [{control: "AC.L2-3.1.20", confidence: "high", notes: "External system use"}]
+      AC-22: [{control: "AC.L2-3.1.22", confidence: "high", notes: "Publicly accessible content"}]
+      AT-2: [{control: "AT.L2-3.2.1", confidence: "high", notes: "Security awareness"}]
+      AT-3: [{control: "AT.L2-3.2.2", confidence: "high", notes: "Role-based training"}]
       AU-2: [{control: "AU.L2-3.3.1", confidence: "high", notes: "System auditing"}]
+      AU-3: [{control: "AU.L2-3.3.2", confidence: "high", notes: "Audit record content"}]
+      AU-5: [{control: "AU.L2-3.3.4", confidence: "high", notes: "Audit failure alerting"}]
       AU-6: [{control: "AU.L2-3.3.5", confidence: "high", notes: "Audit review"}]
-      SC-7: [{control: "SC.L2-3.13.1", confidence: "high", notes: "Boundary protection"}]
-      IA-2: [{control: "IA.L2-3.5.1", confidence: "high", notes: "Identification"}]
+      AU-8: [{control: "AU.L2-3.3.7", confidence: "high", notes: "Time stamp correlation"}]
+      AU-9: [{control: "AU.L2-3.3.8", confidence: "high", notes: "Audit protection"}]
+      CA-2: [{control: "CA.L2-3.12.1", confidence: "high", notes: "Security assessment"}]
+      CA-5: [{control: "CA.L2-3.12.2", confidence: "high", notes: "Plan of action"}]
+      CA-7: [{control: "CA.L2-3.12.3", confidence: "high", notes: "Continuous monitoring → Security monitoring"}]
+      CM-2: [{control: "CM.L2-3.4.1", confidence: "high", notes: "Baseline configuration"}]
       CM-6: [{control: "CM.L2-3.4.2", confidence: "high", notes: "Security configuration"}]
+      CM-7: [{control: "CM.L2-3.4.6", confidence: "high", notes: "Least functionality"}]
+      CM-8: [{control: "CM.L2-3.4.1", confidence: "medium", notes: "System component inventory"}]
+      IA-2: [{control: "IA.L2-3.5.1", confidence: "high", notes: "Identification"}]
+      IA-5: [{control: "IA.L2-3.5.2", confidence: "high", notes: "Authenticator management"}]
+      IA-8: [{control: "IA.L2-3.5.1", confidence: "medium", notes: "Non-org user identification"}]
+      IR-2: [{control: "IR.L2-3.6.1", confidence: "high", notes: "Incident response training"}]
+      IR-4: [{control: "IR.L2-3.6.2", confidence: "high", notes: "Incident handling"}]
+      IR-5: [{control: "IR.L2-3.6.2", confidence: "medium", notes: "Incident tracking"}]
+      IR-6: [{control: "IR.L2-3.6.2", confidence: "high", notes: "Incident reporting"}]
+      MA-2: [{control: "MA.L2-3.7.1", confidence: "high", notes: "Controlled maintenance"}]
+      MA-3: [{control: "MA.L2-3.7.2", confidence: "high", notes: "Maintenance tools inspection"}]
+      MA-4: [{control: "MA.L2-3.7.5", confidence: "high", notes: "Nonlocal maintenance"}]
+      MP-2: [{control: "MP.L2-3.8.1", confidence: "high", notes: "Media protection"}]
+      MP-4: [{control: "MP.L2-3.8.2", confidence: "high", notes: "Media storage"}]
+      MP-5: [{control: "MP.L2-3.8.5", confidence: "high", notes: "Media transport"}]
+      MP-6: [{control: "MP.L2-3.8.3", confidence: "high", notes: "Media sanitization"}]
+      PE-2: [{control: "PE.L2-3.10.1", confidence: "high", notes: "Physical access"}]
+      PE-3: [{control: "PE.L2-3.10.2", confidence: "high", notes: "Physical access control"}]
+      PE-5: [{control: "PE.L2-3.10.5", confidence: "high", notes: "Access control output devices"}]
+      PE-6: [{control: "PE.L2-3.10.3", confidence: "high", notes: "Physical access monitoring"}]
+      PS-3: [{control: "PS.L2-3.9.1", confidence: "high", notes: "Personnel screening"}]
+      PS-4: [{control: "PS.L2-3.9.2", confidence: "high", notes: "Personnel actions"}]
+      RA-3: [{control: "RA.L2-3.11.1", confidence: "high", notes: "Risk assessment"}]
+      RA-5: [{control: "RA.L2-3.11.2", confidence: "high", notes: "Vulnerability scanning"}]
+      SC-7: [{control: "SC.L2-3.13.1", confidence: "high", notes: "Boundary protection"}]
+      SC-8: [{control: "SC.L2-3.13.8", confidence: "high", notes: "Transmission confidentiality"}]
+      SC-12: [{control: "SC.L2-3.13.10", confidence: "high", notes: "Key management"}]
+      SC-13: [{control: "SC.L2-3.13.11", confidence: "high", notes: "Cryptographic protection"}]
+      SC-28: [{control: "SC.L2-3.13.16", confidence: "high", notes: "Data at rest protection"}]
+      SI-2: [{control: "SI.L2-3.14.1", confidence: "high", notes: "Flaw remediation"}]
+      SI-3: [{control: "SI.L2-3.14.2", confidence: "high", notes: "Malicious code protection"}]
       SI-4: [{control: "SI.L2-3.14.6", confidence: "high", notes: "Monitor communications"}]
+      SI-5: [{control: "SI.L2-3.14.3", confidence: "high", notes: "Security alerts"}]
 
+  # ─────────────────────────────────────────────────────────────────
+  # NIST 800-53 → HIPAA Security Rule
+  # ─────────────────────────────────────────────────────────────────
   nist_to_hipaa:
     source: "nist_800_53"
     target: "hipaa"
     mappings:
-      AC-2: [{control: "164.312(a)(1)", confidence: "high", notes: "Access control"}]
-      AC-6: [{control: "164.312(a)(1)", confidence: "high", notes: "Minimum necessary"}]
-      AU-2: [{control: "164.312(b)", confidence: "high", notes: "Audit controls"}]
-      SC-7: [{control: "164.312(e)(1)", confidence: "high", notes: "Transmission security"}]
-      IA-2: [{control: "164.312(d)", confidence: "high", notes: "Person or entity authentication"}]
+      # Access Control
+      AC-1: [{control: "164.312(a)(1)", confidence: "high", notes: "Access control standard"}]
+      AC-2: [{control: "164.312(a)(1)", confidence: "high", notes: "Account management → Access control"}]
+      AC-3: [{control: "164.312(a)(1)", confidence: "high", notes: "Access enforcement → Access control"}]
+      AC-4: [{control: "164.312(e)(1)", confidence: "medium", notes: "Information flow → Transmission security"}]
+      AC-5: [{control: "164.312(a)(1)", confidence: "medium", notes: "Separation of duties → Access control"}]
+      AC-6: [{control: "164.312(a)(1)", confidence: "high", notes: "Least privilege → Minimum necessary"}]
+      AC-7: [{control: "164.312(a)(1)", confidence: "medium", notes: "Unsuccessful logon → Access control"}]
+      AC-11: [{control: "164.312(a)(2)(iii)", confidence: "high", notes: "Session lock → Automatic logoff"}]
+      AC-12: [{control: "164.312(a)(2)(iii)", confidence: "high", notes: "Session termination → Automatic logoff"}]
+      AC-17: [{control: "164.312(e)(1)", confidence: "high", notes: "Remote access → Transmission security"}]
+
+      # Audit
+      AU-1: [{control: "164.312(b)", confidence: "high", notes: "Audit policy → Audit controls"}]
+      AU-2: [{control: "164.312(b)", confidence: "high", notes: "Auditable events → Audit controls"}]
+      AU-3: [{control: "164.312(b)", confidence: "high", notes: "Audit content → Audit controls"}]
+      AU-6: [{control: "164.312(b)", confidence: "high", notes: "Audit review → Audit controls"}]
+      AU-9: [{control: "164.312(b)", confidence: "high", notes: "Audit protection → Audit controls"}]
+      AU-11: [{control: "164.312(b)", confidence: "medium", notes: "Audit retention"}]
+
+      # Configuration Management
+      CM-2: [{control: "164.310(a)(2)(iv)", confidence: "medium", notes: "Baseline config → Maintenance records"}]
+      CM-6: [{control: "164.312(a)(1)", confidence: "medium", notes: "Configuration settings → Access control"}]
+      CM-7: [{control: "164.312(a)(1)", confidence: "medium", notes: "Least functionality → Access control"}]
+
+      # Contingency Planning
+      CP-1: [{control: "164.308(a)(7)(i)", confidence: "high", notes: "Contingency policy → Contingency plan"}]
+      CP-2: [{control: "164.308(a)(7)(ii)(A)", confidence: "high", notes: "Contingency plan → Data backup plan"}]
+      CP-4: [{control: "164.308(a)(7)(ii)(D)", confidence: "high", notes: "Contingency testing → Testing procedures"}]
+      CP-9: [{control: "164.308(a)(7)(ii)(A)", confidence: "high", notes: "System backup → Data backup plan"}]
+      CP-10: [{control: "164.308(a)(7)(ii)(B)", confidence: "high", notes: "System recovery → Disaster recovery plan"}]
+
+      # Identification and Authentication
+      IA-1: [{control: "164.312(d)", confidence: "high", notes: "I&A policy → Person/entity authentication"}]
+      IA-2: [{control: "164.312(d)", confidence: "high", notes: "User I&A → Person/entity authentication"}]
+      IA-4: [{control: "164.312(a)(2)(i)", confidence: "high", notes: "Identifier management → Unique user identification"}]
+      IA-5: [{control: "164.312(d)", confidence: "high", notes: "Authenticator management → Authentication"}]
+
+      # Incident Response
+      IR-1: [{control: "164.308(a)(6)(i)", confidence: "high", notes: "IR policy → Security incident procedures"}]
+      IR-4: [{control: "164.308(a)(6)(ii)", confidence: "high", notes: "Incident handling → Response and reporting"}]
+      IR-6: [{control: "164.308(a)(6)(ii)", confidence: "high", notes: "Incident reporting → Response and reporting"}]
+
+      # Physical and Environmental Protection
+      PE-2: [{control: "164.310(a)(1)", confidence: "high", notes: "Physical access → Facility access controls"}]
+      PE-3: [{control: "164.310(a)(2)(ii)", confidence: "high", notes: "Physical access control → Facility security plan"}]
+      PE-6: [{control: "164.310(a)(2)(iii)", confidence: "high", notes: "Physical access monitoring → Access control"}]
+
+      # Personnel Security
+      PS-3: [{control: "164.308(a)(3)(ii)(B)", confidence: "high", notes: "Personnel screening → Workforce clearance"}]
+      PS-4: [{control: "164.308(a)(3)(ii)(C)", confidence: "high", notes: "Personnel termination → Termination procedures"}]
+      PS-6: [{control: "164.308(a)(3)(ii)(A)", confidence: "high", notes: "Access agreements → Authorization/supervision"}]
+
+      # Risk Assessment
+      RA-1: [{control: "164.308(a)(1)(ii)(A)", confidence: "high", notes: "Risk assessment policy → Risk analysis"}]
+      RA-3: [{control: "164.308(a)(1)(ii)(A)", confidence: "high", notes: "Risk assessment → Risk analysis"}]
+      RA-5: [{control: "164.308(a)(1)(ii)(A)", confidence: "medium", notes: "Vulnerability scanning → Risk analysis"}]
+
+      # SC - System and Communications Protection
+      SC-7: [{control: "164.312(e)(1)", confidence: "high", notes: "Boundary → Transmission security"}]
+      SC-8: [{control: "164.312(e)(2)(ii)", confidence: "high", notes: "Transmission confidentiality → Encryption"}]
+      SC-12: [{control: "164.312(e)(2)(ii)", confidence: "high", notes: "Key management → Encryption"}]
+      SC-13: [{control: "164.312(a)(2)(iv)", confidence: "high", notes: "Cryptographic protection → Encryption/decryption"}]
+      SC-28: [{control: "164.312(a)(2)(iv)", confidence: "high", notes: "Data at rest → Encryption/decryption"}]
+
+      # SI - System and Information Integrity
+      SI-2: [{control: "164.308(a)(5)(ii)(B)", confidence: "medium", notes: "Flaw remediation → Protection from malicious software"}]
+      SI-3: [{control: "164.308(a)(5)(ii)(B)", confidence: "high", notes: "Malicious code → Protection from malicious software"}]
+      SI-4: [{control: "164.312(b)", confidence: "high", notes: "System monitoring → Audit controls"}]
+      SI-7: [{control: "164.312(c)(1)", confidence: "high", notes: "Software integrity → Integrity controls"}]
+      SI-10: [{control: "164.312(c)(2)", confidence: "high", notes: "Input validation → Mechanism to authenticate ePHI"}]
+
+      # Training and Awareness
+      AT-2: [{control: "164.308(a)(5)(i)", confidence: "high", notes: "Awareness training → Security awareness training"}]
+      AT-3: [{control: "164.308(a)(5)(i)", confidence: "high", notes: "Role-based training → Security awareness training"}]
+
+  # ─────────────────────────────────────────────────────────────────
+  # ISO 27001 → SOC 2 (direct, not via NIST)
+  # ─────────────────────────────────────────────────────────────────
+  iso27001_to_soc2:
+    source: "iso27001"
+    target: "soc2"
+    mappings:
+      # Organizational Controls (A.5)
+      A.5.1: [{control: "CC5.2", confidence: "high", notes: "Policies → Control selection"}]
+      A.5.2: [{control: "CC1.3", confidence: "high", notes: "Roles → Management structure"}]
+      A.5.3: [{control: "CC6.1", confidence: "high", notes: "Segregation of duties"}]
+      A.5.4: [{control: "CC1.4", confidence: "high", notes: "Management responsibilities → Competence"}]
+      A.5.5: [{control: "CC2.2", confidence: "medium", notes: "Contact with authorities → Communication"}]
+      A.5.7: [{control: "CC7.2", confidence: "high", notes: "Threat intelligence → Anomaly detection"}]
+      A.5.8: [{control: "CC8.1", confidence: "medium", notes: "Project management → Change management"}]
+      A.5.9: [{control: "CC6.1", confidence: "medium", notes: "Asset inventory → Logical access"}]
+      A.5.10: [{control: "CC1.1", confidence: "high", notes: "Acceptable use → Integrity/ethical values"}]
+      A.5.12: [{control: "C1.1", confidence: "high", notes: "Classification → Confidentiality"}]
+      A.5.13: [{control: "C1.1", confidence: "medium", notes: "Labeling → Confidentiality"}]
+      A.5.14: [{control: "CC6.6", confidence: "high", notes: "Information transfer → System boundaries"}]
+      A.5.15: [{control: "CC6.1", confidence: "high", notes: "Access control → Logical access"}]
+      A.5.16: [{control: "CC6.1", confidence: "high", notes: "Identity management → Logical access"}]
+      A.5.17: [{control: "CC6.1", confidence: "high", notes: "Authentication → Logical access"}]
+      A.5.18: [{control: "CC6.3", confidence: "high", notes: "Access rights → Role-based access"}]
+      A.5.19: [{control: "CC9.2", confidence: "high", notes: "Supplier relationships → Vendor management"}]
+      A.5.20: [{control: "CC9.2", confidence: "high", notes: "Supplier agreements → Vendor management"}]
+      A.5.21: [{control: "CC9.2", confidence: "high", notes: "ICT supply chain → Vendor management"}]
+      A.5.22: [{control: "CC9.2", confidence: "high", notes: "Monitoring suppliers → Vendor management"}]
+      A.5.23: [{control: "A1.1", confidence: "high", notes: "Cloud services → Availability"}]
+      A.5.24: [{control: "CC7.3", confidence: "high", notes: "Incident planning → Response"}]
+      A.5.25: [{control: "CC7.3", confidence: "high", notes: "Incident assessment → Response"}]
+      A.5.26: [{control: "CC7.4", confidence: "high", notes: "Incident response → Recovery"}]
+      A.5.27: [{control: "CC7.3", confidence: "medium", notes: "Lessons learned → Response evaluation"}]
+      A.5.28: [{control: "CC7.1", confidence: "medium", notes: "Evidence collection → Monitoring"}]
+      A.5.29: [{control: "A1.2", confidence: "high", notes: "Business continuity → Recovery objectives"}]
+      A.5.30: [{control: "A1.2", confidence: "high", notes: "ICT readiness → Recovery mechanisms"}]
+      A.5.33: [{control: "C1.2", confidence: "high", notes: "Records → Information disposition"}]
+      A.5.34: [{control: "P1.1", confidence: "high", notes: "Privacy → Privacy notice"}]
+      A.5.35: [{control: "CC4.1", confidence: "high", notes: "Independent review → Monitoring"}]
+      A.5.36: [{control: "CC5.2", confidence: "high", notes: "Compliance → Control activities"}]
+
+      # People Controls (A.6)
+      A.6.1: [{control: "CC1.4", confidence: "high", notes: "Screening → Competence"}]
+      A.6.2: [{control: "CC1.1", confidence: "high", notes: "Employment terms → Ethical values"}]
+      A.6.3: [{control: "CC1.4", confidence: "high", notes: "Awareness → Competence commitment"}]
+      A.6.4: [{control: "CC1.5", confidence: "medium", notes: "Disciplinary process → Accountability"}]
+      A.6.5: [{control: "CC6.2", confidence: "high", notes: "Termination → Deprovisioning"}]
+      A.6.6: [{control: "CC1.1", confidence: "medium", notes: "Confidentiality agreements → Ethical values"}]
+      A.6.7: [{control: "CC6.1", confidence: "high", notes: "Remote working → Logical access"}]
+
+      # Physical Controls (A.7)
+      A.7.1: [{control: "CC6.4", confidence: "high", notes: "Security perimeters → Physical access"}]
+      A.7.2: [{control: "CC6.4", confidence: "high", notes: "Physical entry → Physical access"}]
+      A.7.4: [{control: "CC6.4", confidence: "high", notes: "Physical monitoring → Physical access"}]
+      A.7.5: [{control: "A1.1", confidence: "high", notes: "Physical threats → Availability"}]
+      A.7.7: [{control: "CC6.5", confidence: "medium", notes: "Secure disposal → Asset disposal"}]
+      A.7.8: [{control: "CC6.1", confidence: "medium", notes: "Unattended equipment → Access control"}]
+      A.7.10: [{control: "CC6.7", confidence: "high", notes: "Storage media → Data restriction"}]
+      A.7.11: [{control: "A1.1", confidence: "high", notes: "Supporting utilities → Availability"}]
+      A.7.13: [{control: "A1.1", confidence: "medium", notes: "Equipment maintenance → Availability"}]
+      A.7.14: [{control: "CC6.5", confidence: "high", notes: "Secure disposal → Asset disposal"}]
+
+      # Technological Controls (A.8)
+      A.8.1: [{control: "CC6.1", confidence: "high", notes: "User endpoints → Logical access"}]
+      A.8.2: [{control: "CC6.1", confidence: "high", notes: "Privileged access → Logical access"}]
+      A.8.3: [{control: "CC6.1", confidence: "high", notes: "Information access → Logical access"}]
+      A.8.5: [{control: "CC6.1", confidence: "high", notes: "Secure authentication → Logical access"}]
+      A.8.6: [{control: "A1.1", confidence: "high", notes: "Capacity management → Availability"}]
+      A.8.7: [{control: "CC6.8", confidence: "high", notes: "Malware protection → Restricting software"}]
+      A.8.8: [{control: "CC7.1", confidence: "high", notes: "Vulnerability management → Monitoring"}]
+      A.8.9: [{control: "CC8.1", confidence: "high", notes: "Configuration management → Change management"}]
+      A.8.10: [{control: "CC6.5", confidence: "high", notes: "Information deletion → Asset disposal"}]
+      A.8.11: [{control: "CC6.7", confidence: "high", notes: "Data masking → Data restriction"}]
+      A.8.12: [{control: "C1.1", confidence: "high", notes: "Data leakage prevention → Confidentiality"}]
+      A.8.13: [{control: "A1.2", confidence: "high", notes: "Information backup → Recovery mechanisms"}]
+      A.8.14: [{control: "A1.1", confidence: "high", notes: "Redundancy → Availability"}]
+      A.8.15: [{control: "CC7.1", confidence: "high", notes: "Logging → Monitoring"}]
+      A.8.16: [{control: "CC7.2", confidence: "high", notes: "Monitoring → Anomaly detection"}]
+      A.8.17: [{control: "CC7.1", confidence: "medium", notes: "Clock synchronization → Monitoring"}]
+      A.8.19: [{control: "CC6.8", confidence: "high", notes: "Software installation → Restricting software"}]
+      A.8.20: [{control: "CC6.6", confidence: "high", notes: "Network security → System boundaries"}]
+      A.8.21: [{control: "CC6.6", confidence: "high", notes: "Web filtering → System boundaries"}]
+      A.8.22: [{control: "CC6.6", confidence: "high", notes: "Network segregation → System boundaries"}]
+      A.8.23: [{control: "CC6.6", confidence: "medium", notes: "Web filtering"}]
+      A.8.24: [{control: "CC6.1", confidence: "high", notes: "Cryptography → Logical access"}]
+      A.8.25: [{control: "CC8.1", confidence: "high", notes: "Secure development lifecycle → Change management"}]
+      A.8.26: [{control: "CC8.1", confidence: "high", notes: "Application security requirements"}]
+      A.8.27: [{control: "CC8.1", confidence: "high", notes: "Secure system architecture → Change management"}]
+      A.8.28: [{control: "PI1.2", confidence: "high", notes: "Secure coding → Input validation"}]
+      A.8.29: [{control: "CC8.1", confidence: "high", notes: "Security testing → Change management"}]
+      A.8.30: [{control: "CC8.1", confidence: "medium", notes: "Outsourced development"}]
+      A.8.31: [{control: "CC8.1", confidence: "medium", notes: "Separation of environments"}]
+      A.8.32: [{control: "CC8.1", confidence: "high", notes: "Change management"}]
+      A.8.33: [{control: "C1.1", confidence: "high", notes: "Test information → Confidentiality"}]
+      A.8.34: [{control: "CC4.1", confidence: "high", notes: "Penetration testing → Assessment"}]
