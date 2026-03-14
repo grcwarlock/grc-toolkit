@@ -1,0 +1,138 @@
+# frameworks.yaml
+# Codified control requirements for automated assessment
+# Extend this file to add new frameworks or control families
+
+nist_800_53:
+  name: "NIST SP 800-53 Rev 5"
+  version: "5.1"
+
+  control_families:
+    AC:
+      name: "Access Control"
+      controls:
+        AC-2:
+          title: "Account Management"
+          description: "Manage system accounts including establishing, activating, modifying, reviewing, disabling, and removing accounts."
+          checks:
+            - id: "AC-2.a"
+              description: "Identify and select account types"
+              evidence_type: "iam_policy"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_users"
+                    assertion: "all_users_have_mfa"
+                  - service: "iam"
+                    method: "get_account_summary"
+                    assertion: "no_root_access_keys"
+                azure:
+                  - service: "entra_id"
+                    method: "list_users"
+                    assertion: "all_users_have_mfa"
+                gcp:
+                  - service: "iam"
+                    method: "list_service_accounts"
+                    assertion: "no_user_managed_keys_over_90_days"
+
+            - id: "AC-2.d"
+              description: "Specify authorized users and access authorizations"
+              evidence_type: "iam_roles"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_roles"
+                    assertion: "least_privilege_enforced"
+                  - service: "iam"
+                    method: "list_attached_user_policies"
+                    assertion: "no_inline_admin_policies"
+
+        AC-6:
+          title: "Least Privilege"
+          description: "Employ the principle of least privilege, allowing only authorized accesses necessary to accomplish assigned tasks."
+          checks:
+            - id: "AC-6.1"
+              description: "Authorize access for security functions"
+              evidence_type: "iam_policy"
+              cloud_checks:
+                aws:
+                  - service: "iam"
+                    method: "list_policies"
+                    assertion: "no_wildcard_admin_policies"
+                  - service: "iam"
+                    method: "get_credential_report"
+                    assertion: "unused_credentials_disabled"
+
+    AU:
+      name: "Audit and Accountability"
+      controls:
+        AU-2:
+          title: "Event Logging"
+          description: "Identify events that the system is capable of logging in support of the audit function."
+          checks:
+            - id: "AU-2.a"
+              description: "Identify event types for logging"
+              evidence_type: "logging_config"
+              cloud_checks:
+                aws:
+                  - service: "cloudtrail"
+                    method: "describe_trails"
+                    assertion: "cloudtrail_enabled_all_regions"
+                  - service: "cloudtrail"
+                    method: "get_trail_status"
+                    assertion: "cloudtrail_logging_active"
+                azure:
+                  - service: "monitor"
+                    method: "list_diagnostic_settings"
+                    assertion: "activity_log_enabled"
+
+        AU-6:
+          title: "Audit Record Review, Analysis, and Reporting"
+          description: "Review and analyze system audit records for indications of inappropriate or unusual activity."
+          checks:
+            - id: "AU-6.a"
+              description: "Review audit records for inappropriate activity"
+              evidence_type: "log_review"
+              cloud_checks:
+                aws:
+                  - service: "guardduty"
+                    method: "list_detectors"
+                    assertion: "guardduty_enabled"
+                  - service: "securityhub"
+                    method: "describe_hub"
+                    assertion: "security_hub_enabled"
+
+    SC:
+      name: "System and Communications Protection"
+      controls:
+        SC-7:
+          title: "Boundary Protection"
+          description: "Monitor and control communications at the external managed interfaces to the system."
+          checks:
+            - id: "SC-7.a"
+              description: "Monitor communications at external interfaces"
+              evidence_type: "network_config"
+              cloud_checks:
+                aws:
+                  - service: "ec2"
+                    method: "describe_security_groups"
+                    assertion: "no_unrestricted_ingress"
+                  - service: "ec2"
+                    method: "describe_network_acls"
+                    assertion: "default_deny_ingress"
+                azure:
+                  - service: "network"
+                    method: "list_network_security_groups"
+                    assertion: "no_unrestricted_ingress"
+
+# FedRAMP extensions can layer on top of the base NIST controls
+fedramp_moderate:
+  name: "FedRAMP Moderate Baseline"
+  inherits: "nist_800_53"
+  additional_requirements:
+    AC-2:
+      frequency: "monthly"
+      evidence_retention_days: 365
+      additional_checks:
+        - id: "AC-2.fedramp.1"
+          description: "Automated account management notifications"
+          assertion: "account_changes_trigger_alerts"

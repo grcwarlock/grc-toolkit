@@ -1,0 +1,100 @@
+# settings.yaml
+# Environment configuration for the GRC toolkit
+# Copy this file and fill in your actual values
+
+environment:
+  name: "production"
+  organization: "Your Organization"
+  timezone: "America/Denver"
+
+# Database configuration
+database:
+  url: "postgresql://grc:grc_secret@localhost:5432/grc_toolkit"
+  pool_size: 10
+  max_overflow: 20
+
+# OPA Policy Engine
+opa:
+  url: "http://localhost:8181"
+  bundle_path: "./policies"
+
+# API configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  api_key_header: "X-API-Key"
+
+# Cloud provider configurations
+cloud_providers:
+  aws:
+    enabled: true
+    # Uses default credential chain: env vars, ~/.aws/credentials, or IAM role
+    regions:
+      - "us-east-1"
+      - "us-west-2"
+    assume_role_arn: ""  # Optional: cross-account role for auditing
+
+  azure:
+    enabled: false
+    subscription_id: ""
+    tenant_id: ""
+    # Uses DefaultAzureCredential: env vars, managed identity, or CLI auth
+    resource_groups: []
+    locations:
+      - "eastus"
+      - "westus2"
+    log_analytics_workspace_id: ""
+
+  gcp:
+    enabled: false
+    project_id: ""
+    # Uses Application Default Credentials
+    regions:
+      - "us-central1"
+      - "us-east1"
+    organization_id: ""
+    security_command_center_source: ""
+
+# Evidence storage
+evidence:
+  local_path: "./evidence"
+  retention_days: 365
+  format: "json"  # json or yaml
+  timestamp_format: "%Y-%m-%dT%H:%M:%SZ"
+
+# Reporting
+reports:
+  output_path: "./reports"
+  formats:
+    - "docx"
+    - "xlsx"
+  templates_path: "./templates"
+
+# Risk analysis
+risk:
+  monte_carlo_iterations: 10000
+  confidence_levels:
+    - 0.90
+    - 0.95
+    - 0.99
+  currency: "USD"
+
+# Notifications (optional)
+notifications:
+  enabled: false
+  slack_webhook_url: ""
+  email:
+    smtp_server: ""
+    smtp_port: 587
+    sender: ""
+    recipients: []
+
+# Logging
+logging:
+  level: "INFO"
+  file: "grc-toolkit.log"
+  max_size_mb: 50
+  backup_count: 5
