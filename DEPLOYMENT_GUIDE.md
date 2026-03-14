@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-You need Python 3.10+ and an AWS account with programmatic access. The toolkit starts with AWS because that's where most of the mature audit APIs live, but the architecture supports Azure and GCP once you're ready.
+You need Python 3.11+ and an AWS account with programmatic access. The toolkit starts with AWS because that's where most of the mature audit APIs live, but the architecture supports Azure and GCP once you're ready.
 
 ### Install and Configure
 
@@ -105,6 +105,54 @@ cloud_providers:
       - "us-west-2"
     assume_role_arn: ""  # Fill in if using cross-account roles
 ```
+
+### Security Configuration
+
+Before running the API in any shared environment, configure these security settings:
+
+**1. Generate API Keys**
+
+```bash
+# Generate a secure API key
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Set it in your environment
+export GRC_API_KEYS="your-generated-key-here"
+```
+
+Multiple keys can be comma-separated for different clients: `GRC_API_KEYS="key1,key2,key3"`
+
+All API endpoints require the `X-API-Key` header when `GRC_API_KEYS` is set. In development mode (no keys configured), authentication is skipped.
+
+**2. Configure CORS Origins**
+
+```bash
+export GRC_CORS_ORIGINS="https://your-app.example.com"
+```
+
+**3. Database Security**
+
+For production PostgreSQL, always use SSL:
+```bash
+export GRC_DATABASE_URL="postgresql+psycopg2://user:pass@host:5432/grc_toolkit?sslmode=require"
+```
+
+**4. Rate Limiting**
+
+```bash
+export GRC_RATE_LIMIT_RPM=120   # Requests per minute per IP
+export GRC_RATE_LIMIT_BURST=20  # Burst allowance
+```
+
+**5. Secrets Management**
+
+Never store secrets in config files. Use environment variables or a secrets manager:
+- `GRC_API_KEYS` — API authentication keys
+- `GRC_SMTP_PASSWORD` — Email notification password
+- `POSTGRES_PASSWORD` — Database password
+- `REDIS_PASSWORD` — Redis cache password
+
+See `.env.example` for the complete list.
 
 ### First Collection Run
 

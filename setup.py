@@ -8,14 +8,14 @@ long_description = Path("README.md").read_text(encoding="utf-8")
 
 setup(
     name="grc-toolkit",
-    version="0.1.0",
+    version="0.3.0",
     author="Jason Wilson",
     description="Automated Governance, Risk, and Compliance toolkit for cloud environments",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/grcwarlock/grc-toolkit",
     packages=find_packages(),
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     install_requires=[
         "boto3>=1.28.0",
         "pyyaml>=6.0.1",
@@ -28,6 +28,11 @@ setup(
         "pandas>=2.1.0",
         "requests>=2.31.0",
         "python-dateutil>=2.8.2",
+        "fastapi>=0.109.0",
+        "uvicorn[standard]>=0.27.0",
+        "pydantic>=2.5.0",
+        "sqlalchemy>=2.0.25",
+        "httpx>=0.27.0",
     ],
     extras_require={
         "azure": [
@@ -54,6 +59,8 @@ setup(
             "pytest>=7.4.0",
             "pytest-cov>=4.1.0",
             "ruff>=0.1.0",
+            "bandit>=1.7.7",
+            "pip-audit>=2.7.0",
         ],
     },
     entry_points={
@@ -64,7 +71,7 @@ setup(
         ],
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Information Technology",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: Apache Software License",

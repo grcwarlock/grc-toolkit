@@ -26,7 +26,9 @@ This is the most impactful contribution you can make. The process is:
 
 ### Adding Cloud Provider Support
 
-Azure and GCP collectors follow the same interface as `AWSCollector`. If you're building one:
+Azure and GCP collectors follow the same interface as `AWSCollector`. Collectors can now be wrapped using the connector framework in `modules/connectors/`. The `BaseConnector` ABC provides `collect()`, `health_check()`, and `validate_config()` methods. See `modules/connectors/cloud_adapter.py` for how existing collectors are wrapped.
+
+If you're building a new collector:
 
 - Implement `collect(service, method, control_id, check_id)` returning `list[EvidenceArtifact]`
 - Handle authentication through the provider's standard credential chain
@@ -47,6 +49,16 @@ Add tests in `tests/` using pytest. At minimum, assertion functions should have 
 ```bash
 python -m pytest tests/ -v
 ```
+
+### Security Guidelines
+
+- **Never commit secrets.** API keys, passwords, and credentials go in environment variables. Use `.env.example` as the template — never add values to tracked config files.
+- **All new endpoints must include authentication.** Add `api_key: str = Depends(require_api_key)` to every route handler.
+- **Validate all input.** Use Pydantic models for request bodies and `validate_enum()` from `api.security` for enum-like fields.
+- **No mass assignment.** When accepting update dicts, explicitly allowlist which fields can be modified.
+- **Escape output.** The frontend uses `esc()` for all dynamic content. Never insert API response data directly into innerHTML.
+- **Run security scans before submitting PRs.** `bandit -r modules/ api/ db/ -ll -ii` should pass clean.
+- **Secrets in notifications.** SMTP and webhook credentials must come from environment variables, never from config dicts passed through function parameters.
 
 ## What We're Looking For
 

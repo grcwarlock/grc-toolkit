@@ -4,7 +4,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "grc-toolkit"
-version = "0.1.0"
+version = "0.3.0"
 description = "Automated GRC evidence collection, compliance assessment, and risk analysis toolkit"
 requires-python = ">=3.11"
 
