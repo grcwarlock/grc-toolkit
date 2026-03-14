@@ -229,6 +229,7 @@ class VendorRecord(Base):
     contract_end: Mapped[date] = mapped_column(Date)
     last_assessment_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     assessment_frequency_days: Mapped[int] = mapped_column(Integer, default=365)
+    sla_uptime_target: Mapped[float] = mapped_column(Float, default=99.9)
     security_rating: Mapped[float | None] = mapped_column(Float, nullable=True)
     certifications: Mapped[list] = mapped_column(JSON, default=list)
     risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
