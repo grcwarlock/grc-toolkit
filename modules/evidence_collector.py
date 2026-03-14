@@ -185,11 +185,12 @@ class EvidenceStore:
         run_dir = self.base_path / run_id
         run_dir.mkdir(parents=True, exist_ok=True)
 
+        manifest_artifacts: list[dict[str, str]] = []
         manifest = {
             "run_id": run_id,
             "collected_at": datetime.now(UTC).strftime(self.timestamp_format),
             "artifact_count": len(artifacts),
-            "artifacts": [],
+            "artifacts": manifest_artifacts,
         }
 
         for artifact in artifacts:
@@ -199,7 +200,7 @@ class EvidenceStore:
             with open(filepath, "w") as f:
                 json.dump(artifact.to_dict(), f, indent=2, default=str)
 
-            manifest["artifacts"].append({
+            manifest_artifacts.append({
                 "file": filename,
                 "control_id": artifact.control_id,
                 "check_id": artifact.check_id,

@@ -20,7 +20,7 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
       - name: Type check
-        run: mypy modules/ api/ db/ --ignore-missing-imports
+        run: mypy modules/ api/ db/
       - name: Run Python tests
         run: pytest tests/ -v --cov=modules --cov=api --cov=db --cov-report=xml --cov-fail-under=60
       - name: Upload coverage

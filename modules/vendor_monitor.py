@@ -311,7 +311,7 @@ class VendorInventory:
                 "factors": score.factors,
             })
 
-        scores.sort(key=lambda x: x["overall_score"], reverse=True)
+        scores.sort(key=lambda x: float(x["overall_score"]), reverse=True)  # type: ignore[arg-type]
 
         risk_distribution = {
             "Critical": sum(1 for s in scores if s["risk_level"] == "Critical"),

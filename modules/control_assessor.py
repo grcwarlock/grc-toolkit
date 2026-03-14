@@ -374,26 +374,32 @@ class ControlAssessor:
 
         return results
 
-    def summarize(self, results: list[AssessmentResult]) -> dict:
+    def summarize(self, results: list[AssessmentResult]) -> dict[str, object]:
         """Produce a summary of assessment results by status and control family."""
-        summary = {
-            "total_checks": len(results),
-            "passed": sum(1 for r in results if r.status == "pass"),
-            "failed": sum(1 for r in results if r.status == "fail"),
-            "errors": sum(1 for r in results if r.status == "error"),
-            "not_assessed": sum(1 for r in results if r.status == "not_assessed"),
-            "by_control": {},
-        }
+        total_checks = len(results)
+        passed = sum(1 for r in results if r.status == "pass")
+        failed = sum(1 for r in results if r.status == "fail")
+        errors = sum(1 for r in results if r.status == "error")
+        not_assessed = sum(1 for r in results if r.status == "not_assessed")
 
+        by_control: dict[str, dict[str, int]] = {}
         for result in results:
             family = result.control_id.split("-")[0]
-            if family not in summary["by_control"]:
-                summary["by_control"][family] = {"pass": 0, "fail": 0, "error": 0}
-            if result.status in summary["by_control"][family]:
-                summary["by_control"][family][result.status] += 1
+            if family not in by_control:
+                by_control[family] = {"pass": 0, "fail": 0, "error": 0}
+            if result.status in by_control[family]:
+                by_control[family][result.status] += 1
 
-        total = summary["total_checks"]
-        if total > 0:
-            summary["pass_rate"] = f"{(summary['passed'] / total) * 100:.1f}%"
+        summary: dict[str, object] = {
+            "total_checks": total_checks,
+            "passed": passed,
+            "failed": failed,
+            "errors": errors,
+            "not_assessed": not_assessed,
+            "by_control": by_control,
+        }
+
+        if total_checks > 0:
+            summary["pass_rate"] = f"{(passed / total_checks) * 100:.1f}%"
 
         return summary

@@ -53,7 +53,7 @@ class AzureCollector:
         def _collect():
             # Microsoft Graph API for Entra ID users
             # In production, use msgraph-sdk-python
-            raw = {"users": [], "service_principals": []}
+            raw: dict[str, list[object]] = {"users": [], "service_principals": []}
             normalized = ResourceNormalizer.normalize_iam_users("azure", raw)
 
             return create_evidence(
@@ -124,7 +124,7 @@ class AzureCollector:
             # Check diagnostic settings at subscription level
             try:
                 settings = list(
-                    monitor_client.diagnostic_settings.list(
+                    monitor_client.diagnostic_settings.list(  # type: ignore[attr-defined]
                         resource_uri=f"/subscriptions/{self.subscription_id}"
                     )
                 )

@@ -44,7 +44,7 @@ class GCPCollector:
         def _collect():
             # GCP IAM service accounts via Cloud Resource Manager
             # In production use google.cloud.iam_admin_v1
-            raw = {"service_accounts": []}
+            raw: dict[str, list[object]] = {"service_accounts": []}
             normalized = ResourceNormalizer.normalize_iam_users("gcp", raw)
 
             return create_evidence(

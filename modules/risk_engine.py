@@ -261,7 +261,7 @@ class RiskEngine:
             })
 
         # Sort by total cost of risk (lower is better)
-        comparisons.sort(key=lambda x: x["total_cost_of_risk"])
+        comparisons.sort(key=lambda x: float(x["total_cost_of_risk"]))  # type: ignore[arg-type]
         return comparisons
 
     def _sample_pert(self, minimum: float, mode: float,
