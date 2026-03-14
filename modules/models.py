@@ -68,7 +68,7 @@ class NormalizedEvidence:
     def __post_init__(self):
         if not self.evidence_id:
             self.evidence_id = str(uuid.uuid4())
-        if self.data and not self.sha256_hash:
+        if not self.sha256_hash:
             self.compute_hash()
 
     def compute_hash(self) -> str:

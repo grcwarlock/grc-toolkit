@@ -22,6 +22,8 @@ deny_unused_credentials contains msg if {
 	msg := sprintf("AC-6: User '%s' has unused access key (last used %d days ago)", [user.username, key.last_used_days])
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_wildcard_actions) == 0
 	count(deny_unused_credentials) == 0

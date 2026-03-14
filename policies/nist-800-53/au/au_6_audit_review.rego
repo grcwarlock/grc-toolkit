@@ -28,6 +28,8 @@ deny_no_scc contains msg if {
 	msg := "AU-6: Security Command Center is not enabled"
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_guardduty) == 0
 	count(deny_no_security_hub) == 0

@@ -28,6 +28,8 @@ deny_no_monitoring_gcp contains msg if {
 	msg := "SI-4: Security Command Center not enabled"
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_ids) == 0
 	count(deny_no_centralized_monitoring) == 0

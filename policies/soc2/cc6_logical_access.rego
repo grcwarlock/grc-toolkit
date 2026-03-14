@@ -26,6 +26,8 @@ deny_root_keys contains msg if {
 	msg := "CC6.1: Root/owner account has programmatic access keys"
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_mfa) == 0
 	count(deny_excessive_access) == 0

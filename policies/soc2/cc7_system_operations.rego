@@ -19,6 +19,8 @@ deny_no_audit_trail contains msg if {
 	msg := "CC7.2: No active multi-region audit trail"
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_monitoring) == 0
 	count(deny_no_audit_trail) == 0

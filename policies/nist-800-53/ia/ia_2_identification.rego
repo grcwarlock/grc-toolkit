@@ -27,6 +27,8 @@ deny_generic_accounts contains msg if {
 	msg := sprintf("IA-2: Generic account name detected: '%s'", [user.username])
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_mfa_privileged) == 0
 	count(deny_shared_accounts) == 0

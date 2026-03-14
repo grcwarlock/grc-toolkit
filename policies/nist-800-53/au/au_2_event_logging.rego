@@ -43,6 +43,8 @@ deny_no_audit_log contains msg if {
 	msg := "AU-2: GCP Cloud Audit Logging is not enabled"
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_multi_region_trail) == 0
 	count(deny_logging_inactive) == 0

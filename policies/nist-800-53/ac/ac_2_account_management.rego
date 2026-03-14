@@ -26,6 +26,8 @@ deny_inactive_accounts contains msg if {
 	msg := sprintf("AC-2: User '%s' has inactive access key (unused %d days)", [user.username, key.last_used_days])
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_no_mfa) == 0
 	count(deny_root_access_keys) == 0

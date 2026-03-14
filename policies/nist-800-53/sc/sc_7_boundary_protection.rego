@@ -41,6 +41,8 @@ port_in_range(range, ports) if {
 	port <= range[1]
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_unrestricted_ingress) == 0
 	count(deny_unrestricted_ipv6) == 0

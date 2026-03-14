@@ -21,6 +21,8 @@ deny_encryption_disabled contains msg if {
 	msg := sprintf("CM-6: Resource '%s' (%s) does not have encryption enabled", [resource.resource_id, resource.resource_type])
 }
 
+default compliant := false
+
 compliant if {
 	count(deny_default_ports_open) == 0
 	count(deny_encryption_disabled) == 0
