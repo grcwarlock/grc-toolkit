@@ -5,7 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
+from api.security import require_api_key
 
 from api.schemas import (
     CrosswalkRequest,
@@ -46,7 +48,7 @@ def _load_crosswalks() -> dict:
 
 
 @router.get("/", response_model=list[FrameworkResponse])
-async def list_frameworks():
+async def list_frameworks(api_key: str = Depends(require_api_key)):
     frameworks = _load_frameworks()
     results = []
     for key, fw in frameworks.items():
@@ -67,7 +69,7 @@ async def list_frameworks():
 
 
 @router.get("/{framework_id}", response_model=FrameworkDetailResponse)
-async def get_framework(framework_id: str):
+async def get_framework(framework_id: str, api_key: str = Depends(require_api_key)):
     frameworks = _load_frameworks()
     fw = frameworks.get(framework_id)
     if fw is None:
@@ -89,7 +91,7 @@ async def get_framework(framework_id: str):
 
 
 @router.get("/{framework_id}/controls")
-async def list_controls(framework_id: str):
+async def list_controls(framework_id: str, api_key: str = Depends(require_api_key)):
     frameworks = _load_frameworks()
     fw = frameworks.get(framework_id)
     if fw is None:
@@ -110,7 +112,7 @@ async def list_controls(framework_id: str):
 
 
 @router.post("/crosswalk", response_model=CrosswalkResponse)
-async def crosswalk_control(request: CrosswalkRequest):
+async def crosswalk_control(request: CrosswalkRequest, api_key: str = Depends(require_api_key)):
     crosswalks = _load_crosswalks()
 
     # Find the right crosswalk mapping

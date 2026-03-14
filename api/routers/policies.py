@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 from api.deps import get_db
+from api.security import require_api_key, validate_enum, VALID_PROVIDERS
 from api.schemas import (
     PolicyEvalRequest,
     PolicyEvalResponse,
@@ -24,12 +25,13 @@ router = APIRouter(prefix="/api/v1/policies", tags=["policies"])
 
 
 @router.post("/evaluate", response_model=PolicyEvalResponse)
-async def evaluate_policy(request: PolicyEvalRequest):
+async def evaluate_policy(request: PolicyEvalRequest, api_key: str = Depends(require_api_key)):
     """Evaluate a resource against OPA policies.
 
     In production this calls the OPA server at GRC_OPA_URL.
     Falls back to a local evaluation if OPA is unavailable.
     """
+    validate_enum(request.provider, VALID_PROVIDERS, "provider")
     opa_url = os.environ.get("GRC_OPA_URL", "http://localhost:8181")
 
     try:
@@ -70,6 +72,7 @@ async def list_violations(
     severity: str | None = Query(None),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    api_key: str = Depends(require_api_key),
 ):
     records = PolicyViolationRepository.list_violations(
         db, status=status, severity=severity, limit=limit,
@@ -86,7 +89,7 @@ async def list_violations(
 
 
 @router.post("/violations/{violation_id}/resolve")
-async def resolve_violation(violation_id: str, db: Session = Depends(get_db)):
+async def resolve_violation(violation_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     try:
         violation = PolicyViolationRepository.resolve_violation(db, violation_id)
     except ValueError:
@@ -95,7 +98,7 @@ async def resolve_violation(violation_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/bundles")
-async def list_bundles():
+async def list_bundles(api_key: str = Depends(require_api_key)):
     """List available OPA policy bundles from the policies/ directory."""
     policies_dir = Path("policies")
     if not policies_dir.exists():

@@ -12,9 +12,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: open-policy-agent/setup-opa@v2
-      - name: Validate policies
+        with:
+          version: 0.62.1
+
+      - name: Validate policy syntax
+        run: opa check policies/
+
+      - name: Run policy tests
         run: opa test policies/ -v
+
       - name: Check for policy regressions
         run: |
-          opa check policies/
-          echo "All policies valid"
+          # Ensure no policies were removed without replacement
+          POLICY_COUNT=$(find policies/ -name "*.rego" ! -name "*_test.rego" | wc -l)
+          echo "Total policies: $POLICY_COUNT"
+          if [ "$POLICY_COUNT" -lt 10 ]; then
+            echo "::error::Policy count ($POLICY_COUNT) is below minimum threshold (10)"
+            exit 1
+          fi
+
+      - name: Verify test coverage
+        run: |
+          POLICIES=$(find policies/ -name "*.rego" ! -name "*_test.rego" -exec basename {} .rego \; | sort)
+          TESTS=$(find policies/ -name "*_test.rego" -exec basename {} _test.rego \; | sort)
+          MISSING=""
+          for p in $POLICIES; do
+            if ! echo "$TESTS" | grep -q "^${p}$"; then
+              MISSING="$MISSING $p"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::warning::Policies without tests:$MISSING"
+          fi

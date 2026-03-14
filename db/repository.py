@@ -262,6 +262,13 @@ class VendorRepository:
         session.flush()
         return vendor
 
+    # Fields that are safe to update via the API — prevents mass assignment
+    _UPDATABLE_FIELDS = frozenset({
+        "name", "category", "criticality", "data_classification",
+        "contract_end", "certifications", "risk_score", "risk_level",
+        "last_assessment_date", "notes",
+    })
+
     @staticmethod
     def update_vendor(
         session: Session, vendor_id: str, updates: dict
@@ -270,7 +277,7 @@ class VendorRepository:
         if vendor is None:
             raise ValueError(f"Vendor {vendor_id} not found")
         for key, value in updates.items():
-            if hasattr(vendor, key):
+            if key in VendorRepository._UPDATABLE_FIELDS:
                 setattr(vendor, key, value)
         session.flush()
         return vendor

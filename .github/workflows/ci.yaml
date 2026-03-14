@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16.2-alpine
         env:
           POSTGRES_DB: grc_test
           POSTGRES_USER: grc
-          POSTGRES_PASSWORD: test_secret
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -38,12 +38,53 @@ jobs:
         run: mypy modules/ api/ db/ --ignore-missing-imports
       - name: Run Python tests
         env:
-          GRC_DATABASE_URL: postgresql://grc:test_secret@localhost:5432/grc_test
-        run: pytest tests/ -v --cov=modules --cov=api --cov=db --cov-report=xml
+          GRC_DATABASE_URL: postgresql://grc:${{ secrets.CI_DB_PASSWORD }}@localhost:5432/grc_test
+        run: pytest tests/ -v --cov=modules --cov=api --cov=db --cov-report=xml --cov-fail-under=60
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           file: coverage.xml
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Python security linter (SAST)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install security tools
+        run: pip install bandit pip-audit
+      - name: Bandit SAST scan
+        run: bandit -r modules/ api/ db/ -ll -ii
+      - name: Dependency vulnerability scan
+        run: pip-audit -r requirements.txt --desc || true
+
+      # Secrets detection
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -rn 'password\|secret\|api_key' config/ --include="*.yaml" | grep -vE '""$|env var|CHANGE_ME|GRC_|NEVER|# '; then
+            echo "::warning::Potential hardcoded secrets detected in config files"
+          fi
+
+      # Container scanning
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+      - name: Build Docker image for scanning
+        run: docker build -t grc-toolkit:scan .
+      - name: Scan Docker image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: grc-toolkit:scan
+          severity: HIGH,CRITICAL
+          exit-code: 1
 
   opa-test:
     runs-on: ubuntu-latest
@@ -52,9 +93,11 @@ jobs:
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
         with:
-          version: latest
+          version: 0.62.1
       - name: Run OPA tests
         run: opa test policies/ -v
+      - name: OPA policy format check
+        run: opa fmt --diff policies/
 
   terraform-validate:
     runs-on: ubuntu-latest
@@ -82,23 +125,14 @@ jobs:
       - name: Setup OPA
         uses: open-policy-agent/setup-opa@v2
         with:
-          version: latest
+          version: 0.62.1
       - name: Setup conftest
         run: |
-          CONFTEST_VERSION=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+          CONFTEST_VERSION="0.50.0"
           wget -q "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           tar xzf "conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
           sudo mv conftest /usr/local/bin/
-      - name: Run policy checks
-        run: echo "Conftest validation would run here against terraform plan output"
-
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
+      - name: Validate Terraform policies
+        run: |
+          opa check policies/terraform/
+          conftest verify --policy policies/terraform/

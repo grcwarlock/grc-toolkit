@@ -7,9 +7,10 @@ risk analysis, framework management, vendor risk, and policy evaluation.
 
 from __future__ import annotations
 
+import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -18,32 +19,65 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.routers import assessments, evidence, frameworks, policies, risk, vendors
+from api.security import (
+    AuditLogMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from db.session import init_db
 
+logger = logging.getLogger(__name__)
+
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+
+# CORS origins: configure via GRC_CORS_ORIGINS env var (comma-separated)
+# Defaults to localhost dev origins if not set.
+_default_origins = "http://localhost:3000,http://localhost:8080"
+CORS_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("GRC_CORS_ORIGINS", _default_origins).split(",")
+    if o.strip()
+]
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database tables on startup."""
     init_db()
+    logger.info("GRC Toolkit API started — database initialized")
     yield
 
 
 app = FastAPI(
     title="GRC Toolkit API",
     description="Governance, Risk, and Compliance automation platform",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
+    docs_url="/docs" if os.environ.get("GRC_ENABLE_DOCS", "true") == "true" else None,
+    redoc_url=None,
 )
 
+# ── Middleware (order matters: last added = first executed) ───────────
+
+# CORS — explicit origin whitelist, no wildcard with credentials
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["X-API-Key", "Content-Type", "Accept"],
 )
+
+# Security headers (HSTS, X-Frame-Options, etc.)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Audit logging for all requests
+app.add_middleware(AuditLogMiddleware)
+
+# Rate limiting (configurable via GRC_RATE_LIMIT_RPM / GRC_RATE_LIMIT_BURST)
+app.add_middleware(RateLimitMiddleware)
+
+# ── Routers ──────────────────────────────────────────────────────────
 
 app.include_router(evidence.router)
 app.include_router(assessments.router)
@@ -57,7 +91,6 @@ app.include_router(policies.router)
 async def health():
     return {
         "status": "healthy",
-        "version": "0.2.0",
         "timestamp": datetime.now(UTC).isoformat(),
     }
 

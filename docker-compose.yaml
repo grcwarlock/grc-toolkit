@@ -2,10 +2,14 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"  # Bind to localhost only
     environment:
-      - GRC_DATABASE_URL=${GRC_DATABASE_URL:-postgresql://grc:grc_secret@db:5432/grc_toolkit}
+      - GRC_DATABASE_URL=${GRC_DATABASE_URL:?Set GRC_DATABASE_URL in .env}
       - GRC_OPA_URL=${GRC_OPA_URL:-http://opa:8181}
+      - GRC_API_KEYS=${GRC_API_KEYS:-}
+      - GRC_CORS_ORIGINS=${GRC_CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      - GRC_RATE_LIMIT_RPM=${GRC_RATE_LIMIT_RPM:-120}
+      - GRC_ENABLE_DOCS=${GRC_ENABLE_DOCS:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -14,31 +18,62 @@ services:
     volumes:
       - ./evidence:/app/evidence
       - ./reports:/app/reports
-      - ./config:/app/config
+      - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    read_only: true
+    tmpfs:
+      - /tmp
 
   db:
-    image: postgres:16-alpine
+    image: postgres:16.2-alpine@sha256:1aadbbc71e04e5024e0a8735fb5b57f13a4d35e437c94e3e1c8a8e87edd5fdf7
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-grc_toolkit}
       POSTGRES_USER: ${POSTGRES_USER:-grc}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grc_secret}
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    # Database NOT exposed to host — internal only
+    expose:
+      - "5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grc} -d ${POSTGRES_DB:-grc_toolkit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   opa:
-    image: openpolicyagent/opa:latest
-    ports:
-      - "8181:8181"
-    command: run --server --bundle /policies
+    image: openpolicyagent/opa:0.62.1-static
+    # OPA NOT exposed to host — internal only
+    expose:
+      - "8181"
+    command: run --server --bundle /policies --log-level info
     volumes:
-      - ./policies:/policies
+      - ./policies:/policies:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8181/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    image: redis:7.2-alpine@sha256:aae4e14e7d0e5f2a8c3e6e5b6e8e6f6f9a8a7b5c3d2e1f0a9b8c7d6e5f4a3b2
+    # Redis NOT exposed to host — internal only
+    expose:
+      - "6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-changeme} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    driver: bridge
 
 volumes:
   pgdata:

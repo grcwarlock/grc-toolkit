@@ -12,6 +12,14 @@ from api.schemas import (
     VendorResponse,
     VendorUpdate,
 )
+from api.security import (
+    require_api_key,
+    validate_enum,
+    VALID_CRITICALITIES,
+    VALID_DATA_CLASSIFICATIONS,
+    VALID_VENDOR_CATEGORIES,
+    VENDOR_UPDATABLE_FIELDS,
+)
 from db.repository import VendorRepository
 
 router = APIRouter(prefix="/api/v1/vendors", tags=["vendors"])
@@ -30,7 +38,17 @@ def _vendor_to_response(v) -> VendorResponse:
 
 
 @router.post("/", response_model=VendorResponse, status_code=201)
-async def create_vendor(request: VendorCreate, db: Session = Depends(get_db)):
+async def create_vendor(request: VendorCreate, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
+    # Validate enum fields
+    validate_enum(request.criticality, VALID_CRITICALITIES, "criticality")
+    validate_enum(request.data_classification, VALID_DATA_CLASSIFICATIONS, "data_classification")
+    validate_enum(request.category, VALID_VENDOR_CATEGORIES, "category")
+    # Validate contract dates
+    if request.contract_end < request.contract_start:
+        raise HTTPException(
+            status_code=422,
+            detail="contract_end must be >= contract_start",
+        )
     vendor = VendorRepository.create_vendor(db, **request.model_dump())
     return _vendor_to_response(vendor)
 
@@ -39,13 +57,14 @@ async def create_vendor(request: VendorCreate, db: Session = Depends(get_db)):
 async def list_vendors(
     active_only: bool = Query(True),
     db: Session = Depends(get_db),
+    api_key: str = Depends(require_api_key),
 ):
     vendors = VendorRepository.list_vendors(db, active_only=active_only)
     return [_vendor_to_response(v) for v in vendors]
 
 
 @router.get("/dashboard", response_model=VendorDashboardResponse)
-async def vendor_dashboard(db: Session = Depends(get_db)):
+async def vendor_dashboard(db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     vendors = VendorRepository.list_vendors(db, active_only=True)
     needing = VendorRepository.get_vendors_needing_assessment(db)
 
@@ -75,13 +94,13 @@ async def vendor_dashboard(db: Session = Depends(get_db)):
 
 
 @router.get("/needing-assessment", response_model=list[VendorResponse])
-async def vendors_needing_assessment(db: Session = Depends(get_db)):
+async def vendors_needing_assessment(db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     vendors = VendorRepository.get_vendors_needing_assessment(db)
     return [_vendor_to_response(v) for v in vendors]
 
 
 @router.get("/{vendor_id}", response_model=VendorResponse)
-async def get_vendor(vendor_id: str, db: Session = Depends(get_db)):
+async def get_vendor(vendor_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     vendor = VendorRepository.get_vendor(db, vendor_id)
     if vendor is None:
         raise HTTPException(status_code=404, detail="Vendor not found")
@@ -90,9 +109,10 @@ async def get_vendor(vendor_id: str, db: Session = Depends(get_db)):
 
 @router.put("/{vendor_id}", response_model=VendorResponse)
 async def update_vendor(
-    vendor_id: str, request: VendorUpdate, db: Session = Depends(get_db)
+    vendor_id: str, request: VendorUpdate, db: Session = Depends(get_db), api_key: str = Depends(require_api_key),
 ):
     updates = request.model_dump(exclude_none=True)
+    updates = {k: v for k, v in updates.items() if k in VENDOR_UPDATABLE_FIELDS}
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
     try:

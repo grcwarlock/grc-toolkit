@@ -45,6 +45,8 @@
       left: 0;
       bottom: 0;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar-logo {
@@ -352,10 +354,43 @@
       align-items: center;
       gap: 8px;
       padding: 12px 20px;
-      margin-top: auto;
       border-top: 1px solid var(--border);
       font-size: 12px;
       color: var(--text-muted);
+    }
+
+    /* Settings area in sidebar */
+    .sidebar-settings {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .sidebar-settings label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-settings input {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .sidebar-settings .hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
     @media (max-width: 768px) {
@@ -395,6 +430,11 @@
       <div class="nav-item" data-page="policies" onclick="navigate('policies')">
         <span class="nav-icon">&#128220;</span> Policies
       </div>
+      <div class="sidebar-settings">
+        <label>API Key</label>
+        <input type="password" id="api-key-input" placeholder="Enter API key" autocomplete="off" />
+        <div class="hint">Stored in sessionStorage only</div>
+      </div>
       <div class="health-bar" id="health-bar">
         <span class="status-dot dot-yellow"></span>
         Checking API...
@@ -407,7 +447,37 @@
   </div>
 
   <script>
-    const API = '';  // Same origin
+    // Same-origin API base URL — requests go to the host that served this page.
+    // Change this if the API is hosted on a different origin.
+    const API = '';
+
+    // ── XSS Prevention ────────────────────────────────
+    // Escape HTML entities to prevent XSS when inserting dynamic content into innerHTML.
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ── API Key (sessionStorage) ──────────────────────
+    (function initApiKeyInput() {
+      const input = document.getElementById('api-key-input');
+      // Restore from sessionStorage on load
+      const stored = sessionStorage.getItem('grc_api_key');
+      if (stored) input.value = stored;
+      input.addEventListener('input', function() {
+        const val = this.value.trim();
+        if (val) {
+          sessionStorage.setItem('grc_api_key', val);
+        } else {
+          sessionStorage.removeItem('grc_api_key');
+        }
+      });
+    })();
 
     // ── State ────────────────────────────────────────
     let currentPage = 'dashboard';
@@ -430,8 +500,14 @@
 
     // ── API helpers ──────────────────────────────────
     async function api(path, opts = {}) {
+      const headers = { 'Content-Type': 'application/json', ...opts.headers };
+      // Include API key from sessionStorage if set
+      const apiKey = sessionStorage.getItem('grc_api_key');
+      if (apiKey) {
+        headers['X-API-Key'] = apiKey;
+      }
       const resp = await fetch(API + path, {
-        headers: { 'Content-Type': 'application/json', ...opts.headers },
+        headers,
         ...opts,
       });
       if (!resp.ok) throw new Error(`API ${resp.status}: ${resp.statusText}`);
@@ -454,7 +530,7 @@
 
     function riskBadge(level) {
       const map = { Critical: 'badge-red', High: 'badge-orange', Medium: 'badge-yellow', Low: 'badge-green' };
-      return `<span class="badge ${map[level] || 'badge-blue'}">${level}</span>`;
+      return `<span class="badge ${map[level] || 'badge-blue'}">${esc(level)}</span>`;
     }
 
     // ── Dashboard ────────────────────────────────────
@@ -476,31 +552,31 @@
       main.innerHTML = `
         <div class="page-header">
           <h2>Dashboard</h2>
-          <p>GRC Toolkit overview — ${new Date().toLocaleDateString()}</p>
+          <p>GRC Toolkit overview — ${esc(new Date().toLocaleDateString())}</p>
         </div>
 
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-label">Frameworks</div>
-            <div class="stat-value">${frameworks.length}</div>
-            <div class="stat-sub">${totalControls} total controls</div>
+            <div class="stat-value">${esc(frameworks.length)}</div>
+            <div class="stat-sub">${esc(totalControls)} total controls</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Vendors Tracked</div>
-            <div class="stat-value">${vendors.length}</div>
-            <div class="stat-sub">${vendors.filter(v => v.risk_level === 'High' || v.risk_level === 'Critical').length} high/critical risk</div>
+            <div class="stat-value">${esc(vendors.length)}</div>
+            <div class="stat-sub">${esc(vendors.filter(v => v.risk_level === 'High' || v.risk_level === 'Critical').length)} high/critical risk</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Risk Scenarios</div>
-            <div class="stat-value">${scenarios.length}</div>
+            <div class="stat-value">${esc(scenarios.length)}</div>
             <div class="stat-sub">Monte Carlo simulation ready</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">API Status</div>
             <div class="stat-value" style="color: ${health.status === 'healthy' ? 'var(--green)' : 'var(--yellow)'}">
-              ${health.status === 'healthy' ? '&#10003;' : '&#9888;'} ${health.status || 'unknown'}
+              ${health.status === 'healthy' ? '&#10003;' : '&#9888;'} ${esc(health.status || 'unknown')}
             </div>
-            <div class="stat-sub">v${health.version || '?'}</div>
+            <div class="stat-sub">v${esc(health.version || '?')}</div>
           </div>
         </div>
 
@@ -511,9 +587,9 @@
               <tr><th>Framework</th><th>Version</th><th>Controls</th></tr>
               ${frameworks.map(f => `
                 <tr>
-                  <td>${f.display_name}</td>
-                  <td><span class="badge badge-blue">${f.version}</span></td>
-                  <td>${f.control_count}</td>
+                  <td>${esc(f.display_name)}</td>
+                  <td><span class="badge badge-blue">${esc(f.version)}</span></td>
+                  <td>${esc(f.control_count)}</td>
                 </tr>
               `).join('') || '<tr><td colspan="3" style="color:var(--text-muted)">No frameworks loaded</td></tr>'}
             </table>
@@ -525,9 +601,9 @@
                 <tr><th>Vendor</th><th>Risk</th><th>Criticality</th></tr>
                 ${vendors.slice(0, 8).map(v => `
                   <tr>
-                    <td>${v.name}</td>
+                    <td>${esc(v.name)}</td>
                     <td>${riskBadge(v.risk_level || 'Medium')}</td>
-                    <td>${v.criticality}</td>
+                    <td>${esc(v.criticality)}</td>
                   </tr>
                 `).join('')}
               </table>
@@ -552,12 +628,12 @@
               <tr><th>ID</th><th>Name</th><th>Version</th><th>Controls</th><th>Status</th><th></th></tr>
               ${frameworks.map(f => `
                 <tr>
-                  <td style="font-family:monospace">${f.id}</td>
-                  <td>${f.display_name}</td>
-                  <td>${f.version}</td>
-                  <td>${f.control_count}</td>
+                  <td style="font-family:monospace">${esc(f.id)}</td>
+                  <td>${esc(f.display_name)}</td>
+                  <td>${esc(f.version)}</td>
+                  <td>${esc(f.control_count)}</td>
                   <td><span class="badge badge-green">Active</span></td>
-                  <td><button class="btn" onclick="viewControls('${f.id}')">View Controls</button></td>
+                  <td><button class="btn" data-framework-id="${esc(f.id)}" onclick="viewControls(this.dataset.frameworkId)">View Controls</button></td>
                 </tr>
               `).join('') || '<tr><td colspan="6" class="empty-state">No frameworks loaded</td></tr>'}
             </table>
@@ -570,7 +646,7 @@
               <div class="form-group">
                 <label>Source Framework</label>
                 <select id="cw-source">
-                  ${frameworks.map(f => `<option value="${f.id}">${f.display_name}</option>`).join('')}
+                  ${frameworks.map(f => `<option value="${esc(f.id)}">${esc(f.display_name)}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
@@ -600,18 +676,18 @@
       const el = document.getElementById('controls-detail');
       el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
       try {
-        const controls = await api(`/api/v1/frameworks/${frameworkId}/controls`);
+        const controls = await api(`/api/v1/frameworks/${encodeURIComponent(frameworkId)}/controls`);
         el.innerHTML = `
           <div class="card">
-            <div class="card-title">Controls — ${frameworkId}</div>
+            <div class="card-title">Controls — ${esc(frameworkId)}</div>
             <table>
               <tr><th>Family</th><th>Control ID</th><th>Title</th><th>Checks</th></tr>
               ${controls.map(c => `
                 <tr>
-                  <td><span class="badge badge-purple">${c.family}</span></td>
-                  <td style="font-family:monospace">${c.control_id}</td>
-                  <td>${c.title}</td>
-                  <td>${c.check_count}</td>
+                  <td><span class="badge badge-purple">${esc(c.family)}</span></td>
+                  <td style="font-family:monospace">${esc(c.control_id)}</td>
+                  <td>${esc(c.title)}</td>
+                  <td>${esc(c.check_count)}</td>
                 </tr>
               `).join('')}
             </table>
@@ -641,16 +717,16 @@
               <tr><th>Target Control</th><th>Title</th><th>Relationship</th></tr>
               ${result.target_controls.map(tc => `
                 <tr>
-                  <td style="font-family:monospace">${tc.control_id || tc.id || JSON.stringify(tc)}</td>
-                  <td>${tc.title || ''}</td>
-                  <td>${tc.relationship || 'equivalent'}</td>
+                  <td style="font-family:monospace">${esc(tc.control_id || tc.id || JSON.stringify(tc))}</td>
+                  <td>${esc(tc.title || '')}</td>
+                  <td>${esc(tc.relationship || 'equivalent')}</td>
                 </tr>
               `).join('')}
             </table>
           `;
         }
       } catch(e) {
-        el.innerHTML = `<p style="color:var(--red)">${e.message}</p>`;
+        el.innerHTML = `<p style="color:var(--red)">${esc(e.message)}</p>`;
       }
     }
 
@@ -674,13 +750,13 @@
                 <tr><th>ID</th><th>Framework</th><th>Status</th><th>Pass Rate</th><th>Passed</th><th>Failed</th><th>Date</th></tr>
                 ${runs.map(r => `
                   <tr>
-                    <td style="font-family:monospace;font-size:12px">${r.id.slice(0,8)}...</td>
-                    <td>${r.framework}</td>
-                    <td><span class="badge ${r.status === 'completed' ? 'badge-green' : 'badge-yellow'}">${r.status}</span></td>
-                    <td>${r.pass_rate != null ? (r.pass_rate * 100).toFixed(1) + '%' : '—'}</td>
-                    <td style="color:var(--green)">${r.passed}</td>
-                    <td style="color:var(--red)">${r.failed}</td>
-                    <td>${new Date(r.started_at).toLocaleString()}</td>
+                    <td style="font-family:monospace;font-size:12px">${esc(r.id.slice(0,8))}...</td>
+                    <td>${esc(r.framework)}</td>
+                    <td><span class="badge ${r.status === 'completed' ? 'badge-green' : 'badge-yellow'}">${esc(r.status)}</span></td>
+                    <td>${r.pass_rate != null ? esc((r.pass_rate * 100).toFixed(1) + '%') : '—'}</td>
+                    <td style="color:var(--green)">${esc(r.passed)}</td>
+                    <td style="color:var(--red)">${esc(r.failed)}</td>
+                    <td>${esc(new Date(r.started_at).toLocaleString())}</td>
                   </tr>
                 `).join('')}
               </table>
@@ -706,10 +782,14 @@
     }
 
     // ── Risk Analysis ────────────────────────────────
+    // Store loaded scenarios by index so we can reference them safely from data attributes
+    let _scenarioCache = [];
+
     async function renderRisk() {
       const main = document.getElementById('main-content');
       try {
         const scenarios = await api('/api/v1/risk/scenarios');
+        _scenarioCache = scenarios;
         main.innerHTML = `
           <div class="page-header">
             <h2>Risk Analysis</h2>
@@ -753,13 +833,13 @@
             ${scenarios.length > 0 ? `
               <table>
                 <tr><th>Name</th><th>Category</th><th>Frequency Range</th><th>Impact Range</th><th></th></tr>
-                ${scenarios.map(s => `
+                ${scenarios.map((s, idx) => `
                   <tr>
-                    <td>${s.name}</td>
-                    <td><span class="badge badge-purple">${s.category}</span></td>
-                    <td>${s.frequency.min} — ${s.frequency.max}/yr</td>
-                    <td>${fmt$(s.impact.min)} — ${fmt$(s.impact.max)}</td>
-                    <td><button class="btn" onclick='loadScenario(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Load</button></td>
+                    <td>${esc(s.name)}</td>
+                    <td><span class="badge badge-purple">${esc(s.category)}</span></td>
+                    <td>${esc(s.frequency.min)} — ${esc(s.frequency.max)}/yr</td>
+                    <td>${esc(fmt$(s.impact.min))} — ${esc(fmt$(s.impact.max))}</td>
+                    <td><button class="btn" data-scenario-idx="${idx}" onclick="loadScenario(_scenarioCache[+this.dataset.scenarioIdx])">Load</button></td>
                   </tr>
                 `).join('')}
               </table>
@@ -803,56 +883,56 @@
           <div class="stat-grid">
             <div class="stat-card">
               <div class="stat-label">Mean ALE</div>
-              <div class="stat-value">${fmt$(result.mean_ale)}</div>
+              <div class="stat-value">${esc(fmt$(result.mean_ale))}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Median ALE</div>
-              <div class="stat-value">${fmt$(result.median_ale)}</div>
+              <div class="stat-value">${esc(fmt$(result.median_ale))}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">VaR 95%</div>
-              <div class="stat-value" style="color:var(--orange)">${fmt$(result.var_95)}</div>
+              <div class="stat-value" style="color:var(--orange)">${esc(fmt$(result.var_95))}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">VaR 99%</div>
-              <div class="stat-value" style="color:var(--red)">${fmt$(result.var_99)}</div>
+              <div class="stat-value" style="color:var(--red)">${esc(fmt$(result.var_99))}</div>
             </div>
           </div>
           <div class="bar-chart">
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.mean_ale)}</div>
+              <div class="bar-value">${esc(fmt$(result.mean_ale))}</div>
               <div class="bar" style="height:${(result.mean_ale/result.max_observed*100)}%;background:var(--accent)"></div>
               <div class="bar-label">Mean</div>
             </div>
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.median_ale)}</div>
+              <div class="bar-value">${esc(fmt$(result.median_ale))}</div>
               <div class="bar" style="height:${(result.median_ale/result.max_observed*100)}%;background:var(--green)"></div>
               <div class="bar-label">Median</div>
             </div>
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.var_90)}</div>
+              <div class="bar-value">${esc(fmt$(result.var_90))}</div>
               <div class="bar" style="height:${(result.var_90/result.max_observed*100)}%;background:var(--yellow)"></div>
               <div class="bar-label">VaR 90</div>
             </div>
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.var_95)}</div>
+              <div class="bar-value">${esc(fmt$(result.var_95))}</div>
               <div class="bar" style="height:${(result.var_95/result.max_observed*100)}%;background:var(--orange)"></div>
               <div class="bar-label">VaR 95</div>
             </div>
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.var_99)}</div>
+              <div class="bar-value">${esc(fmt$(result.var_99))}</div>
               <div class="bar" style="height:${(result.var_99/result.max_observed*100)}%;background:var(--red)"></div>
               <div class="bar-label">VaR 99</div>
             </div>
             <div class="bar-col">
-              <div class="bar-value">${fmt$(result.max_observed)}</div>
+              <div class="bar-value">${esc(fmt$(result.max_observed))}</div>
               <div class="bar" style="height:100%;background:var(--purple)"></div>
               <div class="bar-label">Max</div>
             </div>
           </div>
         `;
       } catch(e) {
-        el.innerHTML = `<p style="color:var(--red)">Simulation failed: ${e.message}</p>`;
+        el.innerHTML = `<p style="color:var(--red)">Simulation failed: ${esc(e.message)}</p>`;
       }
     }
 
@@ -906,18 +986,18 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Vendors (${vendors.length})</div>
+            <div class="card-title">Vendors (${esc(vendors.length)})</div>
             ${vendors.length > 0 ? `
               <table>
                 <tr><th>Name</th><th>Category</th><th>Criticality</th><th>Data Class</th><th>Risk</th><th>Contract End</th></tr>
                 ${vendors.map(v => `
                   <tr>
-                    <td>${v.name}</td>
-                    <td>${v.category}</td>
+                    <td>${esc(v.name)}</td>
+                    <td>${esc(v.category)}</td>
                     <td>${riskBadge(v.criticality)}</td>
-                    <td>${v.data_classification}</td>
+                    <td>${esc(v.data_classification)}</td>
                     <td>${riskBadge(v.risk_level || 'Unscored')}</td>
-                    <td>${v.contract_end}</td>
+                    <td>${esc(v.contract_end)}</td>
                   </tr>
                 `).join('')}
               </table>
@@ -963,18 +1043,18 @@
             <button class="btn btn-primary" onclick="triggerCollection()">Collect Evidence</button>
           </div>
           <div class="card">
-            <div class="card-title">Evidence Records (${data.total})</div>
+            <div class="card-title">Evidence Records (${esc(data.total)})</div>
             ${data.items.length > 0 ? `
               <table>
                 <tr><th>Control</th><th>Check</th><th>Provider</th><th>Service</th><th>Status</th><th>Collected</th></tr>
                 ${data.items.map(e => `
                   <tr>
-                    <td style="font-family:monospace">${e.control_id}</td>
-                    <td>${e.check_id}</td>
-                    <td><span class="badge badge-blue">${e.provider}</span></td>
-                    <td>${e.service}</td>
-                    <td><span class="badge ${e.status === 'pass' ? 'badge-green' : 'badge-red'}">${e.status}</span></td>
-                    <td>${new Date(e.collected_at).toLocaleString()}</td>
+                    <td style="font-family:monospace">${esc(e.control_id)}</td>
+                    <td>${esc(e.check_id)}</td>
+                    <td><span class="badge badge-blue">${esc(e.provider)}</span></td>
+                    <td>${esc(e.service)}</td>
+                    <td><span class="badge ${e.status === 'pass' ? 'badge-green' : 'badge-red'}">${esc(e.status)}</span></td>
+                    <td>${esc(new Date(e.collected_at).toLocaleString())}</td>
                   </tr>
                 `).join('')}
               </table>
@@ -1016,16 +1096,16 @@
           <div class="stat-grid">
             <div class="stat-card">
               <div class="stat-label">Policy Bundles</div>
-              <div class="stat-value">${bundles.length}</div>
+              <div class="stat-value">${esc(bundles.length)}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Total Policies</div>
-              <div class="stat-value">${bundles.reduce((s, b) => s + b.policy_count, 0)}</div>
+              <div class="stat-value">${esc(bundles.reduce((s, b) => s + b.policy_count, 0))}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Open Violations</div>
               <div class="stat-value" style="color:${violations.length > 0 ? 'var(--red)' : 'var(--green)'}">
-                ${violations.filter(v => v.status === 'open').length}
+                ${esc(violations.filter(v => v.status === 'open').length)}
               </div>
             </div>
           </div>
@@ -1038,9 +1118,9 @@
                   <tr><th>Bundle</th><th>Policies</th><th>Tests</th></tr>
                   ${bundles.map(b => `
                     <tr>
-                      <td style="font-family:monospace">${b.name}</td>
-                      <td>${b.policy_count}</td>
-                      <td>${b.test_count}</td>
+                      <td style="font-family:monospace">${esc(b.name)}</td>
+                      <td>${esc(b.policy_count)}</td>
+                      <td>${esc(b.test_count)}</td>
                     </tr>
                   `).join('')}
                 </table>
@@ -1053,10 +1133,10 @@
                   <tr><th>Policy</th><th>Resource</th><th>Severity</th><th>Status</th></tr>
                   ${violations.map(v => `
                     <tr>
-                      <td>${v.policy_name}</td>
-                      <td style="font-family:monospace;font-size:12px">${v.resource_id}</td>
+                      <td>${esc(v.policy_name)}</td>
+                      <td style="font-family:monospace;font-size:12px">${esc(v.resource_id)}</td>
                       <td>${riskBadge(v.severity)}</td>
-                      <td><span class="badge ${v.status === 'open' ? 'badge-red' : 'badge-green'}">${v.status}</span></td>
+                      <td><span class="badge ${v.status === 'open' ? 'badge-red' : 'badge-green'}">${esc(v.status)}</span></td>
                     </tr>
                   `).join('')}
                 </table>
@@ -1074,7 +1154,7 @@
       const bar = document.getElementById('health-bar');
       try {
         const h = await api('/health');
-        bar.innerHTML = `<span class="status-dot dot-green"></span> API v${h.version} healthy`;
+        bar.innerHTML = `<span class="status-dot dot-green"></span> API v${esc(h.version)} healthy`;
       } catch {
         bar.innerHTML = `<span class="status-dot dot-red"></span> API offline`;
       }

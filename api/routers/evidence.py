@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
+from api.security import require_api_key
 from api.schemas import (
     CollectionRequest,
     CollectionResponse,
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/api/v1/evidence", tags=["evidence"])
 
 
 @router.post("/collect", response_model=CollectionResponse, status_code=202)
-async def trigger_collection(request: CollectionRequest, db: Session = Depends(get_db)):
+async def trigger_collection(request: CollectionRequest, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     """Trigger evidence collection from cloud providers.
 
     Returns 202 Accepted — collection runs asynchronously.
@@ -47,6 +48,7 @@ async def list_evidence(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    api_key: str = Depends(require_api_key),
 ):
     offset = (page - 1) * page_size
     records = EvidenceRepository.list_evidence(
@@ -75,7 +77,7 @@ async def list_evidence(
 
 
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
-async def get_evidence(evidence_id: str, db: Session = Depends(get_db)):
+async def get_evidence(evidence_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     record = EvidenceRepository.get_evidence(db, evidence_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Evidence not found")
@@ -90,7 +92,7 @@ async def get_evidence(evidence_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/{evidence_id}/verify", response_model=EvidenceVerifyResponse)
-async def verify_evidence(evidence_id: str, db: Session = Depends(get_db)):
+async def verify_evidence(evidence_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     """Verify evidence integrity by recomputing SHA-256 hash."""
     record = EvidenceRepository.get_evidence(db, evidence_id)
     if record is None:

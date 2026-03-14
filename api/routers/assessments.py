@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
+from api.security import require_api_key
 from api.schemas import (
     AssessmentResultResponse,
     AssessmentRunResponse,
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/api/v1/assessments", tags=["assessments"])
 
 @router.post("/run", response_model=AssessmentRunResponse, status_code=202)
 async def trigger_assessment(
-    request: AssessmentTriggerRequest, db: Session = Depends(get_db)
+    request: AssessmentTriggerRequest, db: Session = Depends(get_db), api_key: str = Depends(require_api_key),
 ):
     """Trigger a compliance assessment run.
 
@@ -41,6 +42,7 @@ async def list_runs(
     framework: str | None = Query(None),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    api_key: str = Depends(require_api_key),
 ):
     runs = AssessmentRepository.list_runs(db, framework=framework, limit=limit)
     return [
@@ -56,7 +58,7 @@ async def list_runs(
 
 
 @router.get("/runs/{run_id}", response_model=AssessmentRunResponse)
-async def get_run(run_id: str, db: Session = Depends(get_db)):
+async def get_run(run_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     run = AssessmentRepository.get_run(db, run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Assessment run not found")
@@ -70,7 +72,7 @@ async def get_run(run_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/runs/{run_id}/results", response_model=list[AssessmentResultResponse])
-async def get_results(run_id: str, db: Session = Depends(get_db)):
+async def get_results(run_id: str, db: Session = Depends(get_db), api_key: str = Depends(require_api_key)):
     results = AssessmentRepository.get_results(db, run_id)
     return [
         AssessmentResultResponse(
@@ -88,6 +90,7 @@ async def get_trend(
     framework: str = Query("nist_800_53"),
     last_n: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
+    api_key: str = Depends(require_api_key),
 ):
     trend = AssessmentRepository.get_trend(db, framework=framework, last_n=last_n)
     return AssessmentTrendResponse(runs=trend)

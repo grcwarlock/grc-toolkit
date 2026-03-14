@@ -30,6 +30,82 @@ class Base(DeclarativeBase):
     pass
 
 
+# ── Audit Log ─────────────────────────────────────────────────────────
+
+class AuditLog(Base):
+    """Immutable audit trail for all data modifications."""
+
+    __tablename__ = "audit_log"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    actor: Mapped[str] = mapped_column(String(100))  # API key hash or "anonymous"
+    action: Mapped[str] = mapped_column(String(20))  # create, update, delete
+    resource_type: Mapped[str] = mapped_column(String(50), index=True)
+    resource_id: Mapped[str] = mapped_column(String(36), index=True)
+    changes: Mapped[dict] = mapped_column(JSON, default=dict)
+    client_ip: Mapped[str] = mapped_column(String(45), default="")
+    request_id: Mapped[str] = mapped_column(String(36), default="")
+
+
+# ── Asset Inventory ───────────────────────────────────────────────────
+
+class AssetRecord(Base):
+    """Cloud resource/asset inventory for correlation across sources."""
+
+    __tablename__ = "assets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(10), index=True)
+    account_id: Mapped[str] = mapped_column(String(50), index=True)
+    resource_id: Mapped[str] = mapped_column(String(200), index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), index=True)
+    region: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(200), default="")
+    tags: Mapped[dict] = mapped_column(JSON, default=dict)
+    criticality: Mapped[str] = mapped_column(String(20), default="Medium")
+    data_classification: Mapped[str] = mapped_column(String(20), default="Internal")
+    first_seen: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_seen: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
+
+    __table_args__ = (
+        Index("ix_assets_provider_account", "provider", "account_id"),
+        Index("ix_assets_resource", "resource_id", "resource_type"),
+    )
+
+
+# ── Data Source / Connector Registry ──────────────────────────────────
+
+class DataSource(Base):
+    """Registry of connected data sources (cloud providers, security tools)."""
+
+    __tablename__ = "data_sources"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    source_type: Mapped[str] = mapped_column(String(30))  # cloud, siem, edr, scanner, etc.
+    provider: Mapped[str] = mapped_column(String(50))  # aws, azure, gcp, splunk, crowdstrike, etc.
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    config: Mapped[dict] = mapped_column(JSON, default=dict)  # Non-secret config
+    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync_status: Mapped[str] = mapped_column(String(20), default="never")
+    sync_interval_minutes: Mapped[int] = mapped_column(Integer, default=60)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class EvidenceRecord(Base):
     __tablename__ = "evidence"
 

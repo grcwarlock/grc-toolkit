@@ -1,31 +1,39 @@
 # settings.yaml
-# Environment configuration for the GRC toolkit
-# Copy this file and fill in your actual values
+# Environment configuration for the GRC toolkit.
+#
+# IMPORTANT: Do NOT store secrets in this file.
+# Use environment variables for all sensitive values:
+#   GRC_DATABASE_URL, GRC_API_KEYS, GRC_SMTP_PASSWORD, etc.
+# See .env.example for the full list.
 
 environment:
   name: "production"
   organization: "Your Organization"
   timezone: "America/Denver"
 
-# Database configuration
+# Database — override via GRC_DATABASE_URL env var
 database:
-  url: "postgresql://grc:grc_secret@localhost:5432/grc_toolkit"
+  # Default is SQLite for local dev; set GRC_DATABASE_URL for production.
+  # Production: postgresql+psycopg2://user:pass@host:5432/grc_toolkit?sslmode=require
+  url: ""  # Leave empty to use GRC_DATABASE_URL env var or SQLite fallback
   pool_size: 10
   max_overflow: 20
 
 # OPA Policy Engine
 opa:
-  url: "http://localhost:8181"
+  url: ""  # Override via GRC_OPA_URL env var; default: http://localhost:8181
   bundle_path: "./policies"
 
 # API configuration
 api:
-  host: "0.0.0.0"
+  host: "127.0.0.1"  # Bind to localhost only; use reverse proxy for external access
   port: 8000
-  cors_origins:
-    - "http://localhost:3000"
-    - "http://localhost:8080"
+  # CORS origins — override via GRC_CORS_ORIGINS env var (comma-separated)
+  cors_origins: []
   api_key_header: "X-API-Key"
+  rate_limit_rpm: 120
+  rate_limit_burst: 20
+  enable_docs: false  # Disable Swagger docs in production
 
 # Cloud provider configurations
 cloud_providers:
@@ -39,8 +47,8 @@ cloud_providers:
 
   azure:
     enabled: false
-    subscription_id: ""
-    tenant_id: ""
+    subscription_id: ""  # Set via AZURE_SUBSCRIPTION_ID env var
+    tenant_id: ""  # Set via AZURE_TENANT_ID env var
     # Uses DefaultAzureCredential: env vars, managed identity, or CLI auth
     resource_groups: []
     locations:
@@ -50,7 +58,7 @@ cloud_providers:
 
   gcp:
     enabled: false
-    project_id: ""
+    project_id: ""  # Set via GCP_PROJECT_ID env var
     # Uses Application Default Credentials
     regions:
       - "us-central1"
@@ -62,7 +70,7 @@ cloud_providers:
 evidence:
   local_path: "./evidence"
   retention_days: 365
-  format: "json"  # json or yaml
+  format: "json"
   timestamp_format: "%Y-%m-%dT%H:%M:%SZ"
 
 # Reporting
@@ -82,14 +90,16 @@ risk:
     - 0.99
   currency: "USD"
 
-# Notifications (optional)
+# Notifications — all credentials via env vars
 notifications:
   enabled: false
+  # Set GRC_SLACK_WEBHOOK_URL env var
   slack_webhook_url: ""
   email:
-    smtp_server: ""
+    smtp_server: ""  # Set via GRC_SMTP_SERVER env var
     smtp_port: 587
-    sender: ""
+    sender: ""  # Set via GRC_SMTP_SENDER env var
+    # Password via GRC_SMTP_PASSWORD env var — NEVER put in this file
     recipients: []
 
 # Logging

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
+
+from api.security import require_api_key
 
 from api.schemas import (
     PortfolioRequest,
@@ -37,6 +39,7 @@ async def simulate_scenario(
     request: ThreatScenarioRequest,
     iterations: int = Query(10_000, ge=100, le=100_000),
     seed: int | None = Query(None),
+    api_key: str = Depends(require_api_key),
 ):
     engine = RiskEngine(iterations=iterations, seed=seed)
     scenario = _to_threat_scenario(request)
@@ -54,7 +57,7 @@ async def simulate_scenario(
 
 
 @router.post("/portfolio", response_model=PortfolioResponse)
-async def simulate_portfolio(request: PortfolioRequest):
+async def simulate_portfolio(request: PortfolioRequest, api_key: str = Depends(require_api_key)):
     engine = RiskEngine(iterations=request.iterations, seed=request.seed)
     scenarios = [_to_threat_scenario(s) for s in request.scenarios]
     result = engine.simulate_portfolio(scenarios)
@@ -62,7 +65,7 @@ async def simulate_portfolio(request: PortfolioRequest):
 
 
 @router.post("/treatments", response_model=TreatmentComparisonResponse)
-async def compare_treatments(request: TreatmentComparisonRequest):
+async def compare_treatments(request: TreatmentComparisonRequest, api_key: str = Depends(require_api_key)):
     engine = RiskEngine(iterations=request.iterations)
     scenario = _to_threat_scenario(request.scenario)
     treatments = [
@@ -74,7 +77,7 @@ async def compare_treatments(request: TreatmentComparisonRequest):
 
 
 @router.get("/scenarios")
-async def list_scenarios():
+async def list_scenarios(api_key: str = Depends(require_api_key)):
     """Return built-in example threat scenarios."""
     return [
         {

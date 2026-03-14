@@ -68,8 +68,16 @@ def send_email_digest(smtp_config: dict, summary: dict,
     """
     Send a formatted assessment digest email.
 
-    smtp_config expects: server, port, sender, password
+    smtp_config expects: server, port, sender.
+    Password is loaded from GRC_SMTP_PASSWORD env var — never passed in config dicts.
     """
+    import os
+
+    password = os.environ.get("GRC_SMTP_PASSWORD", "")
+    if not password:
+        logger.error("GRC_SMTP_PASSWORD env var not set — cannot send email")
+        return
+
     pass_rate = summary.get("pass_rate", "N/A")
     subject = f"GRC Assessment: {pass_rate} Pass Rate - {summary['failed']} Findings"
 
@@ -103,9 +111,12 @@ Control Family Breakdown:
 
     try:
         with smtplib.SMTP(smtp_config["server"], smtp_config["port"]) as server:
+            server.ehlo()
             server.starttls()
-            server.login(smtp_config["sender"], smtp_config["password"])
+            server.ehlo()
+            server.login(smtp_config["sender"], password)
             server.sendmail(smtp_config["sender"], recipients, msg.as_string())
-        logger.info("Email digest sent to %s", ", ".join(recipients))
+        logger.info("Email digest sent to %d recipients", len(recipients))
     except Exception as e:
-        logger.error("Failed to send email digest: %s", e)
+        # Log exception type only — never log credentials or full stack
+        logger.error("Failed to send email digest: %s", type(e).__name__)
