@@ -1,12 +1,29 @@
 # Cloud SDKs
-boto3>=1.28.0          # AWS SDK
+boto3>=1.28.0
 azure-mgmt-compute>=30.0.0
 azure-mgmt-network>=25.0.0
 azure-mgmt-storage>=21.0.0
+azure-mgmt-monitor>=6.0.0
 azure-identity>=1.14.0
 google-cloud-compute>=1.14.0
 google-cloud-storage>=2.10.0
 google-cloud-asset>=3.19.0
+google-cloud-securitycenter>=1.23.0
+
+# API Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Database
+sqlalchemy>=2.0.25
+alembic>=1.13.0
+psycopg2-binary>=2.9.9
+
+# Task Queue
+celery>=5.3.0
+redis>=5.0.0
 
 # Data handling
 pandas>=2.1.0
@@ -21,9 +38,8 @@ reportlab>=4.0.4
 openpyxl>=3.1.2
 tabulate>=0.9.0
 
-# NLP / AI (optional, for policy analysis)
+# NLP / AI (optional)
 anthropic>=0.34.0
-spacy>=3.7.0
 
 # Utilities
 requests>=2.31.0
@@ -31,3 +47,4 @@ click>=8.1.7
 rich>=13.5.0
 python-dateutil>=2.8.2
 croniter>=1.4.1
+httpx>=0.27.0

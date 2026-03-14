@@ -1,0 +1,20 @@
+name: Compliance Gate
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - 'policies/**'
+
+jobs:
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: open-policy-agent/setup-opa@v2
+      - name: Validate policies
+        run: opa test policies/ -v
+      - name: Check for policy regressions
+        run: |
+          opa check policies/
+          echo "All policies valid"

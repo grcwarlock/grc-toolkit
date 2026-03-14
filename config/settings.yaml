@@ -7,6 +7,26 @@ environment:
   organization: "Your Organization"
   timezone: "America/Denver"
 
+# Database configuration
+database:
+  url: "postgresql://grc:grc_secret@localhost:5432/grc_toolkit"
+  pool_size: 10
+  max_overflow: 20
+
+# OPA Policy Engine
+opa:
+  url: "http://localhost:8181"
+  bundle_path: "./policies"
+
+# API configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  api_key_header: "X-API-Key"
+
 # Cloud provider configurations
 cloud_providers:
   aws:
@@ -22,11 +42,21 @@ cloud_providers:
     subscription_id: ""
     tenant_id: ""
     # Uses DefaultAzureCredential: env vars, managed identity, or CLI auth
+    resource_groups: []
+    locations:
+      - "eastus"
+      - "westus2"
+    log_analytics_workspace_id: ""
 
   gcp:
     enabled: false
     project_id: ""
     # Uses Application Default Credentials
+    regions:
+      - "us-central1"
+      - "us-east1"
+    organization_id: ""
+    security_command_center_source: ""
 
 # Evidence storage
 evidence:

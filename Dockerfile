@@ -1,28 +1,22 @@
-FROM python:3.12-slim
-
-LABEL maintainer="GRC Toolkit"
-LABEL description="Automated GRC evidence collection and compliance assessment"
-
+FROM python:3.12-slim AS base
 WORKDIR /app
 
-# Install dependencies first for better layer caching
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY modules/ modules/
-COPY scripts/ scripts/
-COPY config/ config/
-COPY lambda_handler.py .
+# Copy application
+COPY . .
 
-# Create directories for evidence and reports
-RUN mkdir -p evidence reports
+# Create non-root user
+RUN useradd -m -r grcuser && chown -R grcuser:grcuser /app
+USER grcuser
 
-# Non-root user for security
-RUN useradd -m -s /bin/bash grc-user && \
-    chown -R grc-user:grc-user /app
-USER grc-user
-
-# Default: run full collection + assessment pipeline
-ENTRYPOINT ["python"]
-CMD ["scripts/run_collection.py", "--config", "config/settings.yaml"]
+# Run API server
+EXPOSE 8000
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
