@@ -6,7 +6,7 @@ import os
 from datetime import UTC, datetime
 
 import yaml
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.deps import get_db

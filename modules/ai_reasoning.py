@@ -20,7 +20,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 import httpx
 
@@ -29,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 # ── Types ──────────────────────────────────────────────────────────────
 
-class AIProvider(str, Enum):
+class AIProvider(StrEnum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GEMINI = "gemini"
     OLLAMA = "ollama"
 
 
-class ReasoningTask(str, Enum):
+class ReasoningTask(StrEnum):
     CONTROL_NARRATIVE = "control_narrative"
     GAP_ANALYSIS = "gap_analysis"
     POAM_NARRATIVE = "poam_narrative"

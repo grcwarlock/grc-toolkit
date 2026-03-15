@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from db.session import get_engine, get_session_factory
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """Yield a database session, auto-closing on completion."""
     factory = get_session_factory(get_engine())
     session = factory()

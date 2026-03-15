@@ -97,7 +97,7 @@ def init_db(database_url: str | None = None) -> None:
 
 
 @contextmanager
-def get_db_session(database_url: str | None = None) -> Generator[Session, None, None]:
+def get_db_session(database_url: str | None = None) -> Generator[Session]:
     """Context manager yielding a database session with automatic commit/rollback."""
     engine = get_engine(database_url)
     factory = get_session_factory(engine)
