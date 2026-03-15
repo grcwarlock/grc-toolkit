@@ -18,7 +18,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.routers import assessments, evidence, exports, frameworks, policies, risk, vendors
+from api.routers import (
+    assessments,
+    auth,
+    dashboard,
+    data_silos,
+    evidence,
+    exports,
+    frameworks,
+    integrations,
+    policies,
+    risk,
+    settings,
+    tool_config,
+    trust,
+    vendors,
+)
 from api.security import (
     AuditLogMiddleware,
     RateLimitMiddleware,
@@ -63,9 +78,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["X-API-Key", "Content-Type", "Accept"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["X-API-Key", "Content-Type", "Accept", "Authorization"],
 )
 
 # Security headers (HSTS, X-Frame-Options, etc.)
@@ -79,6 +94,10 @@ app.add_middleware(RateLimitMiddleware)
 
 # ── Routers ──────────────────────────────────────────────────────────
 
+app.include_router(auth.router)
+app.include_router(dashboard.router)
+app.include_router(tool_config.router)
+app.include_router(integrations.router)
 app.include_router(evidence.router)
 app.include_router(assessments.router)
 app.include_router(risk.router)
@@ -86,6 +105,9 @@ app.include_router(frameworks.router)
 app.include_router(vendors.router)
 app.include_router(policies.router)
 app.include_router(exports.router)
+app.include_router(data_silos.router)
+app.include_router(trust.router)
+app.include_router(settings.router)
 
 
 @app.get("/health")
@@ -97,10 +119,18 @@ async def health():
     }
 
 
-# Serve frontend static files
+# Serve frontend static files (SPA with client-side routing)
 if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    if (STATIC_DIR / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
 
     @app.get("/")
     async def serve_frontend():
+        return FileResponse(str(STATIC_DIR / "index.html"))
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = STATIC_DIR / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
         return FileResponse(str(STATIC_DIR / "index.html"))

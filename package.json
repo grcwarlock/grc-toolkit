@@ -1,0 +1,28 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "An end-to-end Governance, Risk, and Compliance engineering platform. Multi-cloud evidence collection, policy-as-code enforcement, quantitative risk analysis, framework crosswalks, and a connector framework for multi-source telemetry -- all exposed through a secured REST API with a frontend dashboard and backed by a persistent data layer.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-query": "^5.90.21",
+    "autoprefixer": "^10.4.27",
+    "axios": "^1.13.6",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.577.0",
+    "postcss": "^8.5.8",
+    "react-router-dom": "^7.13.1",
+    "recharts": "^3.8.0",
+    "tailwindcss": "^4.2.1"
+  }
+}
