@@ -21,8 +21,8 @@ const FEATURES = [
     glow: 'rgba(59,130,246,0.25)',
     title: 'Real-Time Compliance Monitoring',
     desc: 'See every control across NIST 800-53, SOC 2, ISO 27001, HIPAA, and CMMC L2 on one screen — green, yellow, or red. Click any failing control and get exact remediation steps, linked evidence, and ticket creation in under 30 seconds.',
-    link: '/dashboard',
-    linkLabel: 'See live dashboard',
+    link: '/features/compliance-monitoring',
+    linkLabel: 'Learn more',
     badge: '655 controls',
   },
   {
@@ -31,8 +31,8 @@ const FEATURES = [
     glow: 'rgba(139,92,246,0.25)',
     title: '38 Native Integrations',
     desc: 'Wire up AWS, CrowdStrike, Okta, Splunk, Tenable, and 33 more tools with an API key. Findings flow in automatically — mapped to the right control families across every framework simultaneously. No CSV exports, no screenshots, no manual uploads.',
-    link: '/integrations',
-    linkLabel: 'Browse integrations',
+    link: '/features/integrations',
+    linkLabel: 'Learn more',
     badge: '38 tools',
   },
   {
@@ -41,8 +41,8 @@ const FEATURES = [
     glow: 'rgba(16,185,129,0.25)',
     title: 'Automated POAM & Audit Exports',
     desc: 'Every failing control automatically generates a Plan of Action & Milestones entry with risk rating, timeline, and remediation owner. Export a complete audit package — NIST, SOC 2, or HIPAA formatted — in a single click. No more last-minute scrambles before auditor day.',
-    link: '/poam',
-    linkLabel: 'View POAM tracker',
+    link: '/features/poam-exports',
+    linkLabel: 'Learn more',
     badge: 'Audit-ready',
   },
   {
@@ -51,8 +51,8 @@ const FEATURES = [
     glow: 'rgba(245,158,11,0.25)',
     title: 'Data Silo Scanning',
     desc: 'Automatically surface PII, PHI, API secrets, and sensitive data scattered across S3 buckets, GitHub repos, SharePoint sites, and databases. Every finding is mapped directly to the control it violates — so you know exactly what to fix and why it matters.',
-    link: '/data-silos',
-    linkLabel: 'Run a silo scan',
+    link: '/features/data-silo-scanning',
+    linkLabel: 'Learn more',
     badge: 'PII & PHI detection',
   },
   {
@@ -61,8 +61,8 @@ const FEATURES = [
     glow: 'rgba(236,72,153,0.25)',
     title: 'Customer Trust Hub',
     desc: 'Publish a live, public-facing security portal in minutes. Show real-time pass rates, certification status, and audit summaries — no NDA required. When a prospect or enterprise customer asks "do you have a SOC 2?", send them a link instead of a PDF.',
-    link: '/trust',
-    linkLabel: 'View live trust portal',
+    link: '/features/trust-hub',
+    linkLabel: 'Learn more',
     badge: 'Public · No login',
   },
   {
@@ -71,8 +71,8 @@ const FEATURES = [
     glow: 'rgba(14,165,233,0.25)',
     title: 'Third-Party Risk Management',
     desc: 'Score every vendor in your supply chain against your own compliance requirements. Send automated security questionnaires, track response status, flag gaps, and monitor posture changes over time. Know your fourth-party risk before your auditor does.',
-    link: '/vendors',
-    linkLabel: 'View vendor risk',
+    link: '/features/vendor-risk',
+    linkLabel: 'Learn more',
     badge: 'Supply chain',
   },
 ];
@@ -208,7 +208,7 @@ export default function LandingPage() {
             <span className="text-slate-400 font-normal text-2xl md:text-3xl">Nothing manual.</span>
           </h2>
           <p className="text-slate-500 text-base max-w-2xl mx-auto mt-2">
-            Built for security engineers, not spreadsheet warriors. Click any feature to see it live — no account needed.
+            Built for security engineers, not spreadsheet warriors. Click any feature to learn more.
           </p>
         </div>
 

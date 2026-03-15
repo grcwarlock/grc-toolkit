@@ -25,6 +25,8 @@ import PersonnelPage from './pages/PersonnelPage';
 import AuditPortalPage from './pages/AuditPortalPage';
 import SSPPage from './pages/SSPPage';
 import RiskGraphPage from './pages/RiskGraphPage';
+import AIReasoningPage from './pages/AIReasoningPage';
+import FeaturePage from './pages/FeaturePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -67,6 +69,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/trust" element={<TrustPortalPage />} />
+      <Route path="/features/:slug" element={<FeaturePage />} />
       
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -88,6 +91,7 @@ export default function App() {
         <Route path="/audit-portal" element={<AuditPortalPage />} />
         <Route path="/ssp" element={<SSPPage />} />
         <Route path="/risk-graph" element={<RiskGraphPage />} />
+        <Route path="/ai-reasoning" element={<AIReasoningPage />} />
       </Route>
     </Routes>
   );

@@ -12,6 +12,12 @@
       "runtimeExecutable": ".venv/bin/uvicorn",
       "runtimeArgs": ["api.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
       "port": 8000
+    },
+    {
+      "name": "grc-frontend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd frontend && npx vite --port 5173"],
+      "port": 5173
     }
   ]
 }

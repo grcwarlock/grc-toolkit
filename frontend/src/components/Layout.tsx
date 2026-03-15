@@ -6,7 +6,7 @@ import {
   LogOut, Menu, X, User, Settings, HardDrive,
   Globe, Bell, ChevronDown, ChevronRight, Zap,
   Activity, FileQuestion, ListTodo, GraduationCap,
-  ClipboardCheck, FileCode, Network
+  ClipboardCheck, FileCode, Network, Brain
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -27,6 +27,7 @@ const NAV_SECTIONS = [
       { name: 'Risk Graph',    path: '/risk-graph',    icon: Network },
       { name: 'Evidence',      path: '/evidence',      icon: Database },
       { name: 'Data Silos',    path: '/data-silos',    icon: HardDrive },
+      { name: 'AI Reasoning',  path: '/ai-reasoning',  icon: Brain },
     ],
   },
   {

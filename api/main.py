@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.routers import (
+    ai_reasoning,
     assessments,
     audit_collab,
     auth,
@@ -120,6 +121,7 @@ app.include_router(tasks.router)
 app.include_router(personnel.router)
 app.include_router(audit_collab.router)
 app.include_router(ssp.router)
+app.include_router(ai_reasoning.router)
 
 
 @app.get("/health")

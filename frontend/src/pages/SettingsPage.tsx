@@ -3,17 +3,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Settings, Building, Bell, Key, Shield, Users,
   Plus, Trash2, Copy, Check, Eye, EyeOff,
-  Save, Activity, Loader2
+  Save, Activity, Loader2, Brain, Wifi, WifiOff,
+  AlertTriangle, Sparkles
 } from 'lucide-react';
 import api from '../lib/api';
 
 const TABS = [
   { id: 'org',           label: 'Organization',  icon: Building },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'ai-reasoning',  label: 'AI Reasoning',  icon: Brain },
   { id: 'api-keys',      label: 'API Keys',       icon: Key },
   { id: 'audit',         label: 'Audit Log',      icon: Activity },
 ] as const;
 type TabId = typeof TABS[number]['id'];
+
+const AI_PROVIDERS = [
+  { id: 'openai',    name: 'OpenAI',           models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o3-mini'] },
+  { id: 'anthropic', name: 'Anthropic',        models: ['claude-opus-4-20250514', 'claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001'] },
+  { id: 'gemini',    name: 'Google Gemini',    models: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'] },
+  { id: 'ollama',    name: 'Ollama (Local)',   models: ['llama3.1:70b', 'llama3.1:8b', 'mistral:7b', 'mixtral:8x7b', 'qwen2.5:32b'] },
+];
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -32,6 +41,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('org');
   const [copied, setCopied] = useState('');
   const [showKey, setShowKey] = useState<Record<string, boolean>>({});
+  const [showAiKey, setShowAiKey] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: orgSettings, isLoading: orgLoading } = useQuery({
@@ -54,6 +64,11 @@ export default function SettingsPage() {
     queryFn: async () => (await api.get('/settings/audit-log')).data,
   });
 
+  const { data: aiSettings, isLoading: aiLoading } = useQuery({
+    queryKey: ['settings', 'ai-reasoning'],
+    queryFn: async () => (await api.get('/ai-reasoning/settings')).data,
+  });
+
   const updateOrgMutation = useMutation({
     mutationFn: async (d: Record<string, unknown>) => (await api.put('/settings/org', d)).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings', 'org'] }),
@@ -64,6 +79,18 @@ export default function SettingsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings', 'notifications'] }),
   });
 
+  const updateAiMutation = useMutation({
+    mutationFn: async (d: Record<string, unknown>) => (await api.put('/ai-reasoning/settings', d)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'ai-reasoning'] });
+      queryClient.invalidateQueries({ queryKey: ['settings', 'org'] });
+    },
+  });
+
+  const testAiMutation = useMutation({
+    mutationFn: async () => (await api.post('/ai-reasoning/test-connection')).data,
+  });
+
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopied(id);
@@ -71,6 +98,9 @@ export default function SettingsPage() {
   };
 
   const [orgForm, setOrgForm] = useState<Record<string, any>>({});
+  const [aiForm, setAiForm] = useState<Record<string, any>>({});
+
+  const currentAiProvider = AI_PROVIDERS.find(p => p.id === (aiForm.provider ?? aiSettings?.provider ?? 'openai'));
 
   return (
     <div className="space-y-5 page-enter text-white">
@@ -96,6 +126,9 @@ export default function SettingsPage() {
                 }`}
               >
                 <Icon className="w-4 h-4" /> {tab.label}
+                {tab.id === 'ai-reasoning' && aiSettings?.enabled && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                )}
               </button>
             );
           })}
@@ -174,6 +207,232 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* AI Reasoning */}
+          {activeTab === 'ai-reasoning' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" /> AI Reasoning Layer
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Optional LLM-powered compliance analysis</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                    aiSettings?.enabled
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                      : 'bg-white/5 border-white/10 text-slate-500'
+                  }`}>
+                    {aiSettings?.enabled ? 'ENABLED' : 'DISABLED'}
+                  </span>
+                </div>
+              </div>
+
+              {aiLoading ? (
+                <div className="flex items-center gap-2 text-slate-500 py-8">
+                  <Loader2 className="w-5 h-5 animate-spin" /> Loading…
+                </div>
+              ) : (
+                <>
+                  {/* Master toggle */}
+                  <div className="flex items-center justify-between py-4 px-5 rounded-xl bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/15">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                        <Brain className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Enable AI Reasoning</p>
+                        <p className="text-xs text-slate-500">Activate LLM-powered analysis for compliance tasks</p>
+                      </div>
+                    </div>
+                    <Toggle
+                      value={aiSettings?.enabled ?? false}
+                      onChange={v => updateAiMutation.mutate({ enabled: v })}
+                    />
+                  </div>
+
+                  {!aiSettings?.enabled && (
+                    <div className="flex items-start gap-3 py-4 px-5 rounded-xl bg-white/[0.02] border border-white/5">
+                      <AlertTriangle className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-slate-400">AI Reasoning is currently disabled.</p>
+                        <p className="text-xs text-slate-600 mt-1">
+                          When enabled, you can use LLMs to generate control narratives, gap analysis reports,
+                          POA&M entries, evidence mappings, and executive risk summaries. Toggle it on above
+                          and configure your preferred provider below.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Provider config — always visible so user can configure before enabling */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Provider Configuration</h4>
+
+                    {/* Demo mode toggle */}
+                    <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Demo Mode</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Use simulated responses instead of calling a real LLM API</p>
+                      </div>
+                      <Toggle
+                        value={aiSettings?.demo_mode ?? true}
+                        onChange={v => updateAiMutation.mutate({ demo_mode: v })}
+                      />
+                    </div>
+
+                    {/* Provider selection */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-1.5">Provider</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {AI_PROVIDERS.map(p => {
+                          const isSelected = (aiForm.provider ?? aiSettings?.provider) === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              onClick={() => {
+                                setAiForm(prev => ({ ...prev, provider: p.id, model: '' }));
+                                updateAiMutation.mutate({ provider: p.id });
+                              }}
+                              className={`text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                                isSelected
+                                  ? 'bg-amber-500/10 border-amber-500/25 text-amber-300'
+                                  : 'bg-white/[0.02] border-white/8 text-slate-400 hover:bg-white/5 hover:text-white'
+                              }`}
+                            >
+                              <p className="font-bold">{p.name}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                {p.id === 'ollama' ? 'Local / air-gapped' : `${p.models.length} models`}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Model selection */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-300 mb-1.5">Model</label>
+                      <select
+                        value={aiForm.model ?? aiSettings?.model ?? ''}
+                        onChange={e => {
+                          setAiForm(prev => ({ ...prev, model: e.target.value }));
+                          updateAiMutation.mutate({ model: e.target.value });
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+                      >
+                        <option value="">Select a model…</option>
+                        {currentAiProvider?.models.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* API Key (not for Ollama) */}
+                    {(aiForm.provider ?? aiSettings?.provider) !== 'ollama' ? (
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-1.5">
+                          API Key <span className="text-[10px] text-slate-600 ml-1">(encrypted at rest)</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showAiKey ? 'text' : 'password'}
+                            defaultValue=""
+                            onChange={e => setAiForm(prev => ({ ...prev, api_key: e.target.value }))}
+                            placeholder={aiSettings?.api_key || '••••••••••••••••'}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowAiKey(!showAiKey)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                          >
+                            {showAiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-1.5">Ollama Base URL</label>
+                        <input
+                          type="text"
+                          defaultValue={aiSettings?.base_url ?? ''}
+                          onChange={e => setAiForm(prev => ({ ...prev, base_url: e.target.value }))}
+                          placeholder="http://localhost:11434"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    )}
+
+                    {/* Save + Test buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => {
+                          if (Object.keys(aiForm).length > 0) {
+                            updateAiMutation.mutate(aiForm);
+                          }
+                        }}
+                        disabled={updateAiMutation.isPending || Object.keys(aiForm).length === 0}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-sm font-bold transition-all shadow-lg shadow-amber-500/20 disabled:opacity-40"
+                      >
+                        {updateAiMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Save Configuration
+                      </button>
+                      <button
+                        onClick={() => testAiMutation.mutate()}
+                        disabled={testAiMutation.isPending || !aiSettings?.enabled}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/10 transition-colors disabled:opacity-40"
+                      >
+                        {testAiMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />}
+                        Test Connection
+                      </button>
+                    </div>
+
+                    {updateAiMutation.isSuccess && (
+                      <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                        <Check className="w-4 h-4" /> Settings saved
+                      </div>
+                    )}
+
+                    {/* Test result */}
+                    {testAiMutation.data && (
+                      <div className={`flex items-start gap-3 p-4 rounded-xl border ${
+                        testAiMutation.data.status === 'success'
+                          ? 'bg-emerald-500/10 border-emerald-500/20'
+                          : 'bg-red-500/10 border-red-500/20'
+                      }`}>
+                        {testAiMutation.data.status === 'success'
+                          ? <Wifi className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                          : <WifiOff className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                        }
+                        <div>
+                          <p className={`text-sm font-medium ${testAiMutation.data.status === 'success' ? 'text-emerald-300' : 'text-red-300'}`}>
+                            {testAiMutation.data.status === 'success' ? 'Connection successful' : 'Connection failed'}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">{testAiMutation.data.message}</p>
+                          {testAiMutation.data.latency_ms && (
+                            <p className="text-xs text-emerald-500 mt-1">Latency: {testAiMutation.data.latency_ms}ms</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info box */}
+                  <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      The AI Reasoning Layer adds optional LLM-powered analysis to your GRC workflow.
+                      When enabled, it powers control narrative generation, gap analysis, POA&M drafting,
+                      evidence mapping, and executive risk summaries. All AI features are opt-in and
+                      gated behind this toggle. Your API key is stored encrypted and never logged.
+                      Use Demo Mode to explore capabilities without consuming API credits.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

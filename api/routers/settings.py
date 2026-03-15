@@ -30,6 +30,7 @@ ORG_SETTINGS = {
     "risk_threshold_critical": 80,
     "risk_threshold_high": 60,
     "trust_hub_enabled": True,
+    "ai_reasoning_enabled": False,
 }
 
 NOTIFICATION_SETTINGS = {
@@ -90,6 +91,7 @@ class OrgSettingsUpdate(BaseModel):
     risk_threshold_critical: int | None = None
     risk_threshold_high: int | None = None
     trust_hub_enabled: bool | None = None
+    ai_reasoning_enabled: bool | None = None
 
 
 class NotificationUpdate(BaseModel):
