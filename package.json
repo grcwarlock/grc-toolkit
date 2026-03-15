@@ -22,6 +22,7 @@
     "docx": "^9.6.1",
     "lucide-react": "^0.577.0",
     "postcss": "^8.5.8",
+    "puppeteer": "^24.39.1",
     "react-router-dom": "^7.13.1",
     "recharts": "^3.8.0",
     "tailwindcss": "^4.2.1"

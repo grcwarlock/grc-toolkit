@@ -1,24 +1,17 @@
 {
-  "servers": [
+  "version": "0.0.1",
+  "configurations": [
     {
-      "name": "GRC Toolkit API (Development)",
-      "type": "uvicorn",
-      "command": "uvicorn api.main:app --reload --host 127.0.0.1 --port 8000",
-      "env": {},
-      "port": 8000,
-      "url": "http://127.0.0.1:8000",
-      "docs_url": "http://127.0.0.1:8000/docs",
-      "description": "FastAPI dev server with auto-reload"
+      "name": "docs-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "9090", "--directory", "docs"],
+      "port": 9090
     },
     {
-      "name": "GRC Toolkit API (Replit)",
-      "type": "uvicorn",
-      "command": "uvicorn api.main:app --host 0.0.0.0 --port 8000",
-      "env": {},
-      "port": 8000,
-      "url": "http://0.0.0.0:8000",
-      "docs_url": "http://0.0.0.0:8000/docs",
-      "description": "FastAPI server for Replit deployment (no reload, binds all interfaces)"
+      "name": "grc-api",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["api.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+      "port": 8000
     }
   ]
 }

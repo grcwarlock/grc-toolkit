@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRC Toolkit - Technical Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #0f172a;
+    --navy-mid: #1e293b;
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --teal-bg: #f0fdfa;
+    --slate: #475569;
+    --slate-light: #94a3b8;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --white: #ffffff;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --amber-border: #f59e0b;
+    --green: #059669;
+    --red: #dc2626;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: letter;
+    margin: 1in;
+    @bottom-center { content: "Page " counter(page); font-size: 10px; color: var(--slate-light); }
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    color: var(--navy-mid);
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.5in;
+    background: var(--white);
+  }
+
+  /* ── COVER PAGE ── */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 7in;
+    padding: 1.2in 0;
+  }
+  .cover h1 {
+    font-size: 52pt;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    color: var(--navy);
+    margin: 0;
+  }
+  .cover h1 span { color: var(--teal); }
+  .cover .divider {
+    width: 80px;
+    height: 4px;
+    background: var(--teal);
+    margin: 24px 0;
+    border-radius: 2px;
+  }
+  .cover .subtitle {
+    font-size: 18pt;
+    font-weight: 300;
+    color: var(--slate);
+    margin-bottom: 8px;
+  }
+  .cover .subtitle2 {
+    font-size: 12pt;
+    color: var(--slate-light);
+    margin-bottom: 48px;
+  }
+  .stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+  .stat {
+    flex: 1;
+    background: var(--gray-50);
+    border-top: 3px solid var(--teal);
+    border-radius: 0 0 8px 8px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .stat.navy { border-top-color: var(--navy); }
+  .stat.green { border-top-color: var(--green); }
+  .stat.amber { border-top-color: var(--amber); }
+  .stat-value {
+    font-size: 28pt;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+  }
+  .stat-label {
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--slate-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .meta {
+    font-size: 10pt;
+    color: var(--slate-light);
+  }
+  .meta span { margin-right: 20px; }
+
+  /* ── TOC ── */
+  .toc {
+    page-break-after: always;
+  }
+  .toc h2 {
+    font-size: 24pt;
+    color: var(--navy);
+    margin-bottom: 24px;
+    font-weight: 700;
+  }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: 11pt;
+  }
+  .toc-item.sub {
+    padding-left: 24px;
+    font-size: 10pt;
+    color: var(--slate);
+    border-bottom-color: var(--gray-100);
+  }
+  .toc-item a {
+    color: var(--navy-mid);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .toc-item.sub a { font-weight: 400; }
+  .toc-num { color: var(--slate-light); font-variant-numeric: tabular-nums; }
+
+  /* ── HEADINGS ── */
+  h1.section {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--navy);
+    margin-top: 36px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  h1.section::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: var(--teal);
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border-radius: 2px;
+  }
+  h2.sub {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--teal);
+    margin-top: 24px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h3.sub {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--navy-mid);
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  /* ── PARAGRAPHS ── */
+  p {
+    margin-bottom: 8px;
+    color: var(--slate);
+  }
+
+  /* ── CODE BLOCKS ── */
+  .codeblock {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 8px 0 12px 0;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  .codeblock code {
+    font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    color: #e2e8f0;
+    white-space: pre;
+    display: block;
+  }
+  .codeblock .comment { color: #64748b; }
+  .codeblock .string { color: #86efac; }
+  .codeblock .flag { color: #93c5fd; }
+  .codeblock .cmd { color: #fbbf24; }
+  code.inline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt;
+    background: var(--gray-100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--navy-mid);
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  thead th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--navy);
+    padding: 7px 10px;
+    border-bottom: 2px solid var(--teal);
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--slate);
+    vertical-align: top;
+    font-size: 9.5pt;
+  }
+  tbody tr:nth-child(even) { background: var(--gray-50); }
+  td code.inline { font-size: 9pt; }
+
+  /* ── LISTS ── */
+  ul, ol {
+    margin: 6px 0 12px 24px;
+    color: var(--slate);
+  }
+  li { margin-bottom: 3px; padding-left: 4px; }
+  li strong { color: var(--navy-mid); }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-left: 4px solid var(--teal);
+    background: var(--teal-bg);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    page-break-inside: avoid;
+  }
+  .callout-title {
+    font-weight: 600;
+    color: var(--teal);
+    margin-bottom: 6px;
+    font-size: 10.5pt;
+  }
+  .callout p, .callout li { color: var(--slate); margin-bottom: 4px; font-size: 10pt; }
+
+  .warning {
+    border-left-color: var(--amber-border);
+    background: var(--amber-bg);
+  }
+  .warning .callout-title { color: var(--amber); }
+
+  /* ── SECTION BREAKS ── */
+  .page-break { page-break-before: always; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { padding: 0; max-width: none; }
+    .cover { min-height: auto; padding: 3in 0 1in 0; }
+    .codeblock { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tbody tr:nth-child(even) { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .callout, .warning { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .stat { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════ -->
+<!-- COVER PAGE -->
+<!-- ════════════════════════════════════════ -->
+<div class="cover">
+  <h1>GRC<br><span>Toolkit</span></h1>
+  <div class="divider"></div>
+  <div class="subtitle">Technical Documentation</div>
+  <div class="subtitle2">Setup, Configuration &amp; Deployment Guide</div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">437</div>
+      <div class="stat-label">Controls</div>
+    </div>
+    <div class="stat navy">
+      <div class="stat-value">251</div>
+      <div class="stat-label">Rego Policies</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-value">63+</div>
+      <div class="stat-label">API Endpoints</div>
+    </div>
+    <div class="stat amber">
+      <div class="stat-value">35+</div>
+      <div class="stat-label">Integrations</div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <span>Version 0.3.0</span>
+    <span>March 2026</span>
+    <span>Internal Use Only</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Contents</h2>
+  <div class="toc-item"><a href="#s1">1. What is the GRC Toolkit?</a></div>
+  <div class="toc-item sub"><a href="#s1-1">Technology Stack</a></div>
+  <div class="toc-item"><a href="#s2">2. Quick Start</a></div>
+  <div class="toc-item sub"><a href="#s2-1">Prerequisites &amp; Installation</a></div>
+  <div class="toc-item"><a href="#s3">3. Project Structure</a></div>
+  <div class="toc-item"><a href="#s4">4. Architecture</a></div>
+  <div class="toc-item sub"><a href="#s4-1">System Components &amp; Request Flow</a></div>
+  <div class="toc-item"><a href="#s5">5. Compliance Frameworks</a></div>
+  <div class="toc-item sub"><a href="#s5-1">NIST 800-53 &middot; ISO 27001 &middot; SOC 2 &middot; Crosswalks</a></div>
+  <div class="toc-item"><a href="#s6">6. API Reference</a></div>
+  <div class="toc-item sub"><a href="#s6-1">Auth &middot; Dashboard &middot; Evidence &middot; Assessments &middot; Risk &middot; Frameworks &middot; Vendors &middot; Policies</a></div>
+  <div class="toc-item"><a href="#s7">7. Database Schema</a></div>
+  <div class="toc-item"><a href="#s8">8. Frontend Dashboard</a></div>
+  <div class="toc-item"><a href="#s9">9. Docker Deployment</a></div>
+  <div class="toc-item"><a href="#s10">10. Production Configuration</a></div>
+  <div class="toc-item sub"><a href="#s10-1">Reverse Proxy &middot; Environment Variables &middot; Checklist</a></div>
+  <div class="toc-item"><a href="#s11">11. Security Architecture</a></div>
+  <div class="toc-item"><a href="#s12">12. Policy-as-Code (OPA)</a></div>
+  <div class="toc-item"><a href="#s13">13. Integrations</a></div>
+  <div class="toc-item"><a href="#s14">14. Cloud Infrastructure (Terraform)</a></div>
+  <div class="toc-item"><a href="#s15">15. CI/CD Pipeline</a></div>
+  <div class="toc-item"><a href="#s16">16. Operations &amp; Maintenance</a></div>
+  <div class="toc-item"><a href="#s17">17. Troubleshooting</a></div>
+  <div class="toc-item"><a href="#s18">18. Extending the Toolkit</a></div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- 1. WHAT IS THE GRC TOOLKIT? -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s1">1. What is the GRC Toolkit?</h1>
+
+<p>The GRC Toolkit is an open-source platform that helps security and compliance teams manage governance, risk, and compliance from a single system. Instead of tracking controls in spreadsheets and collecting evidence manually, the toolkit automates evidence collection across cloud providers, evaluates policies continuously, and produces audit-ready reports.</p>
+
+<ul>
+  <li><strong>437 compliance controls</strong> across NIST 800-53, ISO 27001, and SOC 2</li>
+  <li><strong>Automated evidence collection</strong> from AWS, Azure, and GCP using native APIs</li>
+  <li><strong>251 OPA/Rego policies</strong> that enforce compliance rules continuously</li>
+  <li><strong>Monte Carlo risk analysis</strong> that quantifies risk in dollars, not guesses</li>
+  <li><strong>521 framework crosswalks</strong> so you assess once and report across multiple standards</li>
+  <li><strong>35+ tool integrations</strong> including CrowdStrike, Splunk, Okta, Tenable, and more</li>
+  <li><strong>Customer trust portal</strong> for prospects to see your compliance posture</li>
+  <li><strong>React dashboard</strong> with real-time charts, trend analysis, and remediation guidance</li>
+</ul>
+
+<h2 class="sub" id="s1-1">Technology Stack</h2>
+
+<table>
+  <thead><tr><th>Layer</th><th>Technology</th><th>Version</th></tr></thead>
+  <tbody>
+    <tr><td>Backend</td><td>Python + FastAPI + Uvicorn</td><td>3.11+ / 0.109+</td></tr>
+    <tr><td>Frontend</td><td>React + TypeScript + Vite</td><td>19 / 5.9 / 8</td></tr>
+    <tr><td>Database</td><td>PostgreSQL (prod) / SQLite (dev)</td><td>16.2</td></tr>
+    <tr><td>ORM</td><td>SQLAlchemy</td><td>2.0+</td></tr>
+    <tr><td>Policy Engine</td><td>Open Policy Agent (OPA)</td><td>0.62.1</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS + Recharts</td><td>Latest</td></tr>
+    <tr><td>Authentication</td><td>JWT (HS256) + bcrypt</td><td>python-jose</td></tr>
+    <tr><td>Task Queue</td><td>Celery + Redis</td><td>5.3 / 7.2</td></tr>
+    <tr><td>Containers</td><td>Docker + Docker Compose</td><td>Latest</td></tr>
+    <tr><td>Infrastructure</td><td>Terraform</td><td>1.5+</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 2. QUICK START -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s2">2. Quick Start</h1>
+
+<p>Get the toolkit running on your machine in under five minutes. This setup uses SQLite, so you don't need PostgreSQL or Docker.</p>
+
+<h2 class="sub" id="s2-1">Prerequisites</h2>
+<ul>
+  <li>Python 3.11 or later</li>
+  <li>Node.js 18 or later <em>(only if modifying the frontend)</em></li>
+  <li>Git</li>
+</ul>
+
+<h3 class="sub">Step 1 &mdash; Clone &amp; install</h3>
+<div class="codeblock"><code><span class="cmd">$</span> git clone https://github.com/your-org/grc-toolkit.git
+<span class="cmd">$</span> cd grc-toolkit
+
+<span class="cmd">$</span> python3 <span class="flag">-m</span> venv .venv
+<span class="cmd">$</span> source .venv/bin/activate
+<span class="cmd">$</span> pip install <span class="flag">-r</span> requirements.txt</code></div>
+
+<h3 class="sub">Step 2 &mdash; Configure environment</h3>
+<div class="codeblock"><code><span class="cmd">$</span> cp .env.example .env</code></div>
+
+<p>Open <code class="inline">.env</code> and set these values:</p>
+
+<div class="codeblock"><code><span class="comment"># Database (SQLite for local development)</span>
+GRC_DATABASE_URL=<span class="string">sqlite:///grc_toolkit.db</span>
+
+<span class="comment"># JWT signing key (any random string for local dev)</span>
+GRC_SECRET_KEY=<span class="string">any-random-string-for-local-dev</span>
+
+<span class="comment"># Leave empty to disable API key auth in dev mode</span>
+GRC_API_KEYS=</code></div>
+
+<h3 class="sub">Step 3 &mdash; Load demo data</h3>
+<div class="codeblock"><code><span class="cmd">$</span> python <span class="flag">-m</span> scripts.seed_demo_data</code></div>
+
+<p>This creates demo users, sample assessments for 5 frameworks, 15 integrations, 20 evidence records, 15 vendors, and 10 policy violations.</p>
+
+<h3 class="sub">Step 4 &mdash; Start the server</h3>
+<div class="codeblock"><code><span class="cmd">$</span> uvicorn api.main:app <span class="flag">--reload</span> <span class="flag">--host</span> 0.0.0.0 <span class="flag">--port</span> 8000</code></div>
+
+<p>Open <strong>http://localhost:8000</strong> in your browser.</p>
+
+<div class="callout">
+  <div class="callout-title">Demo Credentials</div>
+  <p><strong>Email:</strong> admin@grc-demo.com</p>
+  <p><strong>Password:</strong> demo1234</p>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 3. PROJECT STRUCTURE -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s3">3. Project Structure</h1>
+
+<p>Each folder has a single responsibility. Here's where to find things and when you'd need to touch them.</p>
+
+<table>
+  <thead><tr><th>Folder</th><th>What It Contains</th><th>When You'd Touch It</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">api/</code></td><td>FastAPI application and middleware</td><td>Adding or modifying API endpoints</td></tr>
+    <tr><td><code class="inline">api/routers/</code></td><td>14 route files (auth, dashboard, evidence, etc.)</td><td>Adding new API features</td></tr>
+    <tr><td><code class="inline">modules/</code></td><td>Core business logic</td><td>Changing assessment, risk, or collection logic</td></tr>
+    <tr><td><code class="inline">modules/collectors/</code></td><td>AWS, Azure, GCP evidence collectors</td><td>Adding new cloud checks</td></tr>
+    <tr><td><code class="inline">modules/connectors/</code></td><td>Unified connector framework</td><td>Integrating a new security tool</td></tr>
+    <tr><td><code class="inline">db/</code></td><td>SQLAlchemy models, sessions, repositories</td><td>Changing the database schema</td></tr>
+    <tr><td><code class="inline">config/</code></td><td>YAML files for frameworks, controls, crosswalks</td><td>Adding or updating compliance controls</td></tr>
+    <tr><td><code class="inline">policies/</code></td><td>251 OPA Rego policy files</td><td>Adding or updating policy rules</td></tr>
+    <tr><td><code class="inline">frontend/</code></td><td>React TypeScript SPA source code</td><td>Changing the dashboard UI</td></tr>
+    <tr><td><code class="inline">static/</code></td><td>Built frontend assets (served by FastAPI)</td><td>After running <code class="inline">npm run build</code></td></tr>
+    <tr><td><code class="inline">terraform/</code></td><td>IaC modules for AWS, Azure, GCP</td><td>Deploying compliance infrastructure</td></tr>
+    <tr><td><code class="inline">tests/</code></td><td>364 pytest tests</td><td>After any code changes</td></tr>
+    <tr><td><code class="inline">scripts/</code></td><td>CLI tools (seeding, assessments, exports)</td><td>Running manual operations</td></tr>
+  </tbody>
+</table>
+
+<p>The full directory tree:</p>
+
+<div class="codeblock"><code>grc-toolkit/
+├── api/
+│   ├── main.py                 <span class="comment"># App entry point, middleware, routes</span>
+│   ├── schemas.py              <span class="comment"># Pydantic request/response models</span>
+│   ├── deps.py                 <span class="comment"># Dependency injection</span>
+│   ├── security.py             <span class="comment"># Auth, rate limiting, audit</span>
+│   └── routers/                <span class="comment"># 14 endpoint files</span>
+├── modules/
+│   ├── collectors/             <span class="comment"># AWS, Azure, GCP collectors</span>
+│   ├── connectors/             <span class="comment"># Unified connector framework</span>
+│   ├── control_assessor.py     <span class="comment"># Assertion engine</span>
+│   ├── risk_engine.py          <span class="comment"># Monte Carlo simulation</span>
+│   ├── framework_mapper.py     <span class="comment"># Crosswalk engine</span>
+│   └── vendor_monitor.py       <span class="comment"># Vendor risk scoring</span>
+├── db/
+│   ├── models.py               <span class="comment"># 10 SQLAlchemy tables</span>
+│   ├── session.py              <span class="comment"># Engine & connection pooling</span>
+│   └── repository.py           <span class="comment"># CRUD operations</span>
+├── config/
+│   ├── nist_800_53.yaml        <span class="comment"># 293 NIST controls (8,474 lines)</span>
+│   ├── iso_27001.yaml          <span class="comment"># 93 ISO controls (2,668 lines)</span>
+│   ├── soc2.yaml               <span class="comment"># 51 SOC 2 controls (1,972 lines)</span>
+│   ├── crosswalks.yaml         <span class="comment"># 521 framework mappings</span>
+│   └── settings.yaml           <span class="comment"># App configuration</span>
+├── policies/
+│   ├── nist-800-53/            <span class="comment"># 142 policies, 20 families</span>
+│   ├── iso-27001/              <span class="comment"># 93 policies, 4 themes</span>
+│   ├── soc2/                   <span class="comment"># 13 policies, all categories</span>
+│   └── terraform/              <span class="comment"># 3 cloud baseline policies</span>
+├── frontend/src/               <span class="comment"># React + TypeScript + Tailwind</span>
+├── terraform/modules/          <span class="comment"># AWS, Azure, GCP baselines</span>
+├── tests/                      <span class="comment"># 364 pytest tests</span>
+├── scripts/                    <span class="comment"># CLI utilities</span>
+├── docker-compose.yaml
+├── Dockerfile
+└── requirements.txt</code></div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 4. ARCHITECTURE -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s4">4. Architecture</h1>
+
+<h2 class="sub" id="s4-1">System Components</h2>
+
+<table>
+  <thead><tr><th>Component</th><th>What It Does</th><th>How It Connects</th></tr></thead>
+  <tbody>
+    <tr><td><strong>FastAPI App</strong></td><td>Serves the REST API (63+ endpoints) and the React frontend</td><td>Port 8000, HTTP/HTTPS</td></tr>
+    <tr><td><strong>PostgreSQL</strong></td><td>Stores all persistent data across 10 tables</td><td>Internal port 5432</td></tr>
+    <tr><td><strong>OPA Server</strong></td><td>Evaluates Rego policies against resource data</td><td>Internal port 8181</td></tr>
+    <tr><td><strong>Redis</strong></td><td>Message broker for Celery background tasks</td><td>Internal port 6379</td></tr>
+    <tr><td><strong>React SPA</strong></td><td>Dashboard UI with 16 pages</td><td>Static files served by FastAPI</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Request Flow</h2>
+<p>Every API request passes through these layers, in order:</p>
+<ol>
+  <li><strong>Rate Limiter</strong> &mdash; checks if the client has exceeded their quota (120 requests/min per IP)</li>
+  <li><strong>Audit Logger</strong> &mdash; records the request with a unique ID, timestamp, method, path, and client IP</li>
+  <li><strong>Security Headers</strong> &mdash; adds HSTS, X-Frame-Options, and other protective headers</li>
+  <li><strong>CORS</strong> &mdash; validates the request origin against your whitelist</li>
+  <li><strong>Authentication</strong> &mdash; verifies the JWT token or API key</li>
+  <li><strong>Route Handler</strong> &mdash; executes business logic and returns JSON</li>
+</ol>
+
+<div class="callout">
+  <div class="callout-title">Every Request Gets Tracked</div>
+  <p>All responses include an <code class="inline">X-Request-Id</code> header for tracing. Sensitive headers (Authorization, API keys, cookies) are automatically redacted in all logs.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 5. COMPLIANCE FRAMEWORKS -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s5">5. Compliance Frameworks</h1>
+
+<p>Control definitions live in YAML files under <code class="inline">config/</code>. The multi-file loader merges <code class="inline">frameworks.yaml</code> with individual framework files at startup. OPA Rego policies in <code class="inline">policies/</code> enforce every control.</p>
+
+<h2 class="sub" id="s5-1">Framework Coverage</h2>
+
+<table>
+  <thead><tr><th>Framework</th><th>Controls</th><th>Config File</th><th>Policies</th></tr></thead>
+  <tbody>
+    <tr><td><strong>NIST SP 800-53 Rev 5</strong></td><td>293 active controls</td><td>config/nist_800_53.yaml</td><td>142 Rego files</td></tr>
+    <tr><td><strong>ISO 27001:2022 Annex A</strong></td><td>93 controls</td><td>config/iso_27001.yaml</td><td>93 Rego files</td></tr>
+    <tr><td><strong>SOC 2 Type II</strong></td><td>51 controls</td><td>config/soc2.yaml</td><td>13 Rego files</td></tr>
+    <tr><td>HIPAA</td><td>64+ controls</td><td>config/frameworks.yaml</td><td>Via NIST crosswalk</td></tr>
+    <tr><td>CMMC Level 2</td><td>110 controls</td><td>config/frameworks.yaml</td><td>Via NIST crosswalk</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">NIST 800-53 &mdash; All 20 Families</h2>
+
+<table>
+  <thead><tr><th>ID</th><th>Family</th><th>Policies</th></tr></thead>
+  <tbody>
+    <tr><td>AC</td><td>Access Control</td><td>3</td></tr>
+    <tr><td>AT</td><td>Awareness and Training</td><td>4</td></tr>
+    <tr><td>AU</td><td>Audit and Accountability</td><td>2</td></tr>
+    <tr><td>CA</td><td>Security Assessment and Authorization</td><td>7</td></tr>
+    <tr><td>CM</td><td>Configuration Management</td><td>1</td></tr>
+    <tr><td>CP</td><td>Contingency Planning</td><td>9</td></tr>
+    <tr><td>IA</td><td>Identification and Authentication</td><td>2</td></tr>
+    <tr><td>IR</td><td>Incident Response</td><td>8</td></tr>
+    <tr><td>MA</td><td>Maintenance</td><td>6</td></tr>
+    <tr><td>MP</td><td>Media Protection</td><td>7</td></tr>
+    <tr><td>PE</td><td>Physical and Environmental Protection</td><td>17</td></tr>
+    <tr><td>PL</td><td>Planning</td><td>8</td></tr>
+    <tr><td>PM</td><td>Program Management</td><td>14</td></tr>
+    <tr><td>PS</td><td>Personnel Security</td><td>9</td></tr>
+    <tr><td>PT</td><td>PII Processing and Transparency</td><td>8</td></tr>
+    <tr><td>RA</td><td>Risk Assessment</td><td>7</td></tr>
+    <tr><td>SA</td><td>System and Services Acquisition</td><td>15</td></tr>
+    <tr><td>SC</td><td>System and Communications Protection</td><td>4</td></tr>
+    <tr><td>SI</td><td>System and Information Integrity</td><td>1</td></tr>
+    <tr><td>SR</td><td>Supply Chain Risk Management</td><td>10</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">ISO 27001:2022 &mdash; All 4 Themes</h2>
+
+<table>
+  <thead><tr><th>Theme</th><th>Name</th><th>Controls</th><th>Policies</th></tr></thead>
+  <tbody>
+    <tr><td>A.5</td><td>Organizational Controls</td><td>37 (A.5.1&ndash;A.5.37)</td><td>37</td></tr>
+    <tr><td>A.6</td><td>People Controls</td><td>8 (A.6.1&ndash;A.6.8)</td><td>8</td></tr>
+    <tr><td>A.7</td><td>Physical Controls</td><td>14 (A.7.1&ndash;A.7.14)</td><td>14</td></tr>
+    <tr><td>A.8</td><td>Technological Controls</td><td>34 (A.8.1&ndash;A.8.34)</td><td>34</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">SOC 2 &mdash; All 13 Categories</h2>
+
+<table>
+  <thead><tr><th>Category</th><th>Name</th><th>Policy File</th></tr></thead>
+  <tbody>
+    <tr><td>CC1</td><td>Control Environment</td><td><code class="inline">cc1_control_environment.rego</code></td></tr>
+    <tr><td>CC2</td><td>Communication and Information</td><td><code class="inline">cc2_communication_information.rego</code></td></tr>
+    <tr><td>CC3</td><td>Risk Assessment</td><td><code class="inline">cc3_risk_assessment.rego</code></td></tr>
+    <tr><td>CC4</td><td>Monitoring Activities</td><td><code class="inline">cc4_monitoring_activities.rego</code></td></tr>
+    <tr><td>CC5</td><td>Control Activities</td><td><code class="inline">cc5_control_activities.rego</code></td></tr>
+    <tr><td>CC6</td><td>Logical and Physical Access</td><td><code class="inline">cc6_logical_access.rego</code></td></tr>
+    <tr><td>CC7</td><td>System Operations</td><td><code class="inline">cc7_system_operations.rego</code></td></tr>
+    <tr><td>CC8</td><td>Change Management</td><td><code class="inline">cc8_change_management.rego</code></td></tr>
+    <tr><td>CC9</td><td>Risk Mitigation</td><td><code class="inline">cc9_risk_mitigation.rego</code></td></tr>
+    <tr><td>A1</td><td>Availability</td><td><code class="inline">a1_availability.rego</code></td></tr>
+    <tr><td>C1</td><td>Confidentiality</td><td><code class="inline">c1_confidentiality.rego</code></td></tr>
+    <tr><td>PI1</td><td>Processing Integrity</td><td><code class="inline">pi1_processing_integrity.rego</code></td></tr>
+    <tr><td>P1</td><td>Privacy</td><td><code class="inline">p1_privacy.rego</code></td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Framework Crosswalks</h2>
+<p>The <code class="inline">crosswalks.yaml</code> file contains <strong>521 control mappings</strong> across five crosswalk sections. This lets you assess against one framework and automatically map results to the others:</p>
+<ul>
+  <li>NIST 800-53 &rarr; SOC 2</li>
+  <li>NIST 800-53 &rarr; ISO 27001</li>
+  <li>NIST 800-53 &rarr; HIPAA</li>
+  <li>SOC 2 &rarr; ISO 27001</li>
+  <li>ISO 27001 &rarr; NIST 800-53</li>
+</ul>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 6. API REFERENCE -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s6">6. API Reference</h1>
+
+<p>All endpoints live under <code class="inline">/api/v1/</code>. They return JSON and require authentication unless noted otherwise.</p>
+
+<h2 class="sub" id="s6-1">Authentication</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/auth/register</code></td><td>Create a new user account</td><td>None</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/auth/login</code></td><td>Log in and receive a JWT token</td><td>None</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/auth/me</code></td><td>Get the current user&rsquo;s profile</td><td>JWT</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/auth/logout</code></td><td>Log out (invalidate client-side)</td><td>JWT</td></tr>
+  </tbody>
+</table>
+<p>Include the token as: <code class="inline">Authorization: Bearer &lt;token&gt;</code>. Tokens expire after 8 hours.</p>
+
+<h2 class="sub">Dashboard</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/dashboard/summary</code></td><td>Real-time compliance posture: framework status, violations, vendor risk, integrations, recent activity</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Evidence Collection</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/evidence/collect</code></td><td>Trigger cloud evidence collection (returns 202 Accepted)</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/evidence/</code></td><td>List evidence records with filtering and pagination</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/evidence/{id}</code></td><td>Get a single evidence record with raw API data</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/evidence/{id}/verify</code></td><td>Verify evidence integrity via SHA-256 hash</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Assessments</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/assessments/run</code></td><td>Start a compliance assessment (returns 202 Accepted)</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/assessments/runs</code></td><td>List all assessment runs with status and pass rates</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/assessments/runs/{id}</code></td><td>Get details for a specific assessment run</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/assessments/runs/{id}/results</code></td><td>Get all check results for a run</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/assessments/remediation/{control_id}</code></td><td>Get remediation guidance for a specific control</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/assessments/trend</code></td><td>Compliance score trend data over time</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Risk Analysis</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/risk/simulate</code></td><td>Run Monte Carlo simulation for a single threat scenario</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/risk/portfolio</code></td><td>Aggregate risk across multiple scenarios</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/risk/treatments</code></td><td>Compare cost-effectiveness of risk treatments</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/risk/scenarios</code></td><td>List predefined threat scenarios</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Frameworks</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/frameworks/</code></td><td>List all supported frameworks</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/frameworks/{id}</code></td><td>Get framework details with control families</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/frameworks/{id}/controls</code></td><td>Get all controls in a specific framework</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/frameworks/crosswalk</code></td><td>Map a control to equivalents in other frameworks</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Vendors</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/vendors/</code></td><td>Add a new vendor</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/vendors/</code></td><td>List vendors with pagination</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/vendors/dashboard</code></td><td>Vendor risk dashboard with distribution chart</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/vendors/needing-assessment</code></td><td>Vendors overdue for their next assessment</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/vendors/{id}</code></td><td>Get a specific vendor&rsquo;s details</td></tr>
+    <tr><td><code class="inline">PUT</code></td><td><code class="inline">/api/v1/vendors/{id}</code></td><td>Update vendor (allowlisted fields only)</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Policies (OPA)</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/policies/evaluate</code></td><td>Evaluate a resource against OPA policies</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/policies/violations</code></td><td>List open violations with severity filtering</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/policies/violations/{id}/resolve</code></td><td>Mark a violation as resolved</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/policies/bundles</code></td><td>List available policy bundles</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Additional Routers</h2>
+<table>
+  <thead><tr><th>Router</th><th>Prefix</th><th>What It Does</th></tr></thead>
+  <tbody>
+    <tr><td>Integrations</td><td><code class="inline">/api/v1/integrations</code></td><td>Browse 35-tool catalog, connect, sync, and disconnect tools</td></tr>
+    <tr><td>Exports</td><td><code class="inline">/api/v1/exports</code></td><td>Download POA&amp;M documents, executive summaries, audit packages</td></tr>
+    <tr><td>Tool Config</td><td><code class="inline">/api/v1/tool-config</code></td><td>Configure credentials for connected security tools</td></tr>
+    <tr><td>Data Silos</td><td><code class="inline">/api/v1/data-silos</code></td><td>Scan S3, GitHub, SharePoint for PII/PHI/credentials</td></tr>
+    <tr><td>Trust Portal</td><td><code class="inline">/api/v1/trust</code></td><td>Public compliance transparency page (no auth)</td></tr>
+    <tr><td>Settings</td><td><code class="inline">/api/v1/settings</code></td><td>Organization settings, notifications, API key management</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 7. DATABASE -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s7">7. Database Schema</h1>
+
+<p>The app uses SQLAlchemy 2.0 with 10 tables. All primary keys are UUIDs (stored as strings for SQLite/PostgreSQL portability). Tables are created automatically on startup via <code class="inline">init_db()</code>.</p>
+
+<table>
+  <thead><tr><th>Table</th><th>What It Stores</th><th>Key Fields</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">users</code></td><td>Login accounts</td><td>email (unique), hashed_password, role</td></tr>
+    <tr><td><code class="inline">audit_logs</code></td><td>Every data modification</td><td>actor, action, resource_type, changes (JSON)</td></tr>
+    <tr><td><code class="inline">evidence_records</code></td><td>Collected cloud evidence</td><td>control_id, provider, data (JSON), sha256_hash</td></tr>
+    <tr><td><code class="inline">assessment_runs</code></td><td>Assessment executions</td><td>framework, status, pass_rate, summary (JSON)</td></tr>
+    <tr><td><code class="inline">assessment_results</code></td><td>Individual check results</td><td>run_id (FK), control_id, status, findings (JSON)</td></tr>
+    <tr><td><code class="inline">framework_definitions</code></td><td>Framework metadata</td><td>key, version, control_count, data (JSON)</td></tr>
+    <tr><td><code class="inline">vendor_records</code></td><td>Vendor risk tracking</td><td>risk_score, risk_level, certifications (JSON)</td></tr>
+    <tr><td><code class="inline">policy_violations</code></td><td>OPA policy violations</td><td>policy_id, severity, status (open/resolved)</td></tr>
+    <tr><td><code class="inline">asset_records</code></td><td>Cloud resource inventory</td><td>provider, service, resource_type, tags (JSON)</td></tr>
+    <tr><td><code class="inline">data_sources</code></td><td>Connected data source registry</td><td>name, type, connection_status, last_sync</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Key Indexes</h2>
+<ul>
+  <li><code class="inline">evidence_records</code>: control_id, provider, account_id, collected_at</li>
+  <li><code class="inline">assessment_results</code>: run_id, control_id, status</li>
+  <li><code class="inline">users</code>: email (unique index)</li>
+  <li><code class="inline">policy_violations</code>: policy_id, status</li>
+</ul>
+
+<h2 class="sub">Key Relationships</h2>
+<ul>
+  <li><code class="inline">assessment_results.run_id</code> references <code class="inline">assessment_runs.id</code> (cascade delete)</li>
+  <li>Evidence records are linked to assessment results via <code class="inline">evidence_ids</code> JSON array</li>
+  <li>Audit logs reference any resource via <code class="inline">resource_type</code> + <code class="inline">resource_id</code> polymorphism</li>
+</ul>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 8. FRONTEND -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s8">8. Frontend Dashboard</h1>
+
+<p>The frontend is a React single-page application built with TypeScript, Tailwind CSS, and Recharts. FastAPI serves the built assets as static files &mdash; no separate frontend server needed in production.</p>
+
+<h2 class="sub">Pages</h2>
+<table>
+  <thead><tr><th>Route</th><th>Page</th><th>What It Shows</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">/</code></td><td>Landing</td><td>Public marketing page with feature overview</td></tr>
+    <tr><td><code class="inline">/login</code></td><td>Login</td><td>Email + password authentication</td></tr>
+    <tr><td><code class="inline">/register</code></td><td>Register</td><td>New user sign-up</td></tr>
+    <tr><td><code class="inline">/dashboard</code></td><td>Dashboard</td><td>Real-time compliance posture with charts and trends</td></tr>
+    <tr><td><code class="inline">/frameworks</code></td><td>Frameworks</td><td>Browse control families and crosswalk explorer</td></tr>
+    <tr><td><code class="inline">/assessments</code></td><td>Assessments</td><td>Run assessments, view results, compliance trends</td></tr>
+    <tr><td><code class="inline">/evidence</code></td><td>Evidence</td><td>Browse and verify collected evidence records</td></tr>
+    <tr><td><code class="inline">/risk</code></td><td>Risk</td><td>Monte Carlo simulations and portfolio analysis</td></tr>
+    <tr><td><code class="inline">/vendors</code></td><td>Vendors</td><td>Vendor inventory, risk scoring, certifications</td></tr>
+    <tr><td><code class="inline">/integrations</code></td><td>Integrations</td><td>Connect and configure 35+ security tools</td></tr>
+    <tr><td><code class="inline">/poam</code></td><td>POA&amp;M</td><td>Plan of Action and Milestones tracking</td></tr>
+    <tr><td><code class="inline">/data-silos</code></td><td>Data Silos</td><td>Data discovery and classification results</td></tr>
+    <tr><td><code class="inline">/trust</code></td><td>Trust Portal</td><td>Public compliance transparency page</td></tr>
+    <tr><td><code class="inline">/settings</code></td><td>Settings</td><td>Organization config, notifications, API keys</td></tr>
+    <tr><td><code class="inline">/tool-config</code></td><td>Tool Config</td><td>Credential management for integrations</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Building the Frontend</h2>
+<div class="codeblock"><code><span class="cmd">$</span> cd frontend
+<span class="cmd">$</span> npm install
+<span class="cmd">$</span> npm run dev          <span class="comment"># Dev server with hot-reload on port 5173</span>
+<span class="cmd">$</span> npm run build        <span class="comment"># Production build → outputs to ../static/</span></code></div>
+<p>After building, restart the FastAPI server and the new frontend is live at the root URL.</p>
+
+<h2 class="sub">Frontend Architecture</h2>
+<ul>
+  <li><strong>React Router v6</strong> &mdash; Client-side routing with protected route wrappers</li>
+  <li><strong>TanStack Query</strong> &mdash; Server state management with automatic caching</li>
+  <li><strong>AuthContext</strong> &mdash; JWT token management via React Context + localStorage</li>
+  <li><strong>Tailwind CSS</strong> &mdash; Utility-first styling with consistent design system</li>
+  <li><strong>Recharts</strong> &mdash; Data visualization for trends and risk analysis</li>
+</ul>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 9. DOCKER DEPLOYMENT -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s9">9. Docker Deployment</h1>
+
+<p>For production, use Docker Compose to run the full stack: API, PostgreSQL, OPA, and Redis.</p>
+
+<h2 class="sub">Services</h2>
+<table>
+  <thead><tr><th>Service</th><th>Image</th><th>Exposed Port</th><th>Health Check</th></tr></thead>
+  <tbody>
+    <tr><td><strong>api</strong></td><td>Built from Dockerfile</td><td>127.0.0.1:8000</td><td>GET /health</td></tr>
+    <tr><td><strong>db</strong></td><td>postgres:16.2-alpine</td><td>Internal only</td><td>pg_isready</td></tr>
+    <tr><td><strong>opa</strong></td><td>openpolicyagent/opa:0.62.1</td><td>Internal only</td><td>GET /health</td></tr>
+    <tr><td><strong>redis</strong></td><td>redis:7.2-alpine</td><td>Internal only</td><td>redis-cli ping</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Step 1 &mdash; Create environment file</h2>
+<div class="codeblock"><code><span class="cmd">$</span> cp .env.example .env</code></div>
+
+<h2 class="sub">Step 2 &mdash; Generate secure credentials</h2>
+<div class="codeblock"><code><span class="comment"># Generate a strong database password</span>
+<span class="cmd">$</span> python3 <span class="flag">-c</span> <span class="string">"import secrets; print(secrets.token_urlsafe(24))"</span>
+
+<span class="comment"># Generate API key for programmatic access</span>
+<span class="cmd">$</span> python3 <span class="flag">-c</span> <span class="string">"import secrets; print(secrets.token_urlsafe(32))"</span>
+
+<span class="comment"># Generate JWT signing key</span>
+<span class="cmd">$</span> python3 <span class="flag">-c</span> <span class="string">"import secrets; print(secrets.token_urlsafe(64))"</span></code></div>
+<p>Copy the generated values into your <code class="inline">.env</code> file.</p>
+
+<h2 class="sub">Step 3 &mdash; Launch the stack</h2>
+<div class="codeblock"><code><span class="cmd">$</span> docker compose up <span class="flag">-d</span>
+<span class="cmd">$</span> docker compose ps              <span class="comment"># Verify all services are healthy</span>
+<span class="cmd">$</span> docker compose logs <span class="flag">-f</span> api      <span class="comment"># Tail API logs</span></code></div>
+
+<h2 class="sub">Step 4 &mdash; Seed demo data (optional)</h2>
+<div class="codeblock"><code><span class="cmd">$</span> docker compose exec api python <span class="flag">-m</span> scripts.seed_demo_data</code></div>
+
+<div class="callout">
+  <div class="callout-title">Container Security Features</div>
+  <ul>
+    <li>Non-root user (<code class="inline">grcuser</code>) inside all containers</li>
+    <li>Read-only filesystem with <code class="inline">/tmp</code> tmpfs</li>
+    <li>Database, OPA, and Redis not exposed to host network</li>
+    <li>API bound to 127.0.0.1 only (use a reverse proxy for external access)</li>
+    <li>Pinned image digests for supply chain security</li>
+    <li>Health checks on all services with automatic restart</li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 10. PRODUCTION -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s10">10. Production Configuration</h1>
+
+<h2 class="sub" id="s10-1">Reverse Proxy</h2>
+<p>The API binds to localhost:8000 and should <strong>never</strong> be directly exposed to the internet. Put a reverse proxy in front of it.</p>
+
+<h3 class="sub">Nginx Configuration</h3>
+<div class="codeblock"><code>server {
+    listen 443 ssl http2;
+    server_name grc.example.com;
+
+    ssl_certificate     /etc/ssl/certs/grc.crt;
+    ssl_certificate_key /etc/ssl/private/grc.key;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></div>
+
+<h2 class="sub">Environment Variables</h2>
+<table>
+  <thead><tr><th>Variable</th><th>Required</th><th>Default</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">GRC_DATABASE_URL</code></td><td>Yes</td><td>sqlite:///grc_toolkit.db</td><td>PostgreSQL connection string with sslmode=require</td></tr>
+    <tr><td><code class="inline">GRC_SECRET_KEY</code></td><td>Yes</td><td>dev-secret</td><td>JWT signing key (64+ random chars in production)</td></tr>
+    <tr><td><code class="inline">GRC_API_KEYS</code></td><td>Production</td><td><em>(empty)</em></td><td>Comma-separated API keys</td></tr>
+    <tr><td><code class="inline">GRC_OPA_URL</code></td><td>No</td><td>http://opa:8181</td><td>OPA server address</td></tr>
+    <tr><td><code class="inline">GRC_CORS_ORIGINS</code></td><td>No</td><td>*</td><td>Allowed CORS origins</td></tr>
+    <tr><td><code class="inline">GRC_RATE_LIMIT_RPM</code></td><td>No</td><td>120</td><td>Requests per minute per client IP</td></tr>
+    <tr><td><code class="inline">GRC_RATE_LIMIT_BURST</code></td><td>No</td><td>20</td><td>Burst request capacity</td></tr>
+    <tr><td><code class="inline">GRC_ENABLE_DOCS</code></td><td>No</td><td>false</td><td>Enable Swagger UI at /docs</td></tr>
+    <tr><td><code class="inline">POSTGRES_PASSWORD</code></td><td>Docker</td><td>&mdash;</td><td>PostgreSQL password</td></tr>
+    <tr><td><code class="inline">REDIS_PASSWORD</code></td><td>Docker</td><td>&mdash;</td><td>Redis AUTH password</td></tr>
+    <tr><td><code class="inline">GRC_SLACK_WEBHOOK_URL</code></td><td>No</td><td>&mdash;</td><td>Slack notification webhook URL</td></tr>
+    <tr><td><code class="inline">GRC_SMTP_SERVER</code></td><td>No</td><td>&mdash;</td><td>SMTP server for email alerts</td></tr>
+    <tr><td><code class="inline">GRC_SMTP_PORT</code></td><td>No</td><td>587</td><td>SMTP port</td></tr>
+    <tr><td><code class="inline">GRC_SMTP_SENDER</code></td><td>No</td><td>&mdash;</td><td>From address for alert emails</td></tr>
+  </tbody>
+</table>
+
+<div class="warning">
+  <div class="callout-title">Production Checklist</div>
+  <ul>
+    <li>Set <code class="inline">GRC_API_KEYS</code> with strong, randomly-generated API keys</li>
+    <li>Set <code class="inline">GRC_SECRET_KEY</code> to a cryptographically random value (64+ characters)</li>
+    <li>Set <code class="inline">GRC_ENABLE_DOCS=false</code> to disable Swagger UI</li>
+    <li>Set <code class="inline">GRC_CORS_ORIGINS</code> to your specific domain(s), not <code class="inline">*</code></li>
+    <li>Use PostgreSQL with SSL (<code class="inline">sslmode=require</code>), never SQLite in production</li>
+    <li>Place behind a TLS-terminating reverse proxy (Nginx, Caddy, or cloud ALB)</li>
+    <li>Configure log aggregation (CloudWatch, Datadog, ELK Stack)</li>
+    <li>Set up automated daily database backups with tested restore procedures</li>
+    <li>Enable cloud provider credential rotation</li>
+    <li>Configure Slack or email notifications for critical findings</li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 11. SECURITY -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s11">11. Security Architecture</h1>
+
+<h2 class="sub">Authentication Methods</h2>
+<table>
+  <thead><tr><th>Method</th><th>Used For</th><th>How It Works</th></tr></thead>
+  <tbody>
+    <tr><td><strong>JWT Bearer Token</strong></td><td>Dashboard UI, user sessions</td><td>HS256 signed, 8-hour expiry, bcrypt password hashing</td></tr>
+    <tr><td><strong>API Key</strong></td><td>Scripts, service-to-service calls</td><td>X-API-Key header, constant-time comparison, env-based</td></tr>
+    <tr><td><strong>OAuth2 Password</strong></td><td>Login endpoint</td><td>Validates credentials, returns JWT token</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Security Headers</h2>
+<p>Every response includes these protective headers automatically:</p>
+<table>
+  <thead><tr><th>Header</th><th>Value</th><th>What It Prevents</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">X-Content-Type-Options</code></td><td>nosniff</td><td>MIME-type confusion attacks</td></tr>
+    <tr><td><code class="inline">X-Frame-Options</code></td><td>DENY</td><td>Clickjacking</td></tr>
+    <tr><td><code class="inline">X-XSS-Protection</code></td><td>1; mode=block</td><td>Cross-site scripting</td></tr>
+    <tr><td><code class="inline">Strict-Transport-Security</code></td><td>max-age=31536000</td><td>HTTP downgrade attacks</td></tr>
+    <tr><td><code class="inline">Permissions-Policy</code></td><td>geolocation=(), camera=()</td><td>Unwanted browser API access</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Rate Limiting</h2>
+<ul>
+  <li><strong>Algorithm:</strong> Token bucket, per-IP tracking</li>
+  <li><strong>Default:</strong> 120 requests/min, 20 burst capacity</li>
+  <li><strong>Exceeded:</strong> Returns HTTP 429 with <code class="inline">Retry-After</code> header</li>
+  <li><strong>Performance:</strong> O(1) per request, no database queries (in-memory)</li>
+</ul>
+
+<h2 class="sub">Input Validation</h2>
+<ul>
+  <li>All request payloads validated via Pydantic v2 schemas with type coercion</li>
+  <li>Enum fields restricted to known-good value sets</li>
+  <li>Vendor updates use a field allowlist to prevent mass assignment</li>
+  <li>SQLAlchemy ORM prevents SQL injection via parameterized queries</li>
+</ul>
+
+<h2 class="sub">Audit Trail</h2>
+<ul>
+  <li>Every request logged: timestamp, request ID, method, path, client IP, status, duration</li>
+  <li>Sensitive headers (Authorization, API keys, cookies) redacted automatically</li>
+  <li>Database changes tracked in <code class="inline">audit_logs</code> table with before/after JSON snapshots</li>
+  <li>All responses include <code class="inline">X-Request-Id</code> for traceability</li>
+</ul>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 12. OPA -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s12">12. Policy-as-Code (OPA)</h1>
+
+<p>The toolkit uses Open Policy Agent to continuously evaluate your infrastructure against compliance rules written in Rego. With 251 policy files, every control across all three major frameworks has enforcement coverage.</p>
+
+<h2 class="sub">How It Works</h2>
+<ol>
+  <li>Client sends resource data to <code class="inline">POST /api/v1/policies/evaluate</code></li>
+  <li>API forwards the data to OPA at <code class="inline">http://opa:8181</code></li>
+  <li>OPA evaluates the matching Rego policies against the resource data</li>
+  <li>Violations are returned and stored in the <code class="inline">policy_violations</code> table</li>
+  <li>Unresolved violations appear on the dashboard and trigger Slack/email alerts</li>
+</ol>
+
+<h2 class="sub">Policy Organization</h2>
+<div class="codeblock"><code>policies/
+├── nist-800-53/                 <span class="comment"># 142 policies across 20 families</span>
+│   ├── ac/                      <span class="comment"># Access Control</span>
+│   ├── at/                      <span class="comment"># Awareness and Training</span>
+│   ├── au/                      <span class="comment"># Audit and Accountability</span>
+│   ├── ca/                      <span class="comment"># Security Assessment</span>
+│   ├── cm/                      <span class="comment"># Configuration Management</span>
+│   ├── cp/                      <span class="comment"># Contingency Planning</span>
+│   ├── ia/                      <span class="comment"># Identification & Auth</span>
+│   ├── ir/                      <span class="comment"># Incident Response</span>
+│   ├── ma/  mp/  pe/  pl/      <span class="comment"># Maintenance, Media, Physical, Planning</span>
+│   ├── pm/  ps/  pt/           <span class="comment"># Program Mgmt, Personnel, PII</span>
+│   ├── ra/  sa/  sc/  si/  sr/ <span class="comment"># Risk, Acquisition, Comms, Integrity, Supply Chain</span>
+├── iso-27001/                   <span class="comment"># 93 policies across 4 themes</span>
+│   ├── a5/                      <span class="comment"># Organizational (37 policies)</span>
+│   ├── a6/                      <span class="comment"># People (8 policies)</span>
+│   ├── a7/                      <span class="comment"># Physical (14 policies)</span>
+│   └── a8/                      <span class="comment"># Technological (34 policies)</span>
+├── soc2/                        <span class="comment"># 13 policies (all categories)</span>
+└── terraform/                   <span class="comment"># 3 cloud baseline policies</span></code></div>
+
+<h2 class="sub">Terraform Policy Validation</h2>
+<p>Validate Terraform plans against compliance policies before applying:</p>
+<div class="codeblock"><code><span class="cmd">$</span> terraform plan <span class="flag">-out</span>=plan.tfplan
+<span class="cmd">$</span> terraform show <span class="flag">-json</span> plan.tfplan > plan.json
+<span class="cmd">$</span> conftest test plan.json <span class="flag">-p</span> policies/terraform/</code></div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 13. INTEGRATIONS -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s13">13. Integrations</h1>
+
+<p>The toolkit connects to 35+ security tools across 9 categories. Each integration maps to the compliance controls it helps satisfy.</p>
+
+<table>
+  <thead><tr><th>Category</th><th>Tools</th><th>Controls</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Cloud Providers</strong></td><td>AWS, Azure, GCP, Prisma Cloud</td><td>AC, AU, CM, SC, SI</td></tr>
+    <tr><td><strong>EDR / Endpoints</strong></td><td>CrowdStrike, Defender, SentinelOne</td><td>SI-3, SI-4, IR-4</td></tr>
+    <tr><td><strong>Identity &amp; Access</strong></td><td>Okta, Entra ID, CyberArk, SailPoint</td><td>AC-2, AC-6, IA-2, IA-5</td></tr>
+    <tr><td><strong>Vulnerability Scanners</strong></td><td>Tenable, Qualys, Rapid7, Wiz</td><td>RA-5, SI-2, CM-6</td></tr>
+    <tr><td><strong>SIEM / Monitoring</strong></td><td>Sentinel, Splunk, Elastic, Datadog</td><td>AU-6, SI-4, IR-4, IR-6</td></tr>
+    <tr><td><strong>DevSecOps</strong></td><td>GitHub, GitLab, Snyk</td><td>SA-11, CM-3, SI-2</td></tr>
+    <tr><td><strong>GRC Platforms</strong></td><td>ServiceNow, Drata, Vanta</td><td>CA-2, CA-7, PM-9</td></tr>
+    <tr><td><strong>Alerting</strong></td><td>PagerDuty, Slack, Jira</td><td>IR-4, IR-6, IR-7</td></tr>
+    <tr><td><strong>AI / LLM</strong></td><td>OpenAI, Anthropic, Gemini, Ollama</td><td>Custom analysis</td></tr>
+  </tbody>
+</table>
+
+<p>Configure credentials through the <strong>Tool Config</strong> page in the dashboard or via the <code class="inline">/api/v1/tool-config</code> API. For production, consider injecting credentials via a secrets manager (AWS Secrets Manager, HashiCorp Vault, Azure Key Vault).</p>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 14. TERRAFORM -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s14">14. Cloud Infrastructure (Terraform)</h1>
+
+<p>These Terraform modules deploy compliance-enforcing infrastructure baselines that the toolkit then monitors.</p>
+
+<h2 class="sub">AWS Modules</h2>
+<table>
+  <thead><tr><th>Module</th><th>What It Creates</th><th>Controls</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">secure-account-baseline</code></td><td>CloudTrail, GuardDuty, Security Hub, SNS alerts</td><td>AU-2, AU-3, AU-6, SI-4, IR-6</td></tr>
+    <tr><td><code class="inline">compliant-vpc</code></td><td>VPC, subnets, flow logs, NAT, default-deny SGs</td><td>SC-7, AC-4, AU-2, SC-8</td></tr>
+    <tr><td><code class="inline">iam-baseline</code></td><td>Auditor role, root account alerts, MFA enforcement</td><td>AC-2, AC-6, IA-2, IA-5</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Azure &amp; GCP Modules</h2>
+<table>
+  <thead><tr><th>Module</th><th>What It Creates</th><th>Controls</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">azure/secure-subscription-baseline</code></td><td>Log Analytics, Activity Log diagnostics, storage encryption</td><td>AU-2, AU-3, SC-28</td></tr>
+    <tr><td><code class="inline">gcp/secure-project-baseline</code></td><td>Audit log sink, org policy constraints, OS login</td><td>AU-2, AC-2, CM-6</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Usage</h2>
+<div class="codeblock"><code><span class="cmd">$</span> cd terraform/modules/aws/secure-account-baseline
+<span class="cmd">$</span> terraform init
+<span class="cmd">$</span> terraform plan <span class="flag">-out</span>=plan.tfplan
+<span class="cmd">$</span> terraform apply plan.tfplan</code></div>
+<p>Review <code class="inline">variables.tf</code> in each module to customize regions, notification emails, and retention periods.</p>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 15. CI/CD -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s15">15. CI/CD Pipeline</h1>
+
+<p>GitHub Actions runs these quality gates on every push and pull request. All must pass before merging.</p>
+
+<table>
+  <thead><tr><th>Check</th><th>Tool</th><th>Gate Criteria</th></tr></thead>
+  <tbody>
+    <tr><td>Linting</td><td><code class="inline">ruff check</code></td><td>Zero violations</td></tr>
+    <tr><td>Type checking</td><td><code class="inline">mypy</code></td><td>No type errors</td></tr>
+    <tr><td>Unit tests</td><td><code class="inline">pytest</code> + coverage</td><td>All pass, &ge;60% coverage</td></tr>
+    <tr><td>Security analysis</td><td><code class="inline">bandit</code> (SAST)</td><td>No high/critical findings</td></tr>
+    <tr><td>Dependency audit</td><td><code class="inline">pip-audit</code></td><td>No known CVEs</td></tr>
+    <tr><td>Container scan</td><td><code class="inline">trivy</code></td><td>No critical vulnerabilities</td></tr>
+    <tr><td>Secret detection</td><td><code class="inline">gitleaks</code></td><td>No leaked credentials</td></tr>
+    <tr><td>Policy tests</td><td><code class="inline">opa test -v</code></td><td>All Rego tests pass</td></tr>
+    <tr><td>Policy formatting</td><td><code class="inline">opa fmt --diff</code></td><td>Consistent formatting</td></tr>
+    <tr><td>Terraform validation</td><td><code class="inline">terraform validate</code></td><td>Valid HCL syntax</td></tr>
+    <tr><td>Terraform compliance</td><td><code class="inline">conftest verify</code></td><td>Plans pass policies</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <div class="callout-title">Compliance Gate</div>
+  <p>A separate <code class="inline">compliance-gate.yaml</code> workflow blocks PRs that modify <code class="inline">terraform/</code> or <code class="inline">policies/</code> directories until all security checks pass <strong>and</strong> a policy review approval is obtained.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 16. OPERATIONS -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s16">16. Operations &amp; Maintenance</h1>
+
+<h2 class="sub">Health Monitoring</h2>
+<div class="codeblock"><code><span class="cmd">$</span> curl http://localhost:8000/health
+<span class="string">{"status": "healthy"}</span></code></div>
+<p>Use this endpoint for load balancer health checks and uptime monitoring.</p>
+
+<h2 class="sub">Database Backups</h2>
+<div class="codeblock"><code><span class="comment"># Create a backup</span>
+<span class="cmd">$</span> docker compose exec db pg_dump <span class="flag">-U</span> grc grc_toolkit > backup_$(date +%Y%m%d).sql
+
+<span class="comment"># Restore from backup</span>
+<span class="cmd">$</span> docker compose exec <span class="flag">-T</span> db psql <span class="flag">-U</span> grc grc_toolkit < backup_20260314.sql</code></div>
+
+<h2 class="sub">Scaling</h2>
+<ul>
+  <li><strong>Horizontal:</strong> Run multiple API containers behind a load balancer. The app is stateless (JWT + database).</li>
+  <li><strong>Database:</strong> Use managed PostgreSQL (RDS, Cloud SQL) with read replicas for dashboard queries.</li>
+  <li><strong>Workers:</strong> Scale Celery workers independently for evidence collection and assessment jobs.</li>
+  <li><strong>Storage:</strong> Configure S3/GCS/Azure Blob for evidence files in large deployments.</li>
+</ul>
+
+<h2 class="sub">CLI Scripts</h2>
+<table>
+  <thead><tr><th>Script</th><th>What It Does</th><th>Command</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">seed_demo_data.py</code></td><td>Load demo data</td><td><code class="inline">python -m scripts.seed_demo_data</code></td></tr>
+    <tr><td><code class="inline">run_assessment.py</code></td><td>Run an assessment</td><td><code class="inline">python scripts/run_assessment.py --framework nist_800_53</code></td></tr>
+    <tr><td><code class="inline">run_collection.py</code></td><td>Collect evidence</td><td><code class="inline">python scripts/run_collection.py --provider aws</code></td></tr>
+    <tr><td><code class="inline">run_risk_analysis.py</code></td><td>Monte Carlo sim</td><td><code class="inline">python scripts/run_risk_analysis.py --scenarios data_breach</code></td></tr>
+    <tr><td><code class="inline">generate_demo_exports.py</code></td><td>Sample reports</td><td><code class="inline">python scripts/generate_demo_exports.py</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <div class="callout-title">Important</div>
+  <p>Always run scripts from the project root directory with the virtual environment activated, or use <code class="inline">python -m scripts.&lt;name&gt;</code> syntax.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 17. TROUBLESHOOTING -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s17">17. Troubleshooting</h1>
+
+<table>
+  <thead><tr><th>Problem</th><th>Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">ModuleNotFoundError: api</code></td><td>Running from wrong directory</td><td><code class="inline">cd</code> to project root, use <code class="inline">python -m scripts.&lt;name&gt;</code></td></tr>
+    <tr><td><code class="inline">.venv/bin/python: no such file</code></td><td>Not in the project directory</td><td><code class="inline">cd /path/to/grc-toolkit</code> first</td></tr>
+    <tr><td>Connection refused on :8000</td><td>Server not running</td><td><code class="inline">uvicorn api.main:app --reload</code></td></tr>
+    <tr><td>401 Unauthorized</td><td>Expired or missing JWT</td><td>Log in again at <code class="inline">/api/v1/auth/login</code></td></tr>
+    <tr><td>OPA connection failed</td><td>OPA container not running</td><td><code class="inline">docker compose up -d opa</code></td></tr>
+    <tr><td>Database locked (SQLite)</td><td>Multiple writers</td><td>Switch to PostgreSQL</td></tr>
+    <tr><td><code class="inline">bcrypt</code> import error</td><td>Missing dependency</td><td><code class="inline">pip install passlib[bcrypt]</code></td></tr>
+    <tr><td>Tests fail on Python 3.9</td><td>Uses <code class="inline">datetime.UTC</code></td><td>Upgrade to Python 3.11+</td></tr>
+    <tr><td>Wrong demo credentials</td><td>Seed data not loaded</td><td><code class="inline">python -m scripts.seed_demo_data</code></td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Debug Mode</h2>
+<p>Enable verbose logging and the interactive API explorer:</p>
+<div class="codeblock"><code><span class="cmd">$</span> GRC_ENABLE_DOCS=true uvicorn api.main:app <span class="flag">--reload</span> <span class="flag">--log-level</span> debug
+
+<span class="comment"># Then open http://localhost:8000/docs for the Swagger UI</span></code></div>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 18. EXTENDING -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section" id="s18">18. Extending the Toolkit</h1>
+
+<h2 class="sub">Add a New Control Assertion</h2>
+<ol>
+  <li>Define the check in <code class="inline">config/frameworks.yaml</code> under the appropriate control</li>
+  <li>Write the assertion function in <code class="inline">modules/control_assessor.py</code></li>
+  <li>Create a Rego policy in <code class="inline">policies/&lt;framework&gt;/&lt;family&gt;/</code></li>
+  <li>Add test coverage in <code class="inline">tests/</code></li>
+</ol>
+
+<h2 class="sub">Add a New Connector</h2>
+<ol>
+  <li>Subclass <code class="inline">BaseConnector</code> in <code class="inline">modules/connectors/</code></li>
+  <li>Implement <code class="inline">validate_config()</code>, <code class="inline">collect()</code>, and <code class="inline">health_check()</code></li>
+  <li>Register with <code class="inline">ConnectorRegistry</code></li>
+  <li>Add credential fields to <code class="inline">api/routers/tool_config.py</code></li>
+</ol>
+
+<h2 class="sub">Add a New API Router</h2>
+<ol>
+  <li>Create the router file in <code class="inline">api/routers/&lt;name&gt;.py</code></li>
+  <li>Import and register in <code class="inline">api/main.py</code> with <code class="inline">app.include_router()</code></li>
+  <li>Add Pydantic schemas in <code class="inline">api/schemas.py</code></li>
+  <li>Add route tests in <code class="inline">tests/test_api.py</code></li>
+</ol>
+
+<h2 class="sub">Add a New Framework</h2>
+<ol>
+  <li>Create <code class="inline">config/&lt;framework_key&gt;.yaml</code> with control definitions</li>
+  <li>Add crosswalk entries to <code class="inline">config/crosswalks.yaml</code></li>
+  <li>Create Rego policies in <code class="inline">policies/&lt;framework&gt;/</code></li>
+  <li>Add assertions in <code class="inline">modules/control_assessor.py</code></li>
+  <li>Add test coverage</li>
+</ol>
+
+<br><br>
+<hr style="border: none; border-top: 1px solid var(--gray-200); margin: 32px 0;">
+<p style="text-align: center; color: var(--slate-light); font-size: 10pt; font-style: italic;">End of Document &mdash; GRC Toolkit v0.3.0 &mdash; March 2026</p>
+
+</body>
+</html>
