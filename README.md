@@ -1,16 +1,16 @@
 # GRC Toolkit
 
-An end-to-end Governance, Risk, and Compliance engineering platform. Multi-cloud evidence collection, policy-as-code enforcement, quantitative risk analysis, framework crosswalks, and a connector framework for multi-source telemetry -- all exposed through a secured REST API with a frontend dashboard and backed by a persistent data layer.
+An end-to-end Governance, Risk, and Compliance engineering platform. Multi-cloud evidence collection, policy-as-code enforcement, quantitative risk analysis, framework crosswalks, continuous monitoring with drift detection, AI-powered questionnaire auto-answer, SSP generation, OSCAL export, audit collaboration, task workflow management, and personnel tracking -- all exposed through a secured REST API with a React frontend dashboard and backed by a persistent data layer.
 
-**Version 0.3.0** | Python 3.11+
+**Version 0.4.0** | Python 3.11+
 
 ## Architecture
 
 ```
                     ┌─────────────────────────────────────────────┐
-                    │            Frontend Dashboard               │
-                    │  Dashboard · Frameworks · Assessments       │
-                    │  Risk Analysis · Vendors · Evidence · Policies│
+                    │         React Frontend Dashboard            │
+                    │  Compliance · Security · Operations         │
+                    │  Third Parties · Reporting                  │
                     └──────────────────┬──────────────────────────┘
                                        │
                     ┌──────────────────▼──────────────────────────┐
@@ -22,25 +22,24 @@ An end-to-end Governance, Risk, and Compliance engineering platform. Multi-cloud
                                        │
                     ┌──────────────────▼──────────────────────────┐
                     │           FastAPI REST API                   │
-                    │  /api/v1/evidence  /api/v1/assessments      │
-                    │  /api/v1/risk  /api/v1/frameworks           │
-                    │  /api/v1/vendors  /api/v1/policies          │
+                    │  /api/v1/evidence     /api/v1/assessments   │
+                    │  /api/v1/risk         /api/v1/frameworks    │
+                    │  /api/v1/vendors      /api/v1/policies      │
+                    │  /api/v1/monitoring   /api/v1/questionnaires│
+                    │  /api/v1/tasks        /api/v1/personnel     │
+                    │  /api/v1/audit        /api/v1/ssp           │
                     └──────────────────┬──────────────────────────┘
                                        │
-            ┌──────────────────────────┼──────────────────────────┐
-            │                          │                          │
- ┌──────────▼──────────┐  ┌───────────▼──────────┐  ┌───────────▼───────────┐
- │  Connector Framework │  │    Policy Engine     │  │    Risk Engine        │
- │  Cloud · SIEM · EDR  │  │    OPA + Rego        │  │   Monte Carlo Sim    │
- │  Scanner · Custom    │  │                      │  │                      │
- └──────────┬──────────┘  └───────────┬──────────┘  └───────────┬──────────┘
-            │                          │                          │
- ┌──────────▼──────────┐               │                          │
- │  Cloud Collectors    │              │                          │
- │  AWS · Azure · GCP   │              │                          │
- └──────────┬──────────┘               │                          │
-            │                          │                          │
-            ▼                          ▼                          ▼
+     ┌──────────────┬─────────────┬────┴────┬──────────────┬──────────────┐
+     │              │             │         │              │              │
+ ┌───▼────────┐ ┌───▼──────┐ ┌───▼────┐ ┌──▼──────┐ ┌────▼─────┐ ┌─────▼──────┐
+ │ Connector  │ │ Policy   │ │ Risk   │ │ SSP     │ │ AI Auto  │ │ Continuous │
+ │ Framework  │ │ Engine   │ │ Engine │ │ & OSCAL │ │ Answer   │ │ Monitoring │
+ │ Cloud/SIEM │ │ OPA+Rego │ │ Monte  │ │ Export  │ │ Engine   │ │ & Drift    │
+ │ EDR/Custom │ │          │ │ Carlo  │ │        │ │          │ │ Detection  │
+ └───┬────────┘ └───┬──────┘ └───┬────┘ └──┬──────┘ └────┬─────┘ └─────┬──────┘
+     │              │             │         │              │              │
+     ▼              ▼             ▼         ▼              ▼              ▼
  ┌────────────────────────────────────────────────────────────────────────┐
  │                     Normalized Evidence Model                         │
  │          SHA-256 integrity · Provider-agnostic schema                  │
@@ -53,7 +52,8 @@ An end-to-end Governance, Risk, and Compliance engineering platform. Multi-cloud
  │  (SQLAlchemy) │   │ Crosswalks   │   │  Compliance     │
  │               │   │ NIST·SOC2    │   │  Modules        │
  │               │   │ ISO·CMMC     │   │  AWS·Azure·GCP  │
- │               │   │ HIPAA        │   │                 │
+ │               │   │ HIPAA·FedRAMP│   │                 │
+ │               │   │ GDPR·ISO42001│   │                 │
  └───────────────┘   └──────────────┘   └─────────────────┘
 ```
 
@@ -70,10 +70,16 @@ grc-toolkit/
 │   └── routers/
 │       ├── evidence.py               # Evidence collection & integrity
 │       ├── assessments.py            # Control assessment runs
-│       ├── risk.py                   # Monte Carlo risk simulation
+│       ├── risk.py                   # Monte Carlo sim + risk graph
 │       ├── frameworks.py             # Framework listing & crosswalks
 │       ├── vendors.py                # Vendor risk CRUD & dashboard
-│       └── policies.py              # OPA policy evaluation
+│       ├── policies.py               # OPA policy evaluation
+│       ├── monitoring.py             # Continuous monitoring & drift detection
+│       ├── questionnaires.py         # Security questionnaire auto-answer
+│       ├── tasks.py                  # Task & workflow management
+│       ├── personnel.py              # Personnel & training tracking
+│       ├── audit_collab.py           # Audit collaboration portal
+│       └── ssp.py                    # SSP generation & OSCAL export
 │
 ├── modules/                          # Core business logic
 │   ├── models.py                     # NormalizedEvidence, CloudCollector protocol,
@@ -98,10 +104,13 @@ grc-toolkit/
 │   ├── models.py                     # SQLAlchemy 2.0 ORM models
 │   │                                 # AuditLog, AssetRecord, DataSource,
 │   │                                 # EvidenceRecord, AssessmentRun, VendorRecord,
-│   │                                 # PolicyViolation, FrameworkDefinition
+│   │                                 # PolicyViolation, FrameworkDefinition,
+│   │                                 # MonitoringSchedule, QuestionnaireRecord,
+│   │                                 # TaskAssignment, PersonnelRecord, AuditComment
 │   ├── session.py                    # Engine/session management
 │   └── repository.py                 # Repository pattern (evidence, assessments,
-│                                     # vendors, policy violations)
+│                                     # vendors, policy violations, monitoring,
+│                                     # questionnaires, tasks, personnel, audit)
 │
 ├── policies/                         # Policy-as-Code (OPA/Rego)
 │   ├── nist-800-53/
@@ -117,8 +126,29 @@ grc-toolkit/
 │   ├── soc2/                         # CC6 logical access, CC7 system operations
 │   └── terraform/                    # Conftest policies (AWS, Azure, GCP baselines)
 │
-├── static/
-│   └── index.html                    # Frontend dashboard UI (single-page)
+├── frontend/                          # React 19 + TypeScript + Vite frontend
+│   ├── src/
+│   │   ├── App.tsx                    # Routes and layout
+│   │   ├── components/
+│   │   │   └── Layout.tsx             # Sidebar nav (5 sections)
+│   │   ├── pages/
+│   │   │   ├── DashboardPage.tsx      # Compliance overview & metrics
+│   │   │   ├── FrameworksPage.tsx     # Framework browser & crosswalks
+│   │   │   ├── AssessmentsPage.tsx    # Assessment runs & results
+│   │   │   ├── RiskPage.tsx           # Monte Carlo risk simulation
+│   │   │   ├── RiskGraphPage.tsx      # Risk relationship graph
+│   │   │   ├── VendorsPage.tsx        # Vendor inventory & risk
+│   │   │   ├── EvidencePage.tsx       # Evidence browser & integrity
+│   │   │   ├── PoliciesPage.tsx       # OPA policy evaluation
+│   │   │   ├── MonitoringPage.tsx     # Continuous monitoring & drift
+│   │   │   ├── QuestionnairesPage.tsx # AI-powered questionnaire mgmt
+│   │   │   ├── TasksPage.tsx          # Task & workflow board
+│   │   │   ├── PersonnelPage.tsx      # Personnel & training tracker
+│   │   │   ├── AuditPortalPage.tsx    # Audit collaboration portal
+│   │   │   └── SSPPage.tsx            # SSP generator & OSCAL export
+│   │   └── lib/
+│   │       └── api.ts                 # Axios API client
+│   └── package.json                   # React, TanStack Query, Recharts, Tailwind
 │
 ├── terraform/modules/                # Compliance-enforcing infrastructure
 │   ├── aws/
@@ -133,6 +163,9 @@ grc-toolkit/
 ├── config/
 │   ├── frameworks.yaml               # NIST 800-53 control definitions (AC, AU, SC)
 │   ├── crosswalks.yaml               # NIST → SOC 2, ISO 27001, CMMC L2, HIPAA
+│   ├── fedramp.yaml                  # FedRAMP Moderate baseline (Rev 5)
+│   ├── gdpr.yaml                     # GDPR (EU 2016/679)
+│   ├── iso_42001.yaml                # ISO/IEC 42001 AI Management System
 │   └── settings.yaml                 # Environment configuration
 │
 ├── tests/
@@ -331,19 +364,95 @@ POST /api/v1/policies/violations/{id}/resolve  # Resolve a violation
 GET  /api/v1/policies/bundles          # List available policy bundles
 ```
 
+### Continuous Monitoring
+```
+POST /api/v1/monitoring/schedules      # Create monitoring schedule
+GET  /api/v1/monitoring/schedules      # List all schedules
+PUT  /api/v1/monitoring/schedules/{id} # Update schedule
+POST /api/v1/monitoring/schedules/{id}/run  # Trigger run with drift detection
+GET  /api/v1/monitoring/due            # Get schedules due for next run
+```
+
+### Security Questionnaires
+```
+POST /api/v1/questionnaires/           # Create questionnaire
+GET  /api/v1/questionnaires/           # List questionnaires (filter by status)
+GET  /api/v1/questionnaires/{id}       # Get questionnaire with questions
+PUT  /api/v1/questionnaires/{id}       # Update questionnaire
+POST /api/v1/questionnaires/{id}/auto-answer  # AI auto-answer from compliance data
+```
+
+### Task & Workflow Management
+```
+POST /api/v1/tasks/                    # Create task
+GET  /api/v1/tasks/                    # List tasks (filter by status, assignee)
+GET  /api/v1/tasks/dashboard           # Task dashboard with metrics
+GET  /api/v1/tasks/{id}                # Get task details
+PUT  /api/v1/tasks/{id}                # Update task
+POST /api/v1/tasks/{id}/comments       # Add comment to task
+```
+
+### Personnel & Training
+```
+POST /api/v1/personnel/               # Create personnel record
+GET  /api/v1/personnel/               # List personnel (filter by department)
+GET  /api/v1/personnel/dashboard       # Personnel compliance dashboard
+GET  /api/v1/personnel/{id}            # Get personnel details
+PUT  /api/v1/personnel/{id}            # Update personnel record
+POST /api/v1/personnel/{id}/training   # Add training record
+POST /api/v1/personnel/{id}/access-review  # Complete access review
+```
+
+### Audit Collaboration
+```
+POST /api/v1/audit/comments            # Create audit comment/request/finding
+GET  /api/v1/audit/comments            # List comments (filter by audit_id)
+POST /api/v1/audit/comments/{id}/resolve  # Resolve a comment/request
+GET  /api/v1/audit/engagements/{id}    # Engagement summary (counts, status)
+```
+
+### SSP Generation & OSCAL Export
+```
+POST /api/v1/ssp/generate              # Generate SSP with control narratives
+POST /api/v1/ssp/oscal                 # Export OSCAL 1.1.2 JSON (SSP, POA&M, Assessment Results)
+```
+
+### Risk Graph
+```
+GET  /api/v1/risk/graph                # Risk relationship graph (threats, controls, assets, vendors)
+```
+
 ## Frontend Dashboard
 
-The single-page frontend is served from `static/index.html` and provides a browser-based interface to the API. Pages include:
+The React 19 + TypeScript + Vite frontend provides a full-featured browser-based interface organized into five navigation sections:
 
+**Compliance**
 - **Dashboard** -- overview of compliance posture and key metrics
-- **Frameworks** -- browse framework definitions and control mappings
+- **Frameworks** -- browse framework definitions and control mappings (NIST, SOC 2, ISO 27001, HIPAA, CMMC, PCI DSS, FedRAMP, GDPR, ISO 42001)
 - **Assessments** -- view and trigger assessment runs, review results
-- **Risk Analysis** -- run simulations and view risk distributions
-- **Vendors** -- manage vendor inventory and risk ratings
-- **Evidence** -- browse collected evidence and verify integrity
-- **Policies** -- evaluate policies and review violations
+- **Monitoring** -- continuous monitoring schedules with drift detection and alerts
 
-The sidebar includes an API key entry field for authenticating against secured deployments.
+**Security**
+- **Risk Analysis** -- run Monte Carlo simulations and view risk distributions
+- **Risk Graph** -- visualize relationships between threats, controls, assets, and vendors
+- **Evidence** -- browse collected evidence and verify integrity
+- **Data Silos** -- manage data classification and storage locations
+
+**Operations**
+- **Tasks** -- task and workflow management with priorities, status filters, and comment threads
+- **Questionnaires** -- AI-powered security questionnaire management with auto-answer
+- **Personnel** -- personnel tracking with training compliance, background checks, and access reviews
+
+**Third Parties**
+- **Vendors** -- manage vendor inventory and risk ratings
+- **Integrations** -- connected systems and data sources
+- **Tool Config** -- connector and integration configuration
+
+**Reporting**
+- **POA&M & Reports** -- plan of action and milestones reporting
+- **SSP & OSCAL** -- system security plan generation and OSCAL 1.1.2 machine-readable export
+- **Audit Portal** -- audit collaboration with comments, evidence requests, and findings
+- **Trust Hub** -- external trust center for sharing compliance posture
 
 ## Connector Framework
 
@@ -437,6 +546,20 @@ Evidence collected against NIST 800-53 controls automatically maps to:
 | IA-2          | CC6.1     | A.8.5     | IA.L2-3.5.1     | 164.312(d)       |
 
 Crosswalk definitions live in `config/crosswalks.yaml`.
+
+### Supported Frameworks
+
+| Framework | Config File | Families | Description |
+|-----------|------------|----------|-------------|
+| NIST 800-53 | `config/frameworks.yaml` | AC, AU, SC | Core control catalog |
+| SOC 2 | `config/crosswalks.yaml` | CC6, CC7 | Trust service criteria |
+| ISO 27001 | `config/crosswalks.yaml` | Annex A | Information security controls |
+| CMMC L2 | `config/crosswalks.yaml` | AC, AU, SC | DoD cybersecurity maturity |
+| HIPAA | `config/crosswalks.yaml` | 164.3xx | Healthcare data protection |
+| PCI DSS | via crosswalks | Req 1-12 | Payment card industry |
+| FedRAMP Moderate | `config/fedramp.yaml` | AC, AU, CA, CM, IA, IR, RA, SC, SI | Federal cloud authorization |
+| GDPR | `config/gdpr.yaml` | Art 5-35 | EU data protection regulation |
+| ISO 42001 | `config/iso_42001.yaml` | A5-A10, Annex B | AI management system |
 
 ## Terraform Modules
 

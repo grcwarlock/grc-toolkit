@@ -4,7 +4,9 @@ import {
   Shield, LayoutDashboard, Layers, CheckSquare,
   Database, AlertTriangle, Users, Plug, FileText,
   LogOut, Menu, X, User, Settings, HardDrive,
-  Globe, Bell, ChevronDown, ChevronRight, Zap
+  Globe, Bell, ChevronDown, ChevronRight, Zap,
+  Activity, FileQuestion, ListTodo, GraduationCap,
+  ClipboardCheck, FileCode, Network
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,17 +14,27 @@ const NAV_SECTIONS = [
   {
     label: 'Compliance',
     items: [
-      { name: 'Dashboard',    path: '/dashboard',   icon: LayoutDashboard },
-      { name: 'Frameworks',   path: '/frameworks',  icon: Layers },
-      { name: 'Assessments',  path: '/assessments', icon: CheckSquare },
+      { name: 'Dashboard',    path: '/dashboard',      icon: LayoutDashboard },
+      { name: 'Frameworks',   path: '/frameworks',     icon: Layers },
+      { name: 'Assessments',  path: '/assessments',    icon: CheckSquare },
+      { name: 'Monitoring',   path: '/monitoring',     icon: Activity },
     ],
   },
   {
     label: 'Security',
     items: [
-      { name: 'Risk Analysis', path: '/risk',        icon: AlertTriangle },
-      { name: 'Evidence',      path: '/evidence',    icon: Database },
-      { name: 'Data Silos',    path: '/data-silos',  icon: HardDrive },
+      { name: 'Risk Analysis', path: '/risk',          icon: AlertTriangle },
+      { name: 'Risk Graph',    path: '/risk-graph',    icon: Network },
+      { name: 'Evidence',      path: '/evidence',      icon: Database },
+      { name: 'Data Silos',    path: '/data-silos',    icon: HardDrive },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { name: 'Tasks',          path: '/tasks',          icon: ListTodo },
+      { name: 'Questionnaires', path: '/questionnaires', icon: FileQuestion },
+      { name: 'Personnel',      path: '/personnel',      icon: GraduationCap },
     ],
   },
   {
@@ -36,8 +48,10 @@ const NAV_SECTIONS = [
   {
     label: 'Reporting',
     items: [
-      { name: 'POAM & Reports', path: '/poam',      icon: FileText },
-      { name: 'Trust Hub',      path: '/trust-hub', icon: Globe },
+      { name: 'POAM & Reports', path: '/poam',          icon: FileText },
+      { name: 'SSP & OSCAL',    path: '/ssp',           icon: FileCode },
+      { name: 'Audit Portal',   path: '/audit-portal',  icon: ClipboardCheck },
+      { name: 'Trust Hub',      path: '/trust-hub',     icon: Globe },
     ],
   },
 ];

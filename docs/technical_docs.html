@@ -307,7 +307,7 @@
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-value">437</div>
+      <div class="stat-value">500+</div>
       <div class="stat-label">Controls</div>
     </div>
     <div class="stat navy">
@@ -315,17 +315,17 @@
       <div class="stat-label">Rego Policies</div>
     </div>
     <div class="stat green">
-      <div class="stat-value">63+</div>
+      <div class="stat-value">90+</div>
       <div class="stat-label">API Endpoints</div>
     </div>
     <div class="stat amber">
-      <div class="stat-value">35+</div>
-      <div class="stat-label">Integrations</div>
+      <div class="stat-value">9</div>
+      <div class="stat-label">Frameworks</div>
     </div>
   </div>
 
   <div class="meta">
-    <span>Version 0.3.0</span>
+    <span>Version 0.4.0</span>
     <span>March 2026</span>
     <span>Internal Use Only</span>
   </div>
@@ -344,22 +344,24 @@
   <div class="toc-item"><a href="#s4">4. Architecture</a></div>
   <div class="toc-item sub"><a href="#s4-1">System Components &amp; Request Flow</a></div>
   <div class="toc-item"><a href="#s5">5. Compliance Frameworks</a></div>
-  <div class="toc-item sub"><a href="#s5-1">NIST 800-53 &middot; ISO 27001 &middot; SOC 2 &middot; Crosswalks</a></div>
+  <div class="toc-item sub"><a href="#s5-1">NIST 800-53 &middot; ISO 27001 &middot; SOC 2 &middot; FedRAMP &middot; GDPR &middot; ISO 42001 &middot; Crosswalks</a></div>
   <div class="toc-item"><a href="#s6">6. API Reference</a></div>
-  <div class="toc-item sub"><a href="#s6-1">Auth &middot; Dashboard &middot; Evidence &middot; Assessments &middot; Risk &middot; Frameworks &middot; Vendors &middot; Policies</a></div>
+  <div class="toc-item sub"><a href="#s6-1">Auth &middot; Evidence &middot; Assessments &middot; Risk &middot; Monitoring &middot; Questionnaires &middot; Tasks &middot; Personnel &middot; Audit &middot; SSP/OSCAL</a></div>
   <div class="toc-item"><a href="#s7">7. Database Schema</a></div>
   <div class="toc-item"><a href="#s8">8. Frontend Dashboard</a></div>
-  <div class="toc-item"><a href="#s9">9. Docker Deployment</a></div>
-  <div class="toc-item"><a href="#s10">10. Production Configuration</a></div>
+  <div class="toc-item"><a href="#s8b">9. v0.4.0 Enhancements</a></div>
+  <div class="toc-item sub"><a href="#s8b-1">Monitoring &middot; Questionnaires &middot; Tasks &middot; Personnel &middot; Audit &middot; SSP/OSCAL &middot; Risk Graph</a></div>
+  <div class="toc-item"><a href="#s9">10. Docker Deployment</a></div>
+  <div class="toc-item"><a href="#s10">11. Production Configuration</a></div>
   <div class="toc-item sub"><a href="#s10-1">Reverse Proxy &middot; Environment Variables &middot; Checklist</a></div>
-  <div class="toc-item"><a href="#s11">11. Security Architecture</a></div>
-  <div class="toc-item"><a href="#s12">12. Policy-as-Code (OPA)</a></div>
-  <div class="toc-item"><a href="#s13">13. Integrations</a></div>
-  <div class="toc-item"><a href="#s14">14. Cloud Infrastructure (Terraform)</a></div>
-  <div class="toc-item"><a href="#s15">15. CI/CD Pipeline</a></div>
-  <div class="toc-item"><a href="#s16">16. Operations &amp; Maintenance</a></div>
-  <div class="toc-item"><a href="#s17">17. Troubleshooting</a></div>
-  <div class="toc-item"><a href="#s18">18. Extending the Toolkit</a></div>
+  <div class="toc-item"><a href="#s11">12. Security Architecture</a></div>
+  <div class="toc-item"><a href="#s12">13. Policy-as-Code (OPA)</a></div>
+  <div class="toc-item"><a href="#s13">14. Integrations</a></div>
+  <div class="toc-item"><a href="#s14">15. Cloud Infrastructure (Terraform)</a></div>
+  <div class="toc-item"><a href="#s15">16. CI/CD Pipeline</a></div>
+  <div class="toc-item"><a href="#s16">17. Operations &amp; Maintenance</a></div>
+  <div class="toc-item"><a href="#s17">18. Troubleshooting</a></div>
+  <div class="toc-item"><a href="#s18">19. Extending the Toolkit</a></div>
 </div>
 
 <!-- ════════════════════════════════════════ -->
@@ -367,17 +369,22 @@
 <!-- ════════════════════════════════════════ -->
 <h1 class="section page-break" id="s1">1. What is the GRC Toolkit?</h1>
 
-<p>The GRC Toolkit is an open-source platform that helps security and compliance teams manage governance, risk, and compliance from a single system. Instead of tracking controls in spreadsheets and collecting evidence manually, the toolkit automates evidence collection across cloud providers, evaluates policies continuously, and produces audit-ready reports.</p>
+<p>The GRC Toolkit is an open-source platform that helps security and compliance teams manage governance, risk, and compliance from a single system. Instead of tracking controls in spreadsheets and collecting evidence manually, the toolkit automates evidence collection across cloud providers, evaluates policies continuously, generates SSPs with OSCAL export, auto-answers security questionnaires, and produces audit-ready reports.</p>
 
 <ul>
-  <li><strong>437 compliance controls</strong> across NIST 800-53, ISO 27001, and SOC 2</li>
+  <li><strong>500+ compliance controls</strong> across 9 frameworks (NIST 800-53, ISO 27001, SOC 2, HIPAA, CMMC, PCI DSS, FedRAMP, GDPR, ISO 42001)</li>
   <li><strong>Automated evidence collection</strong> from AWS, Azure, and GCP using native APIs</li>
   <li><strong>251 OPA/Rego policies</strong> that enforce compliance rules continuously</li>
   <li><strong>Monte Carlo risk analysis</strong> that quantifies risk in dollars, not guesses</li>
   <li><strong>521 framework crosswalks</strong> so you assess once and report across multiple standards</li>
-  <li><strong>35+ tool integrations</strong> including CrowdStrike, Splunk, Okta, Tenable, and more</li>
-  <li><strong>Customer trust portal</strong> for prospects to see your compliance posture</li>
-  <li><strong>React dashboard</strong> with real-time charts, trend analysis, and remediation guidance</li>
+  <li><strong>Continuous monitoring</strong> with drift detection, automated scheduling, and alerting</li>
+  <li><strong>AI-powered questionnaire auto-answer</strong> from your compliance knowledge base with confidence scoring</li>
+  <li><strong>SSP auto-generation</strong> with per-control-family narratives and OSCAL 1.1.2 machine-readable export</li>
+  <li><strong>Audit collaboration portal</strong> for auditor comments, evidence requests, findings, and resolution tracking</li>
+  <li><strong>Task &amp; workflow management</strong> with priorities, assignments, due dates, and threaded comments</li>
+  <li><strong>Personnel &amp; training tracking</strong> with compliance monitoring, background checks, and access reviews</li>
+  <li><strong>Risk relationship graph</strong> connecting threats, controls, assets, and vendors</li>
+  <li><strong>React dashboard</strong> with 20+ pages, real-time charts, trend analysis, and remediation guidance</li>
 </ul>
 
 <h2 class="sub" id="s1-1">Technology Stack</h2>
@@ -463,7 +470,7 @@ GRC_API_KEYS=</code></div>
   <thead><tr><th>Folder</th><th>What It Contains</th><th>When You'd Touch It</th></tr></thead>
   <tbody>
     <tr><td><code class="inline">api/</code></td><td>FastAPI application and middleware</td><td>Adding or modifying API endpoints</td></tr>
-    <tr><td><code class="inline">api/routers/</code></td><td>14 route files (auth, dashboard, evidence, etc.)</td><td>Adding new API features</td></tr>
+    <tr><td><code class="inline">api/routers/</code></td><td>20 route files (auth, dashboard, evidence, monitoring, questionnaires, tasks, personnel, audit, ssp, etc.)</td><td>Adding new API features</td></tr>
     <tr><td><code class="inline">modules/</code></td><td>Core business logic</td><td>Changing assessment, risk, or collection logic</td></tr>
     <tr><td><code class="inline">modules/collectors/</code></td><td>AWS, Azure, GCP evidence collectors</td><td>Adding new cloud checks</td></tr>
     <tr><td><code class="inline">modules/connectors/</code></td><td>Unified connector framework</td><td>Integrating a new security tool</td></tr>
@@ -486,7 +493,7 @@ GRC_API_KEYS=</code></div>
 │   ├── schemas.py              <span class="comment"># Pydantic request/response models</span>
 │   ├── deps.py                 <span class="comment"># Dependency injection</span>
 │   ├── security.py             <span class="comment"># Auth, rate limiting, audit</span>
-│   └── routers/                <span class="comment"># 14 endpoint files</span>
+│   └── routers/                <span class="comment"># 20 endpoint files</span>
 ├── modules/
 │   ├── collectors/             <span class="comment"># AWS, Azure, GCP collectors</span>
 │   ├── connectors/             <span class="comment"># Unified connector framework</span>
@@ -495,14 +502,17 @@ GRC_API_KEYS=</code></div>
 │   ├── framework_mapper.py     <span class="comment"># Crosswalk engine</span>
 │   └── vendor_monitor.py       <span class="comment"># Vendor risk scoring</span>
 ├── db/
-│   ├── models.py               <span class="comment"># 10 SQLAlchemy tables</span>
+│   ├── models.py               <span class="comment"># 15 SQLAlchemy tables</span>
 │   ├── session.py              <span class="comment"># Engine & connection pooling</span>
-│   └── repository.py           <span class="comment"># CRUD operations</span>
+│   └── repository.py           <span class="comment"># CRUD operations (9 repositories)</span>
 ├── config/
 │   ├── nist_800_53.yaml        <span class="comment"># 293 NIST controls (8,474 lines)</span>
 │   ├── iso_27001.yaml          <span class="comment"># 93 ISO controls (2,668 lines)</span>
 │   ├── soc2.yaml               <span class="comment"># 51 SOC 2 controls (1,972 lines)</span>
 │   ├── crosswalks.yaml         <span class="comment"># 521 framework mappings</span>
+│   ├── fedramp.yaml            <span class="comment"># FedRAMP Moderate (Rev 5)</span>
+│   ├── gdpr.yaml               <span class="comment"># GDPR (EU 2016/679)</span>
+│   ├── iso_42001.yaml          <span class="comment"># ISO 42001 AI Management</span>
 │   └── settings.yaml           <span class="comment"># App configuration</span>
 ├── policies/
 │   ├── nist-800-53/            <span class="comment"># 142 policies, 20 families</span>
@@ -528,11 +538,11 @@ GRC_API_KEYS=</code></div>
 <table>
   <thead><tr><th>Component</th><th>What It Does</th><th>How It Connects</th></tr></thead>
   <tbody>
-    <tr><td><strong>FastAPI App</strong></td><td>Serves the REST API (63+ endpoints) and the React frontend</td><td>Port 8000, HTTP/HTTPS</td></tr>
-    <tr><td><strong>PostgreSQL</strong></td><td>Stores all persistent data across 10 tables</td><td>Internal port 5432</td></tr>
+    <tr><td><strong>FastAPI App</strong></td><td>Serves the REST API (90+ endpoints) and the React frontend</td><td>Port 8000, HTTP/HTTPS</td></tr>
+    <tr><td><strong>PostgreSQL</strong></td><td>Stores all persistent data across 15 tables</td><td>Internal port 5432</td></tr>
     <tr><td><strong>OPA Server</strong></td><td>Evaluates Rego policies against resource data</td><td>Internal port 8181</td></tr>
     <tr><td><strong>Redis</strong></td><td>Message broker for Celery background tasks</td><td>Internal port 6379</td></tr>
-    <tr><td><strong>React SPA</strong></td><td>Dashboard UI with 16 pages</td><td>Static files served by FastAPI</td></tr>
+    <tr><td><strong>React SPA</strong></td><td>Dashboard UI with 20+ pages across 5 nav sections</td><td>Static files served by FastAPI</td></tr>
   </tbody>
 </table>
 
@@ -570,6 +580,9 @@ GRC_API_KEYS=</code></div>
     <tr><td><strong>SOC 2 Type II</strong></td><td>51 controls</td><td>config/soc2.yaml</td><td>13 Rego files</td></tr>
     <tr><td>HIPAA</td><td>64+ controls</td><td>config/frameworks.yaml</td><td>Via NIST crosswalk</td></tr>
     <tr><td>CMMC Level 2</td><td>110 controls</td><td>config/frameworks.yaml</td><td>Via NIST crosswalk</td></tr>
+    <tr><td><strong>FedRAMP Moderate (Rev 5)</strong></td><td>36 controls</td><td>config/fedramp.yaml</td><td>9 control families (AC, AU, CA, CM, IA, IR, RA, SC, SI)</td></tr>
+    <tr><td><strong>GDPR (EU 2016/679)</strong></td><td>15 controls</td><td>config/gdpr.yaml</td><td>11 article groups (Art 5&ndash;35)</td></tr>
+    <tr><td><strong>ISO/IEC 42001 AI Management</strong></td><td>22 controls</td><td>config/iso_42001.yaml</td><td>7 families (A5&ndash;A10) + Annex B</td></tr>
   </tbody>
 </table>
 
@@ -742,6 +755,85 @@ GRC_API_KEYS=</code></div>
   </tbody>
 </table>
 
+<h2 class="sub">Continuous Monitoring</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/monitoring/schedules</code></td><td>Create a monitoring schedule (hourly, daily, weekly, monthly)</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/monitoring/schedules</code></td><td>List all monitoring schedules with drift status</td></tr>
+    <tr><td><code class="inline">PUT</code></td><td><code class="inline">/api/v1/monitoring/schedules/{id}</code></td><td>Update schedule cadence, status, or alert channels</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/monitoring/schedules/{id}/run</code></td><td>Trigger a monitoring run with drift detection</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/monitoring/due</code></td><td>Get schedules due for their next run</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Security Questionnaires</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/questionnaires/</code></td><td>Create a questionnaire (SIG, CAIQ, DDQ, VSAQ, Custom)</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/questionnaires/</code></td><td>List questionnaires with optional status filter</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/questionnaires/{id}</code></td><td>Get questionnaire with all questions and answers</td></tr>
+    <tr><td><code class="inline">PUT</code></td><td><code class="inline">/api/v1/questionnaires/{id}</code></td><td>Update questionnaire details</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/questionnaires/{id}/auto-answer</code></td><td>AI auto-answer from compliance knowledge base with confidence scoring</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Task &amp; Workflow Management</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/tasks/</code></td><td>Create a task with priority, assignee, and due date</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/tasks/</code></td><td>List tasks with status and assignee filters</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/tasks/dashboard</code></td><td>Task dashboard with status/priority/overdue metrics</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/tasks/{id}</code></td><td>Get task details</td></tr>
+    <tr><td><code class="inline">PUT</code></td><td><code class="inline">/api/v1/tasks/{id}</code></td><td>Update task status, assignee, or details</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/tasks/{id}/comments</code></td><td>Add a threaded comment to a task</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Personnel &amp; Training</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/personnel/</code></td><td>Create a personnel record</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/personnel/</code></td><td>List personnel with department filter</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/personnel/dashboard</code></td><td>Personnel compliance dashboard (training, BG checks, access reviews)</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/personnel/{id}</code></td><td>Get personnel details</td></tr>
+    <tr><td><code class="inline">PUT</code></td><td><code class="inline">/api/v1/personnel/{id}</code></td><td>Update personnel record</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/personnel/{id}/training</code></td><td>Add a training record</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/personnel/{id}/access-review</code></td><td>Complete an access review</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Audit Collaboration</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/audit/comments</code></td><td>Create audit comment, evidence request, or finding</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/audit/comments</code></td><td>List comments with audit_id filter</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/audit/comments/{id}/resolve</code></td><td>Resolve a comment or request with attribution</td></tr>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/audit/engagements/{id}</code></td><td>Engagement summary (total, open, resolved, findings)</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">SSP Generation &amp; OSCAL Export</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/ssp/generate</code></td><td>Generate SSP with control narratives for 17 NIST families</td></tr>
+    <tr><td><code class="inline">POST</code></td><td><code class="inline">/api/v1/ssp/oscal</code></td><td>Export OSCAL 1.1.2 JSON (SSP, POA&amp;M, or Assessment Results)</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">Risk Graph</h2>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code class="inline">GET</code></td><td><code class="inline">/api/v1/risk/graph</code></td><td>Risk relationship graph (threats, controls, assets, vendors with edges)</td></tr>
+  </tbody>
+</table>
+
 <h2 class="sub">Additional Routers</h2>
 <table>
   <thead><tr><th>Router</th><th>Prefix</th><th>What It Does</th></tr></thead>
@@ -761,7 +853,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <h1 class="section" id="s7">7. Database Schema</h1>
 
-<p>The app uses SQLAlchemy 2.0 with 10 tables. All primary keys are UUIDs (stored as strings for SQLite/PostgreSQL portability). Tables are created automatically on startup via <code class="inline">init_db()</code>.</p>
+<p>The app uses SQLAlchemy 2.0 with 15 tables. All primary keys are UUIDs (stored as strings for SQLite/PostgreSQL portability). Tables are created automatically on startup via <code class="inline">init_db()</code>.</p>
 
 <table>
   <thead><tr><th>Table</th><th>What It Stores</th><th>Key Fields</th></tr></thead>
@@ -776,6 +868,11 @@ GRC_API_KEYS=</code></div>
     <tr><td><code class="inline">policy_violations</code></td><td>OPA policy violations</td><td>policy_id, severity, status (open/resolved)</td></tr>
     <tr><td><code class="inline">asset_records</code></td><td>Cloud resource inventory</td><td>provider, service, resource_type, tags (JSON)</td></tr>
     <tr><td><code class="inline">data_sources</code></td><td>Connected data source registry</td><td>name, type, connection_status, last_sync</td></tr>
+    <tr><td><code class="inline">monitoring_schedules</code></td><td>Continuous monitoring schedules</td><td>framework, cadence, status, drift_detected, alert_channels (JSON)</td></tr>
+    <tr><td><code class="inline">questionnaire_records</code></td><td>Security questionnaires</td><td>title, requester, type, status, questions (JSON), auto_answered count</td></tr>
+    <tr><td><code class="inline">task_assignments</code></td><td>Workflow tasks</td><td>assignee, priority, status, due_date, comments (JSON)</td></tr>
+    <tr><td><code class="inline">personnel_records</code></td><td>Employee tracking</td><td>department, role, training_records (JSON), bg_check, access_review</td></tr>
+    <tr><td><code class="inline">audit_comments</code></td><td>Audit collaboration</td><td>audit_id, author, comment_type, resource_id, is_resolved</td></tr>
   </tbody>
 </table>
 
@@ -802,25 +899,34 @@ GRC_API_KEYS=</code></div>
 
 <p>The frontend is a React single-page application built with TypeScript, Tailwind CSS, and Recharts. FastAPI serves the built assets as static files &mdash; no separate frontend server needed in production.</p>
 
+<p>The sidebar is organized into <strong>5 navigation sections</strong>: Compliance, Security, Operations, Third Parties, and Reporting.</p>
+
 <h2 class="sub">Pages</h2>
 <table>
-  <thead><tr><th>Route</th><th>Page</th><th>What It Shows</th></tr></thead>
+  <thead><tr><th>Route</th><th>Page</th><th>Section</th><th>What It Shows</th></tr></thead>
   <tbody>
-    <tr><td><code class="inline">/</code></td><td>Landing</td><td>Public marketing page with feature overview</td></tr>
-    <tr><td><code class="inline">/login</code></td><td>Login</td><td>Email + password authentication</td></tr>
-    <tr><td><code class="inline">/register</code></td><td>Register</td><td>New user sign-up</td></tr>
-    <tr><td><code class="inline">/dashboard</code></td><td>Dashboard</td><td>Real-time compliance posture with charts and trends</td></tr>
-    <tr><td><code class="inline">/frameworks</code></td><td>Frameworks</td><td>Browse control families and crosswalk explorer</td></tr>
-    <tr><td><code class="inline">/assessments</code></td><td>Assessments</td><td>Run assessments, view results, compliance trends</td></tr>
-    <tr><td><code class="inline">/evidence</code></td><td>Evidence</td><td>Browse and verify collected evidence records</td></tr>
-    <tr><td><code class="inline">/risk</code></td><td>Risk</td><td>Monte Carlo simulations and portfolio analysis</td></tr>
-    <tr><td><code class="inline">/vendors</code></td><td>Vendors</td><td>Vendor inventory, risk scoring, certifications</td></tr>
-    <tr><td><code class="inline">/integrations</code></td><td>Integrations</td><td>Connect and configure 35+ security tools</td></tr>
-    <tr><td><code class="inline">/poam</code></td><td>POA&amp;M</td><td>Plan of Action and Milestones tracking</td></tr>
-    <tr><td><code class="inline">/data-silos</code></td><td>Data Silos</td><td>Data discovery and classification results</td></tr>
-    <tr><td><code class="inline">/trust</code></td><td>Trust Portal</td><td>Public compliance transparency page</td></tr>
-    <tr><td><code class="inline">/settings</code></td><td>Settings</td><td>Organization config, notifications, API keys</td></tr>
-    <tr><td><code class="inline">/tool-config</code></td><td>Tool Config</td><td>Credential management for integrations</td></tr>
+    <tr><td><code class="inline">/</code></td><td>Landing</td><td>&mdash;</td><td>Public marketing page with feature overview</td></tr>
+    <tr><td><code class="inline">/login</code></td><td>Login</td><td>&mdash;</td><td>Email + password authentication</td></tr>
+    <tr><td><code class="inline">/register</code></td><td>Register</td><td>&mdash;</td><td>New user sign-up</td></tr>
+    <tr><td><code class="inline">/dashboard</code></td><td>Dashboard</td><td>Compliance</td><td>Real-time compliance posture with charts and trends</td></tr>
+    <tr><td><code class="inline">/frameworks</code></td><td>Frameworks</td><td>Compliance</td><td>Browse 9 frameworks, control families, crosswalk explorer</td></tr>
+    <tr><td><code class="inline">/assessments</code></td><td>Assessments</td><td>Compliance</td><td>Run assessments, view results, compliance trends</td></tr>
+    <tr><td><code class="inline">/monitoring</code></td><td>Monitoring</td><td>Compliance</td><td>Continuous monitoring schedules, drift detection, alerts</td></tr>
+    <tr><td><code class="inline">/risk</code></td><td>Risk Analysis</td><td>Security</td><td>Monte Carlo simulations and portfolio analysis</td></tr>
+    <tr><td><code class="inline">/risk-graph</code></td><td>Risk Graph</td><td>Security</td><td>Threat-control-asset-vendor relationship visualization</td></tr>
+    <tr><td><code class="inline">/evidence</code></td><td>Evidence</td><td>Security</td><td>Browse and verify collected evidence records</td></tr>
+    <tr><td><code class="inline">/data-silos</code></td><td>Data Silos</td><td>Security</td><td>Data discovery and classification results</td></tr>
+    <tr><td><code class="inline">/tasks</code></td><td>Tasks</td><td>Operations</td><td>Task board with priorities, status filters, comment threads</td></tr>
+    <tr><td><code class="inline">/questionnaires</code></td><td>Questionnaires</td><td>Operations</td><td>AI-powered questionnaire management with auto-answer</td></tr>
+    <tr><td><code class="inline">/personnel</code></td><td>Personnel</td><td>Operations</td><td>Personnel tracking, training compliance, access reviews</td></tr>
+    <tr><td><code class="inline">/vendors</code></td><td>Vendors</td><td>Third Parties</td><td>Vendor inventory, risk scoring, certifications</td></tr>
+    <tr><td><code class="inline">/integrations</code></td><td>Integrations</td><td>Third Parties</td><td>Connect and configure 35+ security tools</td></tr>
+    <tr><td><code class="inline">/tool-config</code></td><td>Tool Config</td><td>Third Parties</td><td>Credential management for integrations</td></tr>
+    <tr><td><code class="inline">/poam</code></td><td>POA&amp;M</td><td>Reporting</td><td>Plan of Action and Milestones tracking</td></tr>
+    <tr><td><code class="inline">/ssp</code></td><td>SSP &amp; OSCAL</td><td>Reporting</td><td>SSP generator with control narratives + OSCAL 1.1.2 export</td></tr>
+    <tr><td><code class="inline">/audit-portal</code></td><td>Audit Portal</td><td>Reporting</td><td>Audit collaboration: comments, requests, findings, resolution</td></tr>
+    <tr><td><code class="inline">/trust</code></td><td>Trust Hub</td><td>Reporting</td><td>Public compliance transparency page</td></tr>
+    <tr><td><code class="inline">/settings</code></td><td>Settings</td><td>&mdash;</td><td>Organization config, notifications, API keys</td></tr>
   </tbody>
 </table>
 
@@ -842,9 +948,57 @@ GRC_API_KEYS=</code></div>
 
 
 <!-- ════════════════════════════════════════ -->
-<!-- 9. DOCKER DEPLOYMENT -->
+<!-- 9. v0.4.0 ENHANCEMENTS -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section page-break" id="s9">9. Docker Deployment</h1>
+<h1 class="section page-break" id="s8b">9. v0.4.0 Enhancements</h1>
+
+<p>Version 0.4.0 introduces 10 major capabilities that bring the toolkit to competitive parity with commercial GRC platforms like Drata, Vanta, Paramify, and Delve.</p>
+
+<h2 class="sub" id="s8b-1">Continuous Monitoring &amp; Drift Detection</h2>
+<p>Schedule automated compliance monitoring at hourly, daily, weekly, or monthly intervals. Each run compares the current assessment pass rate against the previous run to detect drift. When the pass rate drops or controls that previously passed now fail, a drift alert is triggered. Schedules can be paused and resumed, and alert channels (Slack, email) are configurable per schedule.</p>
+
+<h2 class="sub">AI-Powered Questionnaire Auto-Answer</h2>
+<p>Manage security questionnaires (SIG, SIG Lite, CAIQ, DDQ, VSAQ, Custom) with lifecycle tracking from pending through completion. The auto-answer engine uses a 15-topic compliance knowledge base covering encryption, MFA, access control, incident response, SOC 2, GDPR, data retention, change management, business continuity, logging, subprocessors, password policies, backup, vulnerability management, and more. Each auto-generated answer includes a confidence score and source control attribution.</p>
+
+<h2 class="sub">Task &amp; Workflow Management</h2>
+<p>Create remediation, review, and approval tasks with four priority levels (critical, high, medium, low) and five status states (open, in_progress, review, completed, deferred). Tasks track assignees, due dates, and overdue status. Threaded comments enable collaboration on each task. The dashboard provides real-time metrics on open items, overdue tasks, and completion rates by priority.</p>
+
+<h2 class="sub">Personnel &amp; Training Tracking</h2>
+<p>Manage employee records with department, role, and control mappings. Track training compliance with completion dates and expiration monitoring. Monitor background check status and schedule access reviews. The personnel dashboard shows training compliance rates, overdue reviews, pending background checks, and department-level breakdowns.</p>
+
+<h2 class="sub">Audit Collaboration Portal</h2>
+<p>A dedicated workspace for auditor interactions during engagements. Supports four comment types: general comments, evidence requests, findings, and resolutions. Each comment is tied to a specific resource (evidence, control, assessment, POA&amp;M item) within an audit engagement. The resolve workflow tracks who resolved each request and when. Engagement summaries show total comments, open requests, resolved items, and findings counts.</p>
+
+<h2 class="sub">SSP Auto-Generation</h2>
+<p>Generate System Security Plans with per-control-family implementation narratives. The SSP generator produces detailed narratives for 17 NIST 800-53 control families (AC, AU, SC, IA, CM, SI, IR, RA, CA, SA, CP, PS, AT, MA, MP, PE, PL). Narratives include implementation descriptions, responsible parties, and evidence references. Implementation status is derived from actual assessment data.</p>
+
+<h2 class="sub">OSCAL 1.1.2 Export</h2>
+<p>Export compliance data in the NIST OSCAL (Open Security Controls Assessment Language) format for machine-readable interoperability. Three document types are supported:</p>
+<ul>
+  <li><strong>System Security Plan (SSP)</strong> &mdash; system metadata, control implementations, and implementation status</li>
+  <li><strong>Plan of Action &amp; Milestones (POA&amp;M)</strong> &mdash; open findings with risk levels and remediation deadlines</li>
+  <li><strong>Assessment Results</strong> &mdash; assessment findings with pass/fail status per control</li>
+</ul>
+<p>The JSON output conforms to OSCAL 1.1.2 and is ready for ingestion by FedRAMP automation tools (e.g., Xacta, eMASS).</p>
+
+<h2 class="sub">Risk Relationship Graph</h2>
+<p>Visualize how threats, controls, assets, and vendors are interconnected. The graph uses four node types and four relationship types (mitigates, targets, provides, supports). Nodes are rendered in a cluster-based layout with a connection matrix showing all relationships. This helps identify coverage gaps, single points of failure, and cascading risk paths.</p>
+
+<h2 class="sub">New Compliance Frameworks</h2>
+<table>
+  <thead><tr><th>Framework</th><th>Config File</th><th>Coverage</th></tr></thead>
+  <tbody>
+    <tr><td><strong>FedRAMP Moderate (Rev 5)</strong></td><td><code class="inline">config/fedramp.yaml</code></td><td>9 families: AC, AU, CA, CM, IA, IR, RA, SC, SI with FedRAMP-specific checks</td></tr>
+    <tr><td><strong>GDPR (EU 2016/679)</strong></td><td><code class="inline">config/gdpr.yaml</code></td><td>11 article groups: Art 5 (Processing Principles), Art 6 (Lawful Basis), Art 13 (Information), Art 15 (Access), Art 17 (Erasure), Art 25 (By Design), Art 28 (Processors), Art 30 (Records), Art 32 (Security), Art 33 (Breach), Art 35 (DPIA)</td></tr>
+    <tr><td><strong>ISO/IEC 42001 (2023)</strong></td><td><code class="inline">config/iso_42001.yaml</code></td><td>7 families (A5&ndash;A10: AI Policies, Planning, Support, Operation, Performance, Improvement) + Annex B (Transparency, Accountability, Fairness, Privacy, Safety, Security)</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- 10. DOCKER DEPLOYMENT -->
+<!-- ════════════════════════════════════════ -->
+<h1 class="section page-break" id="s9">10. Docker Deployment</h1>
 
 <p>For production, use Docker Compose to run the full stack: API, PostgreSQL, OPA, and Redis.</p>
 
@@ -897,7 +1051,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 10. PRODUCTION -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section page-break" id="s10">10. Production Configuration</h1>
+<h1 class="section page-break" id="s10">11. Production Configuration</h1>
 
 <h2 class="sub" id="s10-1">Reverse Proxy</h2>
 <p>The API binds to localhost:8000 and should <strong>never</strong> be directly exposed to the internet. Put a reverse proxy in front of it.</p>
@@ -960,7 +1114,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 11. SECURITY -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s11">11. Security Architecture</h1>
+<h1 class="section" id="s11">12. Security Architecture</h1>
 
 <h2 class="sub">Authentication Methods</h2>
 <table>
@@ -1013,7 +1167,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 12. OPA -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s12">12. Policy-as-Code (OPA)</h1>
+<h1 class="section" id="s12">13. Policy-as-Code (OPA)</h1>
 
 <p>The toolkit uses Open Policy Agent to continuously evaluate your infrastructure against compliance rules written in Rego. With 251 policy files, every control across all three major frameworks has enforcement coverage.</p>
 
@@ -1058,7 +1212,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 13. INTEGRATIONS -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s13">13. Integrations</h1>
+<h1 class="section" id="s13">14. Integrations</h1>
 
 <p>The toolkit connects to 35+ security tools across 9 categories. Each integration maps to the compliance controls it helps satisfy.</p>
 
@@ -1083,7 +1237,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 14. TERRAFORM -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s14">14. Cloud Infrastructure (Terraform)</h1>
+<h1 class="section" id="s14">15. Cloud Infrastructure (Terraform)</h1>
 
 <p>These Terraform modules deploy compliance-enforcing infrastructure baselines that the toolkit then monitors.</p>
 
@@ -1117,7 +1271,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 15. CI/CD -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s15">15. CI/CD Pipeline</h1>
+<h1 class="section" id="s15">16. CI/CD Pipeline</h1>
 
 <p>GitHub Actions runs these quality gates on every push and pull request. All must pass before merging.</p>
 
@@ -1147,7 +1301,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 16. OPERATIONS -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s16">16. Operations &amp; Maintenance</h1>
+<h1 class="section" id="s16">17. Operations &amp; Maintenance</h1>
 
 <h2 class="sub">Health Monitoring</h2>
 <div class="codeblock"><code><span class="cmd">$</span> curl http://localhost:8000/health
@@ -1190,7 +1344,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 17. TROUBLESHOOTING -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s17">17. Troubleshooting</h1>
+<h1 class="section" id="s17">18. Troubleshooting</h1>
 
 <table>
   <thead><tr><th>Problem</th><th>Cause</th><th>Fix</th></tr></thead>
@@ -1217,7 +1371,7 @@ GRC_API_KEYS=</code></div>
 <!-- ════════════════════════════════════════ -->
 <!-- 18. EXTENDING -->
 <!-- ════════════════════════════════════════ -->
-<h1 class="section" id="s18">18. Extending the Toolkit</h1>
+<h1 class="section" id="s18">19. Extending the Toolkit</h1>
 
 <h2 class="sub">Add a New Control Assertion</h2>
 <ol>
@@ -1254,7 +1408,7 @@ GRC_API_KEYS=</code></div>
 
 <br><br>
 <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 32px 0;">
-<p style="text-align: center; color: var(--slate-light); font-size: 10pt; font-style: italic;">End of Document &mdash; GRC Toolkit v0.3.0 &mdash; March 2026</p>
+<p style="text-align: center; color: var(--slate-light); font-size: 10pt; font-style: italic;">End of Document &mdash; GRC Toolkit v0.4.0 &mdash; March 2026</p>
 
 </body>
 </html>

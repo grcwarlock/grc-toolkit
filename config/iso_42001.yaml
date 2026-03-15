@@ -1,0 +1,224 @@
+# ISO/IEC 42001:2023 — AI Management System
+# International standard for organizations developing, providing, or using AI systems
+
+iso_42001:
+  name: "ISO/IEC 42001"
+  version: "2023"
+  description: "AI Management System standard — governance framework for responsible AI development and deployment"
+
+  control_families:
+    A5:
+      name: "AI Policies"
+      controls:
+        A5-1:
+          title: "AI Policy"
+          description: "Establish and maintain an AI policy appropriate to the organization's purpose."
+          checks:
+            - id: "A5-1.1"
+              description: "AI policy is documented, approved, and communicated"
+              evidence_type: "policy"
+        A5-2:
+          title: "AI Roles and Responsibilities"
+          description: "Define and assign roles and responsibilities for AI management."
+          checks:
+            - id: "A5-2.1"
+              description: "AI governance roles are clearly defined"
+              evidence_type: "org_chart"
+
+    A6:
+      name: "Planning"
+      controls:
+        A6-1:
+          title: "AI Risk Assessment"
+          description: "Establish process to identify and assess AI-related risks."
+          checks:
+            - id: "A6-1.1"
+              description: "AI risk assessment methodology documented"
+              evidence_type: "risk_assessment"
+        A6-2:
+          title: "AI Impact Assessment"
+          description: "Conduct impact assessments for AI systems on individuals and groups."
+          checks:
+            - id: "A6-2.1"
+              description: "AI impact assessments completed for deployed AI systems"
+              evidence_type: "impact_assessment"
+        A6-3:
+          title: "AI Objectives"
+          description: "Establish measurable AI objectives consistent with AI policy."
+          checks:
+            - id: "A6-3.1"
+              description: "AI objectives are defined and measurable"
+              evidence_type: "objectives"
+
+    A7:
+      name: "Support"
+      controls:
+        A7-1:
+          title: "Resources for AI"
+          description: "Determine and provide resources needed for AI management system."
+          checks:
+            - id: "A7-1.1"
+              description: "AI resources are allocated and documented"
+              evidence_type: "resource_plan"
+        A7-2:
+          title: "AI Competence"
+          description: "Ensure persons doing work affecting AI system performance are competent."
+          checks:
+            - id: "A7-2.1"
+              description: "AI team competency requirements defined and verified"
+              evidence_type: "training_records"
+        A7-3:
+          title: "AI Awareness"
+          description: "Ensure persons are aware of AI policy, their contribution, and implications."
+          checks:
+            - id: "A7-3.1"
+              description: "AI awareness training completed by relevant personnel"
+              evidence_type: "training_records"
+        A7-4:
+          title: "Communication"
+          description: "Determine internal and external communications relevant to AI management."
+          checks:
+            - id: "A7-4.1"
+              description: "AI communication plan established"
+              evidence_type: "communication_plan"
+
+    A8:
+      name: "Operation"
+      controls:
+        A8-1:
+          title: "AI System Lifecycle"
+          description: "Plan, implement, and control processes for AI system lifecycle."
+          checks:
+            - id: "A8-1.1"
+              description: "AI development lifecycle documented"
+              evidence_type: "sdlc"
+        A8-2:
+          title: "Data Management for AI"
+          description: "Establish processes for data used in AI systems."
+          checks:
+            - id: "A8-2.1"
+              description: "AI training data governance documented"
+              evidence_type: "data_governance"
+            - id: "A8-2.2"
+              description: "Data quality and bias monitoring in place"
+              evidence_type: "monitoring_config"
+        A8-3:
+          title: "AI System Design and Development"
+          description: "Plan and execute AI system design and development activities."
+          checks:
+            - id: "A8-3.1"
+              description: "AI model development follows documented procedures"
+              evidence_type: "development_docs"
+        A8-4:
+          title: "AI System Testing and Validation"
+          description: "Test and validate AI systems prior to deployment."
+          checks:
+            - id: "A8-4.1"
+              description: "AI model testing includes fairness, accuracy, and robustness"
+              evidence_type: "test_results"
+        A8-5:
+          title: "AI System Deployment"
+          description: "Plan and manage deployment of AI systems."
+          checks:
+            - id: "A8-5.1"
+              description: "AI deployment checklist completed before production"
+              evidence_type: "deployment_checklist"
+        A8-6:
+          title: "AI System Monitoring"
+          description: "Monitor AI system performance, output, and impact post-deployment."
+          checks:
+            - id: "A8-6.1"
+              description: "AI model drift monitoring active"
+              evidence_type: "monitoring_config"
+            - id: "A8-6.2"
+              description: "AI output quality metrics tracked"
+              evidence_type: "monitoring_dashboard"
+
+    A9:
+      name: "Performance Evaluation"
+      controls:
+        A9-1:
+          title: "Monitoring and Measurement"
+          description: "Determine what needs to be monitored and measured for AI management."
+          checks:
+            - id: "A9-1.1"
+              description: "AI KPIs defined and regularly measured"
+              evidence_type: "metrics"
+        A9-2:
+          title: "Internal Audit"
+          description: "Conduct internal audits of AI management system at planned intervals."
+          checks:
+            - id: "A9-2.1"
+              description: "Annual AI management system audit conducted"
+              evidence_type: "audit_report"
+        A9-3:
+          title: "Management Review"
+          description: "Top management reviews AI management system at planned intervals."
+          checks:
+            - id: "A9-3.1"
+              description: "Management review of AI program conducted"
+              evidence_type: "review_minutes"
+
+    A10:
+      name: "Improvement"
+      controls:
+        A10-1:
+          title: "Continual Improvement"
+          description: "Continually improve the suitability, adequacy, and effectiveness of AI management."
+          checks:
+            - id: "A10-1.1"
+              description: "AI improvement process documented with lessons learned"
+              evidence_type: "improvement_log"
+        A10-2:
+          title: "Nonconformity and Corrective Action"
+          description: "React to nonconformities and take corrective action."
+          checks:
+            - id: "A10-2.1"
+              description: "AI incident and nonconformity tracking process established"
+              evidence_type: "ncr_log"
+
+    AnnexB:
+      name: "AI Controls Reference (Annex B)"
+      controls:
+        B1-Transparency:
+          title: "Transparency"
+          description: "Ensure transparency of AI system decisions and processes."
+          checks:
+            - id: "B1.1"
+              description: "AI system decisions are explainable to stakeholders"
+              evidence_type: "explainability_docs"
+        B2-Accountability:
+          title: "Accountability"
+          description: "Ensure accountability for AI system outcomes."
+          checks:
+            - id: "B2.1"
+              description: "Accountability chain documented for AI decisions"
+              evidence_type: "raci_matrix"
+        B3-Fairness:
+          title: "Fairness and Bias"
+          description: "Prevent and mitigate unfair bias in AI systems."
+          checks:
+            - id: "B3.1"
+              description: "Bias testing conducted on AI models"
+              evidence_type: "bias_assessment"
+        B4-Privacy:
+          title: "Privacy in AI"
+          description: "Protect privacy in AI data processing and outputs."
+          checks:
+            - id: "B4.1"
+              description: "Privacy impact assessment for AI systems"
+              evidence_type: "pia"
+        B5-Safety:
+          title: "AI Safety"
+          description: "Ensure AI systems operate safely and reliably."
+          checks:
+            - id: "B5.1"
+              description: "AI safety testing and red-teaming conducted"
+              evidence_type: "safety_report"
+        B6-Security:
+          title: "AI Security"
+          description: "Protect AI systems from adversarial attacks and manipulation."
+          checks:
+            - id: "B6.1"
+              description: "AI-specific security controls implemented (model poisoning, evasion)"
+              evidence_type: "security_assessment"

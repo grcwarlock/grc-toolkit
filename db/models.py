@@ -267,6 +267,144 @@ class User(Base):
     )
 
 
+class MonitoringSchedule(Base):
+    """Continuous monitoring schedule for automated compliance checks."""
+
+    __tablename__ = "monitoring_schedules"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    framework: Mapped[str] = mapped_column(String(50), index=True)
+    cadence: Mapped[str] = mapped_column(String(20), default="daily")  # hourly, daily, weekly
+    providers: Mapped[list] = mapped_column(JSON, default=list)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    last_pass_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    drift_detected: Mapped[bool] = mapped_column(Boolean, default=False)
+    drift_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    alert_on_drift: Mapped[bool] = mapped_column(Boolean, default=True)
+    alert_channels: Mapped[list] = mapped_column(JSON, default=list)  # ["slack", "email"]
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class QuestionnaireRecord(Base):
+    """Security questionnaire received from customers/partners."""
+
+    __tablename__ = "questionnaires"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    title: Mapped[str] = mapped_column(String(300))
+    requester: Mapped[str] = mapped_column(String(200))
+    requester_email: Mapped[str] = mapped_column(String(255), default="")
+    questionnaire_type: Mapped[str] = mapped_column(String(50))  # SIG, CAIQ, DDQ, Custom
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)  # pending, in_progress, completed, sent
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    total_questions: Mapped[int] = mapped_column(Integer, default=0)
+    answered_questions: Mapped[int] = mapped_column(Integer, default=0)
+    auto_answered: Mapped[int] = mapped_column(Integer, default=0)
+    questions: Mapped[list] = mapped_column(JSON, default=list)
+    assigned_to: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class TaskAssignment(Base):
+    """Workflow task assignment for POA&M items, remediation, and reviews."""
+
+    __tablename__ = "task_assignments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    title: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str] = mapped_column(Text, default="")
+    task_type: Mapped[str] = mapped_column(String(30), index=True)  # remediation, review, evidence, approval, vendor_assessment
+    reference_type: Mapped[str | None] = mapped_column(String(30), nullable=True)  # poam, vendor, evidence, policy
+    reference_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    assigned_to: Mapped[str] = mapped_column(String(200), index=True)
+    assigned_by: Mapped[str] = mapped_column(String(200), default="system")
+    priority: Mapped[str] = mapped_column(String(10), default="medium")  # critical, high, medium, low
+    status: Mapped[str] = mapped_column(String(20), default="open", index=True)  # open, in_progress, review, completed, deferred
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    comments: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_tasks_assignee_status", "assigned_to", "status"),
+    )
+
+
+class PersonnelRecord(Base):
+    """Personnel tracking for security training, access reviews, and role mapping."""
+
+    __tablename__ = "personnel"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    full_name: Mapped[str] = mapped_column(String(200))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    department: Mapped[str] = mapped_column(String(100), default="")
+    role: Mapped[str] = mapped_column(String(100), default="")
+    title: Mapped[str] = mapped_column(String(200), default="")
+    manager: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    termination_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    background_check_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    background_check_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, passed, failed
+    last_access_review: Mapped[date | None] = mapped_column(Date, nullable=True)
+    access_review_status: Mapped[str] = mapped_column(String(20), default="pending")
+    training_records: Mapped[list] = mapped_column(JSON, default=list)
+    system_access: Mapped[list] = mapped_column(JSON, default=list)  # list of systems/roles
+    control_mappings: Mapped[list] = mapped_column(JSON, default=list)  # NIST control families: IA, AT, PS
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AuditComment(Base):
+    """Comments and requests from auditors on evidence and controls."""
+
+    __tablename__ = "audit_comments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    audit_id: Mapped[str] = mapped_column(String(36), index=True)  # logical audit engagement ID
+    resource_type: Mapped[str] = mapped_column(String(30))  # evidence, control, assessment, poam
+    resource_id: Mapped[str] = mapped_column(String(36), index=True)
+    author: Mapped[str] = mapped_column(String(200))
+    author_role: Mapped[str] = mapped_column(String(20), default="auditor")  # auditor, analyst, admin
+    comment_type: Mapped[str] = mapped_column(String(20), default="comment")  # comment, request, finding, resolution
+    content: Mapped[str] = mapped_column(Text)
+    is_resolved: Mapped[bool] = mapped_column(Boolean, default=False)
+    resolved_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_audit_comments_resource", "resource_type", "resource_id"),
+    )
+
+
 class PolicyViolation(Base):
     __tablename__ = "policy_violations"
 

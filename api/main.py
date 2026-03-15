@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.routers import (
     assessments,
+    audit_collab,
     auth,
     dashboard,
     data_silos,
@@ -27,9 +28,14 @@ from api.routers import (
     exports,
     frameworks,
     integrations,
+    monitoring,
+    personnel,
     policies,
+    questionnaires,
     risk,
     settings,
+    ssp,
+    tasks,
     tool_config,
     trust,
     vendors,
@@ -66,7 +72,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="GRC Toolkit API",
     description="Governance, Risk, and Compliance automation platform",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
     docs_url="/docs" if os.environ.get("GRC_ENABLE_DOCS", "true") == "true" else None,
     redoc_url=None,
@@ -108,6 +114,12 @@ app.include_router(exports.router)
 app.include_router(data_silos.router)
 app.include_router(trust.router)
 app.include_router(settings.router)
+app.include_router(monitoring.router)
+app.include_router(questionnaires.router)
+app.include_router(tasks.router)
+app.include_router(personnel.router)
+app.include_router(audit_collab.router)
+app.include_router(ssp.router)
 
 
 @app.get("/health")

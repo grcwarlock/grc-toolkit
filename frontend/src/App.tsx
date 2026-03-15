@@ -18,6 +18,13 @@ import TrustHubPage from './pages/TrustHubPage';
 import TrustPortalPage from './pages/TrustPortalPage';
 import SettingsPage from './pages/SettingsPage';
 import ToolConfigPage from './pages/ToolConfigPage';
+import MonitoringPage from './pages/MonitoringPage';
+import QuestionnairesPage from './pages/QuestionnairesPage';
+import TasksPage from './pages/TasksPage';
+import PersonnelPage from './pages/PersonnelPage';
+import AuditPortalPage from './pages/AuditPortalPage';
+import SSPPage from './pages/SSPPage';
+import RiskGraphPage from './pages/RiskGraphPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -74,6 +81,13 @@ export default function App() {
         <Route path="/trust-hub" element={<TrustHubPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/tool-config" element={<ToolConfigPage />} />
+        <Route path="/monitoring" element={<MonitoringPage />} />
+        <Route path="/questionnaires" element={<QuestionnairesPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/personnel" element={<PersonnelPage />} />
+        <Route path="/audit-portal" element={<AuditPortalPage />} />
+        <Route path="/ssp" element={<SSPPage />} />
+        <Route path="/risk-graph" element={<RiskGraphPage />} />
       </Route>
     </Routes>
   );

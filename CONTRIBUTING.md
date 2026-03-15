@@ -62,13 +62,16 @@ python -m pytest tests/ -v
 
 ## What We're Looking For
 
-- Additional NIST 800-53 control family coverage (CM, IA, SI, PE, PS are all needed)
+- Additional NIST 800-53 control family coverage (PE, PS are still needed)
 - Azure and GCP collector implementations
-- FedRAMP-specific overlay checks
-- CMMC 2.0 framework definitions
-- SOC 2 trust service criteria mappings
+- Additional OSCAL document type support (Component Definitions, Catalogs)
+- Expanded questionnaire knowledge base topics and industry-specific answers
+- SSP narrative templates for additional frameworks (FedRAMP, CMMC, SOC 2)
 - Integration examples for GRC platforms (ServiceNow, Archer, etc.)
 - Better risk scenario data from industry benchmarks
+- Additional framework configs (CCPA, NIST CSF, CIS Controls, SOX)
+- Webhook/notification integrations for monitoring drift alerts
+- Personnel training provider integrations (KnowBe4, Proofpoint SAT)
 
 ## What We're Not Looking For
 
